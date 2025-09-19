@@ -1,0 +1,15 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace KurguWebsite.Application.DTOs.Service
+{
+    public class UpdateContactInfoDto
+    {
+        public string SupportPhone { get; set; } = string.Empty;
+        public string SalesPhone { get; set; } = string.Empty;
+        public string Email { get; set; } = string.Empty;
+    }
+}

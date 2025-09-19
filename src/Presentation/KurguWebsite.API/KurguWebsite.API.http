@@ -1,0 +1,6 @@
+@KurguWebsite.API_HostAddress = http://localhost:5038
+
+GET {{KurguWebsite.API_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
