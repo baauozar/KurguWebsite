@@ -32,6 +32,7 @@ namespace KurguWebsite.Persistence.Context
         public DbSet<ContactMessage> ContactMessages { get; set; }
         public DbSet<CompanyInfo> CompanyInfo { get; set; }
         public DbSet<ProcessStep> ProcessSteps { get; set; }
+        public DbSet<RefreshToken> RefreshTokens { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {

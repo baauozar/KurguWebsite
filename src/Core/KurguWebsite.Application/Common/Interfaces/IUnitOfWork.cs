@@ -1,4 +1,5 @@
 ﻿using KurguWebsite.Application.Common.Interfaces.Repositories;
+using KurguWebsite.Application.Interfaces.Repositories;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -17,6 +18,7 @@ namespace KurguWebsite.Application.Common.Interfaces
         IContactMessageRepository ContactMessages { get; }
         ICompanyInfoRepository CompanyInfo { get; }
         IProcessStepRepository ProcessSteps { get; }
+        IRefreshTokenRepository RefreshTokens { get; } // Added
 
         Task<int> CommitAsync();
         Task<int> CommitAsync(CancellationToken cancellationToken);

@@ -1,5 +1,6 @@
 ﻿using KurguWebsite.Application.Common.Interfaces;
 using KurguWebsite.Application.Common.Interfaces.Repositories;
+using KurguWebsite.Application.Interfaces.Repositories;
 using KurguWebsite.Persistence.Context;
 using System;
 using System.Collections.Generic;
@@ -23,6 +24,7 @@ namespace KurguWebsite.Persistence.Repositories
         private IContactMessageRepository? _contactMessages;
         private ICompanyInfoRepository? _companyInfo;
         private IProcessStepRepository? _processSteps;
+        private IRefreshTokenRepository? _refreshTokens;
 
         public UnitOfWork(KurguWebsiteDbContext context)
         {
@@ -37,6 +39,7 @@ namespace KurguWebsite.Persistence.Repositories
         public IContactMessageRepository ContactMessages => _contactMessages ??= new ContactMessageRepository(_context);
         public ICompanyInfoRepository CompanyInfo => _companyInfo ??= new CompanyInfoRepository(_context);
         public IProcessStepRepository ProcessSteps => _processSteps ??= new ProcessStepRepository(_context);
+        public IRefreshTokenRepository RefreshTokens => _refreshTokens ??= new RefreshTokenRepository(_context);
 
         public async Task<int> CommitAsync()
         {

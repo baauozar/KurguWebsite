@@ -1,4 +1,5 @@
-﻿using System;
+﻿using KurguWebsite.Domain.Common;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -6,14 +7,43 @@ using System.Threading.Tasks;
 
 namespace KurguWebsite.Domain.Entities
 {
-    public class RefreshToken
+    public class RefreshToken: BaseEntity
     {
-        public Guid Id { get; set; } = Guid.NewGuid();
         public Guid UserId { get; set; }
-        public string Token { get; set; } = string.Empty;
+        public string Token { get; set; }
         public DateTime Expires { get; set; }
-        public bool IsUsed { get; set; } = false;
-        public bool IsRevoked { get; set; } = false;
-        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+        public bool IsRevoked { get; set; }
+        public string? ReplacedByToken { get; set; }
+        public DateTime Created { get; set; }
+        public string? CreatedByIp { get; set; }
+        public DateTime? Revoked { get; set; }
+        public string? RevokedByIp { get; set; }
+
+        public bool IsActive => !IsRevoked && !IsExpired;
+        public bool IsExpired => DateTime.UtcNow >= Expires;
+        private RefreshToken() { }
+
+        public static RefreshToken Create(
+            Guid userId,
+            string token,
+            string createdByIp,
+            int daysToExpire = 7)
+        {
+            return new RefreshToken
+            {
+                UserId = userId,
+                Token = token,
+                CreatedByIp = createdByIp,
+                Expires = DateTime.UtcNow.AddDays(daysToExpire)
+            };
+        }
+
+        public void Revoke(string revokedByIp, string? replacedByToken = null)
+        {
+            IsRevoked = true;
+            Revoked = DateTime.UtcNow;
+            RevokedByIp = revokedByIp;
+            ReplacedByToken = replacedByToken;
+        }
     }
 }

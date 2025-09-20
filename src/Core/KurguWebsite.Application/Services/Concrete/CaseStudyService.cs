@@ -177,7 +177,8 @@ namespace KurguWebsite.Application.Services.Concrete
 
                 if (dto.ServiceId.HasValue)
                     caseStudy.SetService(dto.ServiceId.Value);
-
+                else
+                    caseStudy.SetService(null);
                 if (dto.Technologies != null && dto.Technologies.Any())
                 {
                     foreach (var tech in dto.Technologies)

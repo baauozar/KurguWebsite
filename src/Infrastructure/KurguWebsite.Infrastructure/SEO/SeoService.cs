@@ -1,4 +1,5 @@
 ﻿using KurguWebsite.Application.Common.Interfaces;
+using Microsoft.Extensions.Configuration;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -10,6 +11,12 @@ namespace KurguWebsite.Infrastructure.SEO
 {
     public class SeoService : ISeoService
     {
+        private readonly IConfiguration _configuration;
+
+        public SeoService(IConfiguration configuration)
+        {
+            _configuration = configuration;
+        }
         private static readonly HashSet<string> StopWords = new(StringComparer.OrdinalIgnoreCase)
         {
             // English stopwords
@@ -113,6 +120,83 @@ namespace KurguWebsite.Infrastructure.SEO
 
             return $"<script type=\"application/ld+json\">{json}</script>";
         }
+
+        public string GenerateCanonicalUrl(string url)
+        {
+            if (string.IsNullOrWhiteSpace(url))
+                return string.Empty;
+
+            try
+            {
+                var uri = new Uri(url, UriKind.RelativeOrAbsolute);
+
+                // If relative, prepend base domain (from config if needed)
+                if (!uri.IsAbsoluteUri)
+                {
+                    // Example: load from configuration, otherwise fallback
+                    var baseDomain = _configuration["Site:BaseUrl"] ?? "https://www.example.com";
+                    uri = new Uri(new Uri(baseDomain), uri);
+                }
+
+                // Normalize: lowercase host, no trailing slash unless root
+                var builder = new UriBuilder(uri)
+                {
+                    Host = uri.Host.ToLowerInvariant(),
+                    Scheme = "https",
+                    Port = -1 // remove port if default
+                };
+
+                var canonical = builder.Uri.ToString().TrimEnd('/');
+                return canonical;
+            }
+            catch
+            {
+                return url; // fallback if parsing fails
+            }
+        }
+
+        public string GenerateRobotsTxt(bool allowAll = true)
+        {
+            if (allowAll)
+            {
+                return
+        @"User-agent: *
+Allow: /";
+            }
+            else
+            {
+                return
+        @"User-agent: *
+Disallow: /";
+            }
+        }
+
+        public string GenerateOpenGraphTags(OpenGraphData data)
+        {
+            if (data == null) return string.Empty;
+
+            var tags = new List<string>();
+
+            if (!string.IsNullOrWhiteSpace(data.Title))
+                tags.Add($"<meta property=\"og:title\" content=\"{System.Net.WebUtility.HtmlEncode(data.Title)}\" />");
+
+            if (!string.IsNullOrWhiteSpace(data.Description))
+                tags.Add($"<meta property=\"og:description\" content=\"{System.Net.WebUtility.HtmlEncode(data.Description)}\" />");
+
+            if (!string.IsNullOrWhiteSpace(data.Url))
+                tags.Add($"<meta property=\"og:url\" content=\"{data.Url}\" />");
+
+            if (!string.IsNullOrWhiteSpace(data.ImageUrl))
+                tags.Add($"<meta property=\"og:image\" content=\"{data.ImageUrl}\" />");
+
+            tags.Add($"<meta property=\"og:type\" content=\"{(string.IsNullOrWhiteSpace(data.Type) ? "website" : data.Type)}\" />");
+
+            if (!string.IsNullOrWhiteSpace(data.SiteName))
+                tags.Add($"<meta property=\"og:site_name\" content=\"{System.Net.WebUtility.HtmlEncode(data.SiteName)}\" />");
+
+            return string.Join(Environment.NewLine, tags);
+        }
+
     }
 
     public class SeoMetadata

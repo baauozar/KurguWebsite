@@ -84,6 +84,8 @@ namespace KurguWebsite.Domain.Entities
         public void SetService(Guid? serviceId)
         {
             ServiceId = serviceId;
+            if (!serviceId.HasValue)
+                Service = null;
         }
 
         // Add technology

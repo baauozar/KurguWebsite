@@ -14,9 +14,9 @@ namespace KurguWebsite.Application.Validators.Contact
 
             RuleFor(x => x.Email)
                 .NotEmpty().WithMessage("Email is required")
-                .EmailAddress().WithMessage("Invalid email address")
-                .MaximumLength(100).WithMessage("Email must not exceed 100 characters");
-
+                .EmailAddress().WithMessage("Invalid email format")
+                .Matches(@"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$")
+                .WithMessage("Invalid email format");
             RuleFor(x => x.Phone)
                 .NotEmpty().WithMessage("Phone number is required")
                 .Matches(@"^[\d\s\-\+\(\)]+$").WithMessage("Invalid phone number format")

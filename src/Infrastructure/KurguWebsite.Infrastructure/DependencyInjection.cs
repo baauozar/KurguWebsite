@@ -6,17 +6,16 @@ using KurguWebsite.Infrastructure.SEO;
 using KurguWebsite.Infrastructure.Services;
 using KurguWebsite.Infrastructure.Services.DateTimeService;
 using KurguWebsite.Infrastructure.Services.Email;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.IdentityModel.Tokens;
 using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.AspNetCore.Cors;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.IdentityModel.Tokens; // <-- This is required for AddCors
+using System.Threading.RateLimiting;
 
 namespace KurguWebsite.Infrastructure
 {
@@ -32,12 +31,12 @@ namespace KurguWebsite.Infrastructure
             services.AddMemoryCache();
             services.AddSingleton<ICacheService, MemoryCacheService>();
 
-            // File Storage
-            services.AddScoped<IFileUploadService, LocalFileStorageService>();
+            // File Storage (Updated with enhanced security)
+            services.AddScoped<IFileUploadService, EnhancedFileStorageService>();
 
-            // Identity & Authentication
+            // Identity & Authentication (Updated to use Enhanced version)
             services.AddScoped<JwtService>();
-            services.AddScoped<IAuthenticationService, AuthenticationService>();
+            services.AddScoped<IAuthenticationService, EnhancedAuthenticationService>();
             services.AddScoped<ICurrentUserService, CurrentUserService>();
 
             // JWT Configuration
@@ -55,7 +54,7 @@ namespace KurguWebsite.Infrastructure
                 })
                 .AddJwtBearer(options =>
                 {
-                    options.RequireHttpsMetadata = false;
+                    options.RequireHttpsMetadata = true; // Changed to true for security
                     options.SaveToken = true;
                     options.TokenValidationParameters = new TokenValidationParameters
                     {
@@ -66,7 +65,21 @@ namespace KurguWebsite.Infrastructure
                         ValidateAudience = true,
                         ValidAudience = jwtSettings["Audience"],
                         ValidateLifetime = true,
-                        ClockSkew = TimeSpan.Zero
+                        ClockSkew = TimeSpan.Zero,
+                        RequireExpirationTime = true
+                    };
+
+                    // Add JWT events for better security
+                    options.Events = new JwtBearerEvents
+                    {
+                        OnAuthenticationFailed = context =>
+                        {
+                            if (context.Exception.GetType() == typeof(SecurityTokenExpiredException))
+                            {
+                                context.Response.Headers.Add("Token-Expired", "true");
+                            }
+                            return Task.CompletedTask;
+                        }
                     };
                 });
             }
@@ -88,18 +101,136 @@ namespace KurguWebsite.Infrastructure
             // HttpContext Accessor
             services.AddHttpContextAccessor();
 
-            // Add CORS
+            // FIXED CORS Configuration - More Secure
             services.AddCors(options =>
             {
-                options.AddPolicy("AllowSpecificOrigin",
-                    builder =>
+                options.AddPolicy("Production", builder =>
+                {
+                    var allowedOrigins = configuration.GetSection("Cors:Production:AllowedOrigins")
+                        .Get<string[]>() ?? Array.Empty<string>();
+
+                    if (allowedOrigins.Length > 0)
                     {
-                        var allowedOrigins = configuration["Cors:AllowedOrigins"]?.Split(',') ?? new[] { "*" };
-                        builder.WithOrigins(allowedOrigins)
-                               .AllowAnyMethod()
-                               .AllowAnyHeader()
-                               .AllowCredentials();
-                    });
+                        builder
+                            .WithOrigins(allowedOrigins)
+                            .AllowAnyMethod()
+                            .AllowAnyHeader()
+                            .AllowCredentials()
+                            .SetIsOriginAllowedToAllowWildcardSubdomains()
+                            .SetPreflightMaxAge(TimeSpan.FromSeconds(3600));
+                    }
+                });
+
+                options.AddPolicy("Development", builder =>
+                {
+                    var devOrigins = configuration.GetSection("Cors:Development:AllowedOrigins")
+                        .Get<string[]>() ?? new[] { "http://localhost:3000", "http://localhost:3001" };
+
+                    builder
+                        .WithOrigins(devOrigins)
+                        .AllowAnyMethod()
+                        .AllowAnyHeader()
+                        .AllowCredentials()
+                        .SetPreflightMaxAge(TimeSpan.FromSeconds(3600));
+                });
+            });
+
+            // ADD RATE LIMITING
+            services.AddRateLimiter(options =>
+            {
+                options.RejectionStatusCode = 429;
+
+                // Global rate limit
+                options.GlobalLimiter = PartitionedRateLimiter.Create<HttpContext, string>(
+                    httpContext => RateLimitPartition.GetFixedWindowLimiter(
+                        partitionKey: httpContext.User.Identity?.Name ?? httpContext.Connection.RemoteIpAddress?.ToString() ?? "anonymous",
+                        factory: partition => new FixedWindowRateLimiterOptions
+                        {
+                            AutoReplenishment = true,
+                            PermitLimit = 100,
+                            QueueLimit = 0,
+                            Window = TimeSpan.FromMinutes(1)
+                        }));
+
+                // Login endpoint rate limit
+                options.AddPolicy("LoginLimit", httpContext =>
+                    RateLimitPartition.GetFixedWindowLimiter(
+                        partitionKey: httpContext.Connection.RemoteIpAddress?.ToString() ?? "anonymous",
+                        factory: partition => new FixedWindowRateLimiterOptions
+                        {
+                            AutoReplenishment = true,
+                            PermitLimit = 5,
+                            QueueLimit = 0,
+                            Window = TimeSpan.FromMinutes(15)
+                        }));
+
+                // Registration endpoint rate limit
+                options.AddPolicy("RegistrationLimit", httpContext =>
+                    RateLimitPartition.GetFixedWindowLimiter(
+                        partitionKey: httpContext.Connection.RemoteIpAddress?.ToString() ?? "anonymous",
+                        factory: partition => new FixedWindowRateLimiterOptions
+                        {
+                            AutoReplenishment = true,
+                            PermitLimit = 3,
+                            QueueLimit = 0,
+                            Window = TimeSpan.FromHours(1)
+                        }));
+
+                // API endpoints rate limit
+                options.AddPolicy("ApiLimit", httpContext =>
+                    RateLimitPartition.GetFixedWindowLimiter(
+                        partitionKey: httpContext.User.Identity?.Name ?? httpContext.Connection.RemoteIpAddress?.ToString() ?? "anonymous",
+                        factory: partition => new FixedWindowRateLimiterOptions
+                        {
+                            AutoReplenishment = true,
+                            PermitLimit = 100,
+                            QueueLimit = 10,
+                            Window = TimeSpan.FromMinutes(1)
+                        }));
+
+                // File upload rate limit
+                options.AddPolicy("FileUploadLimit", httpContext =>
+                    RateLimitPartition.GetFixedWindowLimiter(
+                        partitionKey: httpContext.User.Identity?.Name ?? httpContext.Connection.RemoteIpAddress?.ToString() ?? "anonymous",
+                        factory: partition => new FixedWindowRateLimiterOptions
+                        {
+                            AutoReplenishment = true,
+                            PermitLimit = 10,
+                            QueueLimit = 0,
+                            Window = TimeSpan.FromMinutes(10)
+                        }));
+
+                // Password reset rate limit
+                options.AddPolicy("PasswordResetLimit", httpContext =>
+                    RateLimitPartition.GetFixedWindowLimiter(
+                        partitionKey: httpContext.Connection.RemoteIpAddress?.ToString() ?? "anonymous",
+                        factory: partition => new FixedWindowRateLimiterOptions
+                        {
+                            AutoReplenishment = true,
+                            PermitLimit = 3,
+                            QueueLimit = 0,
+                            Window = TimeSpan.FromHours(1)
+                        }));
+
+                // Contact form rate limit
+                options.AddPolicy("ContactFormLimit", httpContext =>
+                    RateLimitPartition.GetFixedWindowLimiter(
+                        partitionKey: httpContext.Connection.RemoteIpAddress?.ToString() ?? "anonymous",
+                        factory: partition => new FixedWindowRateLimiterOptions
+                        {
+                            AutoReplenishment = true,
+                            PermitLimit = 5,
+                            QueueLimit = 0,
+                            Window = TimeSpan.FromHours(1)
+                        }));
+
+                // Add custom rejection response
+                options.OnRejected = async (context, token) =>
+                {
+                    context.HttpContext.Response.StatusCode = 429;
+                    await context.HttpContext.Response.WriteAsync(
+                        "Too many requests. Please try again later.", cancellationToken: token);
+                };
             });
 
             return services;
