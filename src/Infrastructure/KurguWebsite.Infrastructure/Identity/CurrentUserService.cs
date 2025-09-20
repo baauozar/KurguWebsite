@@ -1,11 +1,7 @@
 ﻿using KurguWebsite.Application.Common.Interfaces;
 using Microsoft.AspNetCore.Http;
 using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Security.Claims;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace KurguWebsite.Infrastructure.Identity
 {
@@ -19,6 +15,16 @@ namespace KurguWebsite.Infrastructure.Identity
         }
 
         public string? UserId => _httpContextAccessor.HttpContext?.User?.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+        public Guid? UserGuidId
+        {
+            get
+            {
+                if (Guid.TryParse(UserId, out var guid))
+                    return guid;
+                return null;
+            }
+        }
 
         public string? UserName => _httpContextAccessor.HttpContext?.User?.Identity?.Name;
 

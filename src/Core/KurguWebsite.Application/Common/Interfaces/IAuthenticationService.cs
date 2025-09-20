@@ -11,12 +11,13 @@ namespace KurguWebsite.Application.Common.Interfaces
     {
         Task<AuthenticationResultModel> LoginAsync(string email, string password);
         Task<AuthenticationResultModel> RegisterAsync(RegisterRequest request);
-        Task<bool> LogoutAsync(Guid userId); // Guid here
+        Task<bool> LogoutAsync(); // current user
         Task<bool> UserExistsAsync(string email);
         Task<AuthenticationResultModel> RefreshTokenAsync(string token, string refreshToken);
-        Task<bool> ChangePasswordAsync(Guid userId, string currentPassword, string newPassword); // Guid
-        Task<bool> ResetPasswordAsync(string email);
-        Task<bool> ConfirmEmailAsync(Guid userId, string token); // Guid
+        Task<bool> ChangePasswordAsync(string currentPassword, string newPassword); // current user
+        Task<bool> ResetPasswordAsync(string email); // maybe admin reset other user passwords
+        Task<bool> ConfirmEmailAsync(string token); // current user
     }
+
 
 }

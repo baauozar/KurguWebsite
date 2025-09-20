@@ -1,6 +1,5 @@
 ﻿using KurguWebsite.Application.Common.Interfaces;
 using KurguWebsite.Application.Common.Models;
-using KurguWebsite.Infrastructure.Identity;
 using Microsoft.AspNetCore.Identity;
 using System;
 using System.Linq;
@@ -14,22 +13,24 @@ namespace KurguWebsite.Infrastructure.Identity
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly SignInManager<ApplicationUser> _signInManager;
         private readonly JwtService _jwtService;
+        private readonly ICurrentUserService _currentUserService;
 
         public AuthenticationService(
             UserManager<ApplicationUser> userManager,
             SignInManager<ApplicationUser> signInManager,
-            JwtService jwtService)
+            JwtService jwtService,
+            ICurrentUserService currentUserService)
         {
             _userManager = userManager;
             _signInManager = signInManager;
             _jwtService = jwtService;
+            _currentUserService = currentUserService;
         }
 
         public async Task<AuthenticationResultModel> LoginAsync(string email, string password)
         {
             var user = await _userManager.FindByEmailAsync(email);
-            if (user == null)
-                return Failure("User does not exist");
+            if (user == null) return Failure("User does not exist");
 
             if (!await _userManager.CheckPasswordAsync(user, password))
                 return Failure("Invalid credentials");
@@ -44,8 +45,7 @@ namespace KurguWebsite.Infrastructure.Identity
         public async Task<AuthenticationResultModel> RegisterAsync(RegisterRequest request)
         {
             var existingUser = await _userManager.FindByEmailAsync(request.Email);
-            if (existingUser != null)
-                return Failure("User with this email already exists");
+            if (existingUser != null) return Failure("User with this email already exists");
 
             var user = new ApplicationUser
             {
@@ -69,7 +69,7 @@ namespace KurguWebsite.Infrastructure.Identity
             return Success(user.Id, user.Email, token, refreshToken, roles.ToArray());
         }
 
-        public async Task<bool> LogoutAsync(string userId)
+        public async Task<bool> LogoutAsync()
         {
             await _signInManager.SignOutAsync();
             return true;
@@ -89,7 +89,7 @@ namespace KurguWebsite.Infrastructure.Identity
             var userIdClaim = principal.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier)?.Value;
             if (!Guid.TryParse(userIdClaim, out var userId)) return Failure("Invalid user ID in token");
 
-            var user = await _userManager.FindByIdAsync(userId.ToString()); // Identity requires string here
+            var user = await _userManager.FindByIdAsync(userId.ToString());
             if (user == null) return Failure("User not found");
 
             var roles = await _userManager.GetRolesAsync(user);
@@ -99,9 +99,11 @@ namespace KurguWebsite.Infrastructure.Identity
             return Success(user.Id, user.Email, newToken, newRefreshToken, roles.ToArray());
         }
 
-        public async Task<bool> ChangePasswordAsync(string userId, string currentPassword, string newPassword)
+        public async Task<bool> ChangePasswordAsync(string currentPassword, string newPassword)
         {
-            var user = await _userManager.FindByIdAsync(userId);
+            if (_currentUserService.UserId == null) return false;
+
+            var user = await _userManager.FindByIdAsync(_currentUserService.UserId);
             if (user == null) return false;
 
             var result = await _userManager.ChangePasswordAsync(user, currentPassword, newPassword);
@@ -114,37 +116,15 @@ namespace KurguWebsite.Infrastructure.Identity
             if (user == null) return false;
 
             var token = await _userManager.GeneratePasswordResetTokenAsync(user);
-            // TODO: send email via IEmailService
+            // TODO: Send email via IEmailService
             return true;
         }
 
-        public async Task<bool> ConfirmEmailAsync(string userId, string token)
+        public async Task<bool> ConfirmEmailAsync(string token)
         {
-            var user = await _userManager.FindByIdAsync(userId);
-            if (user == null) return false;
+            if (_currentUserService.UserId == null) return false;
 
-            var result = await _userManager.ConfirmEmailAsync(user, token);
-            return result.Succeeded;
-        }
-        public async Task<bool> LogoutAsync(Guid userId)
-        {
-            // We don't need userId for SignOut
-            await _signInManager.SignOutAsync();
-            return true;
-        }
-
-        public async Task<bool> ChangePasswordAsync(Guid userId, string currentPassword, string newPassword)
-        {
-            var user = await _userManager.FindByIdAsync(userId.ToString()); // Convert Guid → string
-            if (user == null) return false;
-
-            var result = await _userManager.ChangePasswordAsync(user, currentPassword, newPassword);
-            return result.Succeeded;
-        }
-
-        public async Task<bool> ConfirmEmailAsync(Guid userId, string token)
-        {
-            var user = await _userManager.FindByIdAsync(userId.ToString()); // Convert Guid → string
+            var user = await _userManager.FindByIdAsync(_currentUserService.UserId);
             if (user == null) return false;
 
             var result = await _userManager.ConfirmEmailAsync(user, token);
