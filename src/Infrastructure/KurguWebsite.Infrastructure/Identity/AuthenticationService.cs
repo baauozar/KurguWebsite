@@ -1,8 +1,10 @@
 ﻿using KurguWebsite.Application.Common.Interfaces;
 using KurguWebsite.Application.Common.Models;
+using Microsoft.AspNetCore.Identity;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Security.Claims;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -119,6 +121,13 @@ namespace KurguWebsite.Infrastructure.Identity
             return true;
         }
 
+        // ADD MISSING METHOD
+        public async Task<bool> UserExistsAsync(string email)
+        {
+            var user = await _userManager.FindByEmailAsync(email);
+            return user != null;
+        }
+
         public async Task<AuthenticationResult> RefreshTokenAsync(string token, string refreshToken)
         {
             var principal = _jwtService.ValidateToken(token);
@@ -132,7 +141,7 @@ namespace KurguWebsite.Infrastructure.Identity
                 };
             }
 
-            var userId = principal.Claims.FirstOrDefault(c => c.Type == System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+            var userId = principal.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier)?.Value;
             var user = await _userManager.FindByIdAsync(userId);
 
             if (user == null)
@@ -178,8 +187,7 @@ namespace KurguWebsite.Infrastructure.Identity
                 return false;
 
             var token = await _userManager.GeneratePasswordResetTokenAsync(user);
-            // Send email with token
-            // You would implement email service here
+            // TODO: Send email with token via IEmailService
 
             return true;
         }

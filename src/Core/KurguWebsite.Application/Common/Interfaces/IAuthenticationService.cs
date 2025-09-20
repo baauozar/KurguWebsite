@@ -18,15 +18,5 @@ namespace KurguWebsite.Application.Common.Interfaces
         Task<bool> ResetPasswordAsync(string email);
         Task<bool> ConfirmEmailAsync(string userId, string token);
     }
-    public class IdentityResult
-    {
-        public bool Succeeded { get; set; }
-        public string[] Errors { get; set; } = new string[0];
-    }
-
-    public class SignInResult
-    {
-        public bool Succeeded { get; set; }
-        public string ErrorMessage { get; set; }
-    }
+   
 }

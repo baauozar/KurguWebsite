@@ -1,5 +1,5 @@
 ﻿using KurguWebsite.Application.Common.Models;
-using KurguWebsite.Application.DTOs.Service;
+using KurguWebsite.Application.DTOs.Page;
 using KurguWebsite.Domain.Enums;
 
 namespace KurguWebsite.Application.Common.Interfaces.Services

@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace KurguWebsite.Domain.Entities
 {
-    public class ProcessStep : BaseEntity
+    public class ProcessStep : AuditableEntity
     {
         public int StepNumber { get; private set; }
         public string Title { get; private set; } = string.Empty;

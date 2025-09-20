@@ -1,4 +1,5 @@
-﻿using System;
+﻿using KurguWebsite.Domain.Common;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -19,6 +20,7 @@ namespace KurguWebsite.Domain.Entities
         public bool IsActive { get; private set; }
         public bool IsFeatured { get; private set; }
         public int DisplayOrder { get; private set; }
+
 
         private Testimonial() { }
 
@@ -59,8 +61,10 @@ namespace KurguWebsite.Domain.Entities
         }
 
         public void SetFeatured(bool isFeatured) => IsFeatured = isFeatured;
+        public void SetDisplayOrder(int order) => DisplayOrder = order;
         public void Activate() => IsActive = true;
         public void Deactivate() => IsActive = false;
     }
 }
+
 

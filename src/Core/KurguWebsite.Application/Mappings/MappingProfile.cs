@@ -1,6 +1,12 @@
 ﻿using AutoMapper;
 using KurguWebsite.Application.DTOs;
+using KurguWebsite.Application.DTOs.CaseStudy;
+using KurguWebsite.Application.DTOs.CompanyInfo;
+using KurguWebsite.Application.DTOs.Contact;
+using KurguWebsite.Application.DTOs.Page;
+using KurguWebsite.Application.DTOs.Partner;
 using KurguWebsite.Application.DTOs.Service;
+using KurguWebsite.Application.DTOs.Testimonial;
 using KurguWebsite.Domain.Entities;
 using System;
 using System.Collections.Generic;
@@ -14,7 +20,6 @@ namespace KurguWebsite.Application.Mappings
     {
         public MappingProfile()
         {
-            // Service Mappings
             CreateMap<Service, ServiceDto>()
                 .ForMember(dest => dest.Category, opt => opt.MapFrom(src => src.Category.ToString()));
 
@@ -28,10 +33,12 @@ namespace KurguWebsite.Application.Mappings
 
             // Case Study Mappings
             CreateMap<CaseStudy, CaseStudyDto>()
-                .ForMember(dest => dest.ServiceName, opt => opt.MapFrom(src => src.Service != null ? src.Service.Title : null));
+                .ForMember(dest => dest.ServiceName, opt => opt.MapFrom(src => src.Service != null ? src.Service.Title : null))
+                .ForMember(dest => dest.Technologies, opt => opt.MapFrom(src => src.Technologies));
 
             CreateMap<CaseStudy, CaseStudyDetailDto>()
-                .ForMember(dest => dest.ServiceName, opt => opt.MapFrom(src => src.Service != null ? src.Service.Title : null));
+                .ForMember(dest => dest.ServiceName, opt => opt.MapFrom(src => src.Service != null ? src.Service.Title : null))
+                .ForMember(dest => dest.Technologies, opt => opt.MapFrom(src => src.Technologies));
 
             // Testimonial Mappings
             CreateMap<Testimonial, TestimonialDto>();
@@ -47,7 +54,8 @@ namespace KurguWebsite.Application.Mappings
             CreateMap<ProcessStep, ProcessStepDto>();
 
             // Contact Message Mappings
-            CreateMap<ContactMessage, ContactMessageDto>();
+            CreateMap<ContactMessage, ContactMessageDto>()
+                .ForMember(dest => dest.CreatedDate, opt => opt.MapFrom(src => src.CreatedDate));
 
             // Company Info Mappings
             CreateMap<CompanyInfo, CompanyInfoDto>()
@@ -71,4 +79,3 @@ namespace KurguWebsite.Application.Mappings
         }
     }
 }
-

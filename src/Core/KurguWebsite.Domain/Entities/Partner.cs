@@ -1,4 +1,5 @@
-﻿using KurguWebsite.Domain.Enums;
+﻿using KurguWebsite.Domain.Common;
+using KurguWebsite.Domain.Enums;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -29,7 +30,8 @@ namespace KurguWebsite.Domain.Entities
                 Name = name,
                 LogoPath = logoPath,
                 Type = type,
-                IsActive = true
+                IsActive = true,
+                DisplayOrder = 0
             };
         }
 
@@ -46,6 +48,14 @@ namespace KurguWebsite.Domain.Entities
             Description = description;
             Type = type;
         }
+
+        // ADD MISSING METHOD
+        public void SetDisplayOrder(int order)
+        {
+            DisplayOrder = order;
+        }
+
+        public void Activate() => IsActive = true;
+        public void Deactivate() => IsActive = false;
     }
 }
-

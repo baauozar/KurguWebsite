@@ -2,7 +2,6 @@
 using KurguWebsite.Application.Common.Models;
 using Microsoft.AspNetCore.StaticFiles;
 using Microsoft.Extensions.Configuration;
-using System.IO.Compression;
 
 namespace KurguWebsite.Infrastructure.Services
 {
@@ -19,8 +18,6 @@ namespace KurguWebsite.Infrastructure.Services
         {
             _environment = environment;
             _configuration = configuration;
-
-            // Store outside wwwroot for safety
             _baseUrl = _configuration["FileStorage:BaseUrl"] ?? "/files";
         }
 
@@ -41,7 +38,6 @@ namespace KurguWebsite.Infrastructure.Services
             if (!_allowedExtensions.Contains(ext))
                 return false;
 
-            // Read first 8 bytes for magic number validation
             fileStream.Position = 0;
             byte[] header = new byte[8];
             fileStream.Read(header, 0, header.Length);
@@ -49,11 +45,11 @@ namespace KurguWebsite.Infrastructure.Services
 
             return ext switch
             {
-                ".jpg" or ".jpeg" => header[0] == 0xFF && header[1] == 0xD8,                 // JPEG
-                ".png" => header[0] == 0x89 && header[1] == 0x50 && header[2] == 0x4E && header[3] == 0x47, // PNG
-                ".gif" => header[0] == 0x47 && header[1] == 0x49 && header[2] == 0x46,       // GIF
-                ".pdf" => header[0] == 0x25 && header[1] == 0x50 && header[2] == 0x44 && header[3] == 0x46, // PDF
-                ".docx" => header[0] == 0x50 && header[1] == 0x4B && header[2] == 0x03 && header[3] == 0x04, // ZIP (DOCX)
+                ".jpg" or ".jpeg" => header[0] == 0xFF && header[1] == 0xD8,
+                ".png" => header[0] == 0x89 && header[1] == 0x50 && header[2] == 0x4E && header[3] == 0x47,
+                ".gif" => header[0] == 0x47 && header[1] == 0x49 && header[2] == 0x46,
+                ".pdf" => header[0] == 0x25 && header[1] == 0x50 && header[2] == 0x44 && header[3] == 0x46,
+                ".docx" => header[0] == 0x50 && header[1] == 0x4B && header[2] == 0x03 && header[3] == 0x04,
                 _ => false
             };
         }

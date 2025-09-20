@@ -2,15 +2,11 @@
 using KurguWebsite.Application.Common.Interfaces;
 using KurguWebsite.Application.Common.Interfaces.Services;
 using KurguWebsite.Application.Common.Models;
-using KurguWebsite.Application.DTOs.Service;
+using KurguWebsite.Application.DTOs.CompanyInfo;
 using KurguWebsite.Domain.Entities;
 using KurguWebsite.Domain.ValueObjects;
 using Microsoft.Extensions.Logging;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+
 
 namespace KurguWebsite.Application.Services.Concrete
 {

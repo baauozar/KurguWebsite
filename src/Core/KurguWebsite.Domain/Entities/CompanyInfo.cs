@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 
 namespace KurguWebsite.Domain.Entities
 {
-    public class CompanyInfo : BaseEntity, IAggregateRoot
+    public class CompanyInfo : AuditableEntity, IAggregateRoot
     {
         public string CompanyName { get; private set; } = string.Empty;
         public string? LogoPath { get; private set; }

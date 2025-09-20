@@ -1,5 +1,5 @@
 ﻿using KurguWebsite.Application.Common.Models;
-using KurguWebsite.Application.DTOs.Service;
+using KurguWebsite.Application.DTOs.CompanyInfo;
 
 namespace KurguWebsite.Application.Common.Interfaces.Services
 {

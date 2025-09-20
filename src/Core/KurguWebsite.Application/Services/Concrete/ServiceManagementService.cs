@@ -2,6 +2,7 @@
 using KurguWebsite.Application.Common.Interfaces;
 using KurguWebsite.Application.Common.Interfaces.Services;
 using KurguWebsite.Application.Common.Models;
+using KurguWebsite.Application.DTOs.CaseStudy;
 using KurguWebsite.Application.DTOs.Service;
 using KurguWebsite.Domain.Entities;
 using Microsoft.Extensions.Logging;

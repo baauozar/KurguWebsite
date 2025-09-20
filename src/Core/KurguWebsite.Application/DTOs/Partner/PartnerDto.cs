@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace KurguWebsite.Application.DTOs.Service
+namespace KurguWebsite.Application.DTOs.Partner
 {
     public class PartnerDto
     {

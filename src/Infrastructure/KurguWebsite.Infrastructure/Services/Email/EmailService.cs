@@ -1,38 +1,10 @@
-﻿using Microsoft.Extensions.Configuration;
-using System;
-using System.Collections.Generic;
-using System.Linq;
+﻿using KurguWebsite.Application.Common.Interfaces;
+using Microsoft.Extensions.Configuration;
 using System.Net;
 using System.Net.Mail;
-using System.Text;
-using System.Threading.Tasks;
 
-namespace KurguWebsite.Infrastructure.Services
+namespace KurguWebsite.Infrastructure.Services.Email
 {
-    public interface IEmailService
-    {
-        Task<bool> SendEmailAsync(EmailMessage message);
-        Task<bool> SendTemplateEmailAsync(string templateName, string to, object data);
-    }
-
-    public class EmailMessage
-    {
-        public string To { get; set; }
-        public string Subject { get; set; }
-        public string Body { get; set; }
-        public bool IsHtml { get; set; } = true;
-        public List<string> Cc { get; set; } = new();
-        public List<string> Bcc { get; set; } = new();
-        public List<EmailAttachment> Attachments { get; set; } = new();
-    }
-
-    public class EmailAttachment
-    {
-        public string FileName { get; set; }
-        public byte[] Content { get; set; }
-        public string ContentType { get; set; }
-    }
-
     public class EmailService : IEmailService
     {
         private readonly IConfiguration _configuration;
@@ -47,13 +19,14 @@ namespace KurguWebsite.Infrastructure.Services
         {
             _configuration = configuration;
             _smtpServer = _configuration["Email:SmtpServer"];
-            _smtpPort = int.Parse(_configuration["Email:SmtpPort"]);
+            _smtpPort = int.Parse(_configuration["Email:SmtpPort"] ?? "587");
             _smtpUsername = _configuration["Email:Username"];
             _smtpPassword = _configuration["Email:Password"];
             _fromEmail = _configuration["Email:FromEmail"];
             _fromName = _configuration["Email:FromName"];
         }
 
+        // ✅ Core method using EmailMessage
         public async Task<bool> SendEmailAsync(EmailMessage message)
         {
             try
@@ -68,16 +41,21 @@ namespace KurguWebsite.Infrastructure.Services
 
                 mailMessage.To.Add(message.To);
 
-                foreach (var cc in message.Cc)
-                    mailMessage.CC.Add(cc);
+                if (message.Cc?.Any() == true)
+                    foreach (var cc in message.Cc)
+                        mailMessage.CC.Add(cc);
 
-                foreach (var bcc in message.Bcc)
-                    mailMessage.Bcc.Add(bcc);
+                if (message.Bcc?.Any() == true)
+                    foreach (var bcc in message.Bcc)
+                        mailMessage.Bcc.Add(bcc);
 
-                foreach (var attachment in message.Attachments)
+                if (message.Attachments?.Any() == true)
                 {
-                    var stream = new MemoryStream(attachment.Content);
-                    mailMessage.Attachments.Add(new Attachment(stream, attachment.FileName, attachment.ContentType));
+                    foreach (var attachment in message.Attachments)
+                    {
+                        var stream = new MemoryStream(attachment.Content);
+                        mailMessage.Attachments.Add(new Attachment(stream, attachment.FileName, attachment.ContentType));
+                    }
                 }
 
                 using var smtpClient = new SmtpClient(_smtpServer, _smtpPort)
@@ -89,37 +67,40 @@ namespace KurguWebsite.Infrastructure.Services
                 await smtpClient.SendMailAsync(mailMessage);
                 return true;
             }
-            catch
+            catch (Exception ex)
             {
-                // Log error
+                // TODO: log error properly
                 return false;
             }
         }
 
+        // ✅ Template emails
         public async Task<bool> SendTemplateEmailAsync(string templateName, string to, object data)
         {
-            // Load template and replace placeholders with data
             var template = await LoadEmailTemplate(templateName);
             var body = ProcessTemplate(template, data);
+            var subject = GetTemplateSubject(templateName);
 
-            return await SendEmailAsync(new EmailMessage
+            var message = new EmailMessage
             {
                 To = to,
-                Subject = GetTemplateSubject(templateName),
+                Subject = subject,
                 Body = body,
                 IsHtml = true
-            });
+            };
+
+            return await SendEmailAsync(message);
         }
 
         private async Task<string> LoadEmailTemplate(string templateName)
         {
             var templatePath = Path.Combine("EmailTemplates", $"{templateName}.html");
+            if (!File.Exists(templatePath)) return string.Empty;
             return await File.ReadAllTextAsync(templatePath);
         }
 
         private string ProcessTemplate(string template, object data)
         {
-            // Simple template processing - in production use a template engine
             var properties = data.GetType().GetProperties();
             foreach (var prop in properties)
             {
@@ -135,7 +116,7 @@ namespace KurguWebsite.Infrastructure.Services
             {
                 "Welcome" => "Welcome to Kurgu Website",
                 "ResetPassword" => "Reset Your Password",
-                "OrderConfirmation" => "Order Confirmation",
+                "ContactAutoReply" => "Thank you for contacting us",
                 _ => "Kurgu Website Notification"
             };
         }

@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace KurguWebsite.Domain.Entities
 {
-    public class ServiceFeature : BaseEntity
+    public class ServiceFeature : AuditableEntity
     {
         public Guid ServiceId { get; private set; }
         public string Title { get; private set; } = string.Empty;

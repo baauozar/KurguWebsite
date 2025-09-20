@@ -2,14 +2,10 @@
 using KurguWebsite.Application.Common.Interfaces;
 using KurguWebsite.Application.Common.Interfaces.Services;
 using KurguWebsite.Application.Common.Models;
-using KurguWebsite.Application.DTOs.Service;
+using KurguWebsite.Application.DTOs.Contact;
 using KurguWebsite.Domain.Entities;
 using Microsoft.Extensions.Logging;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+
 
 namespace KurguWebsite.Application.Services.Concrete
 {
@@ -54,17 +50,31 @@ namespace KurguWebsite.Application.Services.Concrete
                 // Send email notification to admin
                 try
                 {
-                    await _emailService.SendContactFormEmailAsync(
-                        dto.Name,
-                        dto.Email,
-                        dto.Subject,
-                        dto.Message);
+                    var adminEmail = "admin@kurguwebsite.com"; // or load from config
+
+                    var emailMessage = new EmailMessage
+                    {
+                        To = adminEmail,
+                        Subject = $"Contact Form: {dto.Subject}",
+                        Body = $@"
+            <h3>New Contact Form Submission</h3>
+            <p><strong>Name:</strong> {dto.Name}</p>
+            <p><strong>Email:</strong> {dto.Email}</p>
+            <p><strong>Phone:</strong> {dto.Phone}</p>
+            <p><strong>Subject:</strong> {dto.Subject}</p>
+            <p><strong>Message:</strong></p>
+            <p>{dto.Message}</p>",
+                        IsHtml = true
+                    };
+
+                    await _emailService.SendEmailAsync(emailMessage);
                 }
                 catch (Exception emailEx)
                 {
                     _logger.LogError(emailEx, "Failed to send contact form email notification");
-                    // Don't fail the request if email fails
+                    // Don’t fail the request if email fails
                 }
+
 
                 var messageDto = _mapper.Map<ContactMessageDto>(message);
                 return Result<ContactMessageDto>.Success(messageDto, "Your message has been sent successfully. We'll get back to you soon!");

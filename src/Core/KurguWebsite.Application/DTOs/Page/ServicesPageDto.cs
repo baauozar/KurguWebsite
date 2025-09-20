@@ -1,10 +1,11 @@
-﻿using System;
+﻿using KurguWebsite.Application.DTOs.Service;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace KurguWebsite.Application.DTOs.Service
+namespace KurguWebsite.Application.DTOs.Page
 {
     public class ServicesPageDto
     {
