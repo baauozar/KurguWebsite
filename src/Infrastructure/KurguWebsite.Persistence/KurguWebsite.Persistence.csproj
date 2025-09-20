@@ -2,6 +2,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\Core\KurguWebsite.Application\KurguWebsite.Application.csproj" />
+    <ProjectReference Include="..\KurguWebsite.Infrastructure\KurguWebsite.Infrastructure.csproj" />
   </ItemGroup>
 
   <ItemGroup>
@@ -17,11 +18,6 @@
     </PackageReference>
     <PackageReference Include="Microsoft.Extensions.Configuration.FileExtensions" Version="8.0.0" />
     <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="8.0.0" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Folder Include="Configurations\" />
-    <Folder Include="Context\" />
   </ItemGroup>
 
   <PropertyGroup>

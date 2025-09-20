@@ -3,11 +3,9 @@ using Microsoft.IdentityModel.Tokens;
 using System;
 using System.Collections.Generic;
 using System.IdentityModel.Tokens.Jwt;
-using System.Linq;
 using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Text;
-using System.Threading.Tasks;
 
 namespace KurguWebsite.Infrastructure.Identity
 {
@@ -28,17 +26,16 @@ namespace KurguWebsite.Infrastructure.Identity
             _expiryMinutes = int.Parse(_configuration["Jwt:ExpiryMinutes"] ?? "60");
         }
 
-        public string GenerateToken(string userId, string email, string[] roles)
+        public string GenerateToken(Guid userId, string email, string[] roles)
         {
             var tokenHandler = new JwtSecurityTokenHandler();
             var key = Encoding.ASCII.GetBytes(_secret);
 
             var claims = new List<Claim>
             {
-                new Claim(ClaimTypes.NameIdentifier, userId),
+                new Claim(ClaimTypes.NameIdentifier, userId.ToString()),
                 new Claim(ClaimTypes.Email, email),
-                new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
-                new Claim(JwtRegisteredClaimNames.Iat, DateTimeOffset.UtcNow.ToUnixTimeSeconds().ToString(), ClaimValueTypes.Integer64)
+                new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
             };
 
             foreach (var role in roles)
@@ -84,7 +81,7 @@ namespace KurguWebsite.Infrastructure.Identity
                     ValidAudience = _audience,
                     ValidateLifetime = true,
                     ClockSkew = TimeSpan.Zero
-                }, out SecurityToken validatedToken);
+                }, out _);
 
                 return principal;
             }

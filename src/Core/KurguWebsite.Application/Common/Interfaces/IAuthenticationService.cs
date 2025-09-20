@@ -9,14 +9,14 @@ namespace KurguWebsite.Application.Common.Interfaces
 {
     public interface IAuthenticationService
     {
-        Task<AuthenticationResult> LoginAsync(string email, string password);
-        Task<AuthenticationResult> RegisterAsync(RegisterRequest request);
-        Task<bool> LogoutAsync(string userId);
+        Task<AuthenticationResultModel> LoginAsync(string email, string password);
+        Task<AuthenticationResultModel> RegisterAsync(RegisterRequest request);
+        Task<bool> LogoutAsync(Guid userId); // Guid here
         Task<bool> UserExistsAsync(string email);
-        Task<AuthenticationResult> RefreshTokenAsync(string token, string refreshToken);
-        Task<bool> ChangePasswordAsync(string userId, string currentPassword, string newPassword);
+        Task<AuthenticationResultModel> RefreshTokenAsync(string token, string refreshToken);
+        Task<bool> ChangePasswordAsync(Guid userId, string currentPassword, string newPassword); // Guid
         Task<bool> ResetPasswordAsync(string email);
-        Task<bool> ConfirmEmailAsync(string userId, string token);
+        Task<bool> ConfirmEmailAsync(Guid userId, string token); // Guid
     }
-   
+
 }

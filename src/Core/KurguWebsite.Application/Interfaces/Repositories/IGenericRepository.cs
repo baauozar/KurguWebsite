@@ -6,7 +6,7 @@ using System.Linq.Expressions;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace KurguWebsite.Application.Common.Interfaces.Repositories
+namespace KurguWebsite.Application.Interfaces.Repositories
 {
     public interface IGenericRepository<T> where T : BaseEntity
     {

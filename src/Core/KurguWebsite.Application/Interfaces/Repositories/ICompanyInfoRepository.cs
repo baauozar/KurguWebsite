@@ -1,4 +1,5 @@
-﻿using KurguWebsite.Domain.Entities;
+﻿using KurguWebsite.Application.Interfaces.Repositories;
+using KurguWebsite.Domain.Entities;
 
 namespace KurguWebsite.Application.Common.Interfaces.Repositories
 {
