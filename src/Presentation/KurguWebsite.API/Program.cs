@@ -1,72 +1,213 @@
-using KurguWebsite.Domain.Entities;
-using Microsoft.AspNetCore.RateLimiting;
+using Asp.Versioning;
+using Asp.Versioning.ApiExplorer;
+using KurguWebsite.API.Extensions;
+using KurguWebsite.Application.Features.DependencyInjection;
+using KurguWebsite.Infrastructure;
+using KurguWebsite.Infrastructure.Middleware;
+using KurguWebsite.Persistence;
+using KurguWebsite.Persistence.Context;
+using KurguWebsite.Persistence.Seed;
+using KurguWebsite.WebAPI.Filters;
+using KurguWebsite.WebAPI.Helpers;
+using KurguWebsite.WebAPI.Middleware;
+using Microsoft.AspNetCore.Diagnostics.HealthChecks;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Serilog;
+using Serilog.Events;
 using System.Text.Json.Serialization;
 
-var builder = WebApplication.CreateBuilder(args);
+// Configure Serilog
+Log.Logger = new LoggerConfiguration()
+    .MinimumLevel.Override("Microsoft", LogEventLevel.Information)
+    .MinimumLevel.Override("Microsoft.EntityFrameworkCore", LogEventLevel.Warning)
+    .Enrich.FromLogContext()
+    .WriteTo.Console()
+    .WriteTo.File("logs/kurguwebsite-.txt",
+        rollingInterval: RollingInterval.Day,
+        retainedFileCountLimit: 30,
+        fileSizeLimitBytes: 10_485_760,
+        rollOnFileSizeLimit: true)
+    .CreateLogger();
 
-// Add services to the container.
-// Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
-builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
-builder.Services.AddControllers()
+try
+{
+    Log.Information("Starting KurguWebsite API");
+
+    var builder = WebApplication.CreateBuilder(args);
+
+    // Use Serilog
+    builder.Host.UseSerilog();
+    builder.WebHost.CaptureStartupErrors(true)
+        .UseSetting("detailedErrors", "true");
+
+    // Add services
+    ConfigureServices(builder.Services, builder.Configuration);
+
+    var app = builder.Build();
+
+    // Configure pipeline
+    await ConfigureAsync(app, app.Environment);
+
+    app.Run();
+}
+catch (Exception ex)
+{
+    Log.Fatal(ex, "Application terminated unexpectedly");
+}
+finally
+{
+    Log.CloseAndFlush();
+}
+
+// -------------------- Services --------------------
+void ConfigureServices(IServiceCollection services, IConfiguration configuration)
+{
+    // Add Application, Infrastructure, Persistence layers
+    services.AddApplication();
+    services.AddInfrastructure(configuration);
+    services.AddPersistence(configuration);
+
+    // Controllers with filters
+    services.AddControllers(options =>
+    {
+        options.Filters.Add(new ProducesAttribute("application/json"));
+        options.Filters.Add<ValidationFilter>();
+        options.Filters.Add<ApiExceptionFilter>();
+        options.ReturnHttpNotAcceptable = true;
+        options.RespectBrowserAcceptHeader = true;
+    })
     .AddJsonOptions(options =>
     {
+        options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
         options.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles;
-    });
-// Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
-builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
-/*builder.Services.AddDbContext<Context>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+        options.JsonSerializerOptions.DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull;
+    })
+    .ConfigureApiBehaviorOptions(options =>
+    {
+        options.InvalidModelStateResponseFactory = context =>
+        {
+            var errors = context.ModelState
+                .Where(e => e.Value?.Errors.Count > 0)
+                .SelectMany(e => e.Value.Errors.Select(x => new
+                {
+                    Field = e.Key,
+                    Message = x.ErrorMessage
+                }));
 
-builder.Services.AddBusinessServices();*/ // Extension method to add all services
-builder.Services.AddAutoMapper(cfg => { }, typeof(Program).Assembly);
-builder.Services.AddCors(opt =>
-{
-    opt.AddPolicy("AllowOrigin", policy =>
-    {
-        policy.AllowAnyOrigin()
-              .AllowAnyMethod()
-              .AllowAnyHeader();
-    });
-});
-builder.Services.AddRateLimiter(options =>
-{
-    options.AddFixedWindowLimiter("LoginLimit", opt =>
-    {
-        opt.PermitLimit = 5;
-        opt.Window = TimeSpan.FromMinutes(15);
+            return new BadRequestObjectResult(new
+            {
+                Message = "Validation failed",
+                Errors = errors
+            });
+        };
     });
 
-    options.AddFixedWindowLimiter("ApiLimit", opt =>
+    // API Versioning + Swagger
+    // API Versioning + Swagger
+    services.AddApiVersioning(options =>
     {
-        opt.PermitLimit = 100;
-        opt.Window = TimeSpan.FromMinutes(1);
+        options.DefaultApiVersion = new ApiVersion(1, 0);
+        options.AssumeDefaultVersionWhenUnspecified = true;
+        options.ReportApiVersions = true;
+        options.ApiVersionReader = ApiVersionReader.Combine(
+            new UrlSegmentApiVersionReader(),
+            new HeaderApiVersionReader("X-Api-Version"));
+    })
+    .AddMvc().AddApiExplorer(options =>
+    {
+        // This is where the options from AddVersionedApiExplorer moved to
+        options.GroupNameFormat = "'v'VVV";
+        options.SubstituteApiVersionInUrl = true;
     });
-});
-var app = builder.Build();
 
-// Configure the HTTP request pipeline.
-if (app.Environment.IsDevelopment())
-{
-    app.UseSwagger();
-    app.UseSwaggerUI();
+    services.AddEndpointsApiExplorer();
+    services.ConfigureSwagger();
+
+    // Health Checks
+    services.AddHealthChecks()
+        .AddDbContextCheck<KurguWebsiteDbContext>("Database")
+        .AddCheck<CustomHealthCheck>("Custom");
+
+    // Response compression & caching
+    services.AddResponseCompression(options => options.EnableForHttps = true);
+    services.AddResponseCaching();
+
+    // Other essentials
+    services.AddHttpContextAccessor();
+    services.AddDataProtection();
+    services.AddAntiforgery(options => options.HeaderName = "X-CSRF-TOKEN");
+
+    // AutoMapper
+    services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
 }
-app.Use(async (context, next) =>
+
+// -------------------- Configure Pipeline --------------------
+async Task ConfigureAsync(WebApplication app, IWebHostEnvironment env)
 {
-    context.Response.Headers.Add("X-Content-Type-Options", "nosniff");
-    context.Response.Headers.Add("X-Frame-Options", "DENY");
-    context.Response.Headers.Add("X-XSS-Protection", "1; mode=block");
-    context.Response.Headers.Add("Referrer-Policy", "strict-origin-when-cross-origin");
-    await next();
-});
-app.UseHttpsRedirection();
-app.UseCors("AllowOrigin");
-app.UseAuthorization();
+    app.UseMiddleware<GlobalExceptionMiddleware>();
+    app.UseSecurityHeaders(); // customize your options
+    app.UseAntiXss();
+    app.UseSerilogRequestLogging();
 
-app.MapControllers();
+    if (!env.IsDevelopment())
+    {
+        app.UseHsts();
+        app.UseHttpsRedirection();
+    }
 
+    app.UseResponseCompression();
+    app.UseResponseCaching();
 
-app.Run();
+    app.UseStaticFiles();
 
+    app.UseCors(env.IsDevelopment() ? "Development" : "Production");
+
+    app.UseRouting();
+
+    app.UseRateLimiter();
+    app.UseAuthentication();
+    app.UseAuthorization();
+
+    var provider = app.Services.GetRequiredService<IApiVersionDescriptionProvider>();
+    if (env.IsDevelopment())
+    {
+        app.UseSwagger();
+        app.UseSwaggerUI(options =>
+        {
+            foreach (var desc in provider.ApiVersionDescriptions)
+            {
+                options.SwaggerEndpoint($"/swagger/{desc.GroupName}/swagger.json",
+                    $"Kurgu Website API {desc.GroupName}");
+            }
+            options.RoutePrefix = string.Empty;
+        });
+    }
+
+    app.MapControllers();
+    app.MapHealthChecks("/health", new HealthCheckOptions
+    {
+        ResponseWriter = HealthChecks.UI.Client.UIResponseWriter.WriteHealthCheckUIResponse
+    });
+
+    // --------- Seed database in Development ---------
+    if (env.IsDevelopment())
+    {
+        using var scope = app.Services.CreateScope();
+        var context = scope.ServiceProvider.GetRequiredService<KurguWebsiteDbContext>();
+        var configuration = scope.ServiceProvider.GetRequiredService<IConfiguration>();
+
+        var connString = configuration.GetConnectionString("DefaultConnection");
+        if (string.IsNullOrWhiteSpace(connString))
+            throw new InvalidOperationException("DefaultConnection is not set in appsettings.json");
+
+        await context.Database.EnsureCreatedAsync();
+        await context.Database.MigrateAsync();
+
+        await DatabaseSeeder.SeedAsync(scope.ServiceProvider);
+    }
+
+    Log.Information("Application started successfully");
+}
+
+public partial class Program { }

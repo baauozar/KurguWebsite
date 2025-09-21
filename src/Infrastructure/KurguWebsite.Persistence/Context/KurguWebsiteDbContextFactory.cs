@@ -13,18 +13,14 @@ namespace KurguWebsite.Persistence.Context
     {
         public KurguWebsiteDbContext CreateDbContext(string[] args)
         {
-            var basePath = Path.Combine(Directory.GetCurrentDirectory(), "..", "..", "Presentation", "KurguWebsite.WebAPI");
-
-            IConfigurationRoot configuration = new ConfigurationBuilder()
-                .SetBasePath(basePath)
-                .AddJsonFile("appsettings.json")
-                .AddJsonFile("appsettings.Development.json", optional: true)
+            // Adjust path to point to your API project
+            var configuration = new ConfigurationBuilder()
+                .SetBasePath(Path.Combine(Directory.GetCurrentDirectory(), "../../Presentation/KurguWebsite.API"))
+                .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
                 .Build();
 
             var optionsBuilder = new DbContextOptionsBuilder<KurguWebsiteDbContext>();
-            var connectionString = configuration.GetConnectionString("DefaultConnection");
-
-            optionsBuilder.UseSqlServer(connectionString);
+            optionsBuilder.UseSqlServer(configuration.GetConnectionString("DefaultConnection"));
 
             return new KurguWebsiteDbContext(optionsBuilder.Options);
         }
