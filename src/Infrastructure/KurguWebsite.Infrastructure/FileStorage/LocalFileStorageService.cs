@@ -67,12 +67,14 @@ namespace KurguWebsite.Infrastructure.Services
                 if (fileStream.Length > _maxFileSize)
                     return FileUploadResult.Fail($"File exceeds max size of {_maxFileSize / (1024 * 1024)} MB");
 
+                // Sanitize the filename BEFORE validation
+                fileName = SanitizeFileName(fileName);
+
                 if (!IsValidExtensionAndMime(fileName, fileStream))
                     return FileUploadResult.Fail("Invalid or corrupted file");
 
-                var ext = Path.GetExtension(fileName);
-                var uniqueFileName = $"{Guid.NewGuid()}{ext}";
-                var relativePath = Path.Combine(folderName, uniqueFileName).Replace("\\", "/");
+                // Now use the sanitized filename instead of generating a new GUID-only name
+                var relativePath = Path.Combine(folderName, fileName).Replace("\\", "/");
                 var fullPath = GetSafeFilePath(relativePath);
 
                 Directory.CreateDirectory(Path.GetDirectoryName(fullPath)!);
@@ -82,14 +84,13 @@ namespace KurguWebsite.Infrastructure.Services
                     await fileStream.CopyToAsync(fs);
                 }
 
-                return FileUploadResult.Ok(uniqueFileName, relativePath, GetFileUrl(relativePath));
+                return FileUploadResult.Ok(fileName, relativePath, GetFileUrl(relativePath));
             }
             catch (Exception ex)
             {
                 return FileUploadResult.Fail(ex.Message);
             }
         }
-
         public async Task<List<FileUploadResult>> UploadFilesAsync(List<(Stream fileStream, string fileName)> files, string folderName)
         {
             var results = new List<FileUploadResult>();
@@ -167,6 +168,46 @@ namespace KurguWebsite.Infrastructure.Services
             }
         }
 
-    }
 
+        private string SanitizeFileName(string fileName)
+        {
+            if (string.IsNullOrWhiteSpace(fileName))
+                throw new ArgumentException("Filename cannot be null or empty", nameof(fileName));
+
+            // Remove path characters
+            fileName = Path.GetFileName(fileName);
+
+            // Remove invalid characters and additional risky characters
+            var invalidChars = Path.GetInvalidFileNameChars()
+                .Concat(new[] { ':', '*', '?', '"', '<', '>', '|', '\\', '/', '\0' })
+                .Distinct();
+
+            foreach (var c in invalidChars)
+            {
+                fileName = fileName.Replace(c, '_');
+            }
+
+            // Remove multiple spaces and dots
+            fileName = System.Text.RegularExpressions.Regex.Replace(fileName, @"\s+", "_");
+            fileName = System.Text.RegularExpressions.Regex.Replace(fileName, @"\.+", ".");
+
+            // Split name and extension
+            var name = Path.GetFileNameWithoutExtension(fileName);
+            var ext = Path.GetExtension(fileName);
+
+            // Remove leading/trailing spaces and dots
+            name = name.Trim(' ', '.', '_');
+
+            // Limit length
+            if (name.Length > 50)
+                name = name.Substring(0, 50);
+
+            // Ensure we have a name
+            if (string.IsNullOrWhiteSpace(name))
+                name = "file";
+
+            // Create unique filename
+            return $"{name}_{DateTime.UtcNow:yyyyMMdd}_{Guid.NewGuid():N}{ext}";
+        }
+    }
 }
