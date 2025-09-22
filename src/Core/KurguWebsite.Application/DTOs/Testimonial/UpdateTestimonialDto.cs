@@ -8,14 +8,15 @@ namespace KurguWebsite.Application.DTOs.Testimonial
 {
     public class UpdateTestimonialDto
     {
-        public string ClientName { get; set; } = string.Empty;
-        public string ClientTitle { get; set; } = string.Empty;
-        public string CompanyName { get; set; } = string.Empty;
-        public string Content { get; set; } = string.Empty;
+        public string? ClientName { get; set; }
+        public string? ClientTitle { get; set; }
+        public string? CompanyName { get; set; }
+        public string? Content { get; set; }
         public string? ClientImagePath { get; set; }
-        public int Rating { get; set; }
-        public bool IsActive { get; set; }
-        public bool IsFeatured { get; set; }
-        public int DisplayOrder { get; set; }
+        public int? Rating { get; set; }
+        public DateTime? TestimonialDate { get; set; }
+        public bool? IsActive { get; set; }
+        public bool? IsFeatured { get; set; }
+        public int? DisplayOrder { get; set; }
     }
 }

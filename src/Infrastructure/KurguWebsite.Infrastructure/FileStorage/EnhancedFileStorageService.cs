@@ -64,7 +64,7 @@ namespace KurguWebsite.Infrastructure.Services
 
         private string GetSafeFilePath(string relativePath)
         {
-            var storageRoot = Path.Combine(_environment.ContentRootPath, "storage");
+            var storageRoot = Path.Combine(_environment.ContentRootPath, "wwwroot", "storage");
             Directory.CreateDirectory(storageRoot);
 
             var fullPath = Path.GetFullPath(Path.Combine(storageRoot, relativePath));

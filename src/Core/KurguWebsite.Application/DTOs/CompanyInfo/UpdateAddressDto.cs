@@ -8,11 +8,11 @@ namespace KurguWebsite.Application.DTOs.CompanyInfo
 {
     public class UpdateAddressDto
     {
-        public string Street { get; set; } = string.Empty;
+        public string? Street { get; set; }
         public string? Suite { get; set; }
-        public string City { get; set; } = string.Empty;
-        public string State { get; set; } = string.Empty;
-        public string PostalCode { get; set; } = string.Empty;
-        public string Country { get; set; } = "USA";
+        public string? City { get; set; }
+        public string? State { get; set; }
+        public string? PostalCode { get; set; }
+        public string? Country { get; set; }
     }
 }

@@ -14,6 +14,9 @@ namespace KurguWebsite.Application.DTOs.Testimonial
         public string Content { get; set; } = string.Empty;
         public string? ClientImagePath { get; set; }
         public int Rating { get; set; } = 5;
+        public DateTime TestimonialDate { get; set; } = DateTime.UtcNow;
+        public bool IsActive { get; set; } = true;
         public bool IsFeatured { get; set; }
+        public int DisplayOrder { get; set; }
     }
 }

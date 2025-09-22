@@ -19,26 +19,16 @@ namespace KurguWebsite.Application.DTOs.CompanyInfo
         public string? CopyrightText { get; set; }
 
         // Contact Info
-        public string SupportPhone { get; set; } = string.Empty;
-        public string SalesPhone { get; set; } = string.Empty;
-        public string Email { get; set; } = string.Empty;
-        public string? SupportEmail { get; set; }
-        public string? SalesEmail { get; set; }
+        public ContactInfoDto ContactInformation { get; set; } = new();
 
         // Address
-        public string Street { get; set; } = string.Empty;
-        public string? Suite { get; set; }
-        public string City { get; set; } = string.Empty;
-        public string State { get; set; } = string.Empty;
-        public string PostalCode { get; set; } = string.Empty;
-        public string Country { get; set; } = string.Empty;
-        public string FullAddress { get; set; } = string.Empty;
+        public AddressDto OfficeAddress { get; set; } = new();
 
         // Social Media
-        public string? Facebook { get; set; }
-        public string? Twitter { get; set; }
-        public string? LinkedIn { get; set; }
-        public string? Instagram { get; set; }
-        public string? YouTube { get; set; }
+        public SocialMediaDto? SocialMedia { get; set; }
+
+        // Simplified access
+        public string Email => ContactInformation?.Email ?? string.Empty;
+        public string Phone => ContactInformation?.SupportPhone ?? string.Empty;
     }
 }

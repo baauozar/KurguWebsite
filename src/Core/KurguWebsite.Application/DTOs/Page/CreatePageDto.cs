@@ -7,12 +7,12 @@ using System.Threading.Tasks;
 
 namespace KurguWebsite.Application.DTOs.Page
 {
-    public class UpdatePageDto
+    public class CreatePageDto
     {
-        public string? Title { get; set; }
+        public string Title { get; set; } = string.Empty;
         public string? Content { get; set; }
-        public PageType? PageType { get; set; }
-        public bool? IsActive { get; set; }
+        public PageType PageType { get; set; }
+        public bool IsActive { get; set; } = true;
 
         // Hero Section
         public string? HeroTitle { get; set; }

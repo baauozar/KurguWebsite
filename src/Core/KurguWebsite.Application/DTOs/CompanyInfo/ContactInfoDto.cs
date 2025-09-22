@@ -6,11 +6,11 @@ using System.Threading.Tasks;
 
 namespace KurguWebsite.Application.DTOs.CompanyInfo
 {
-    public class UpdateContactInfoDto
+    public class ContactInfoDto
     {
-        public string? SupportPhone { get; set; }
-        public string? SalesPhone { get; set; }
-        public string? Email { get; set; }
+        public string SupportPhone { get; set; } = string.Empty;
+        public string SalesPhone { get; set; } = string.Empty;
+        public string Email { get; set; } = string.Empty;
         public string? SupportEmail { get; set; }
         public string? SalesEmail { get; set; }
     }

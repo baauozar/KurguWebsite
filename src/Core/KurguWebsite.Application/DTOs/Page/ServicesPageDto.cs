@@ -1,4 +1,5 @@
-﻿using KurguWebsite.Application.DTOs.Service;
+﻿using KurguWebsite.Application.DTOs.ProcessStep;
+using KurguWebsite.Application.DTOs.Service;
 using System;
 using System.Collections.Generic;
 using System.Linq;
