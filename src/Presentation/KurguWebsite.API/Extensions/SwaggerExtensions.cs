@@ -15,15 +15,16 @@ namespace KurguWebsite.API.Extensions
 
             services.AddSwaggerGen(options =>
             {
-                // Add JWT Authentication
+                // --- THIS IS THE CORRECTED JWT CONFIGURATION ---
+                // It uses the standard HTTP Bearer scheme for authentication.
                 options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
                 {
-                    Name = "Authorization",
-                    Type = SecuritySchemeType.ApiKey,
-                    Scheme = "Bearer",
-                    BearerFormat = "JWT",
                     In = ParameterLocation.Header,
-                    Description = "JWT Authorization header using the Bearer scheme. Example: \"Bearer {token}\""
+                    Description = "Please enter into field the word 'Bearer' followed by a space and the JWT value.",
+                    Name = "Authorization",
+                    Type = SecuritySchemeType.Http, // Use Http for Bearer
+                    BearerFormat = "JWT",
+                    Scheme = "Bearer" // The scheme name is 'Bearer'
                 });
 
                 options.AddSecurityRequirement(new OpenApiSecurityRequirement
@@ -40,6 +41,7 @@ namespace KurguWebsite.API.Extensions
                         Array.Empty<string>()
                     }
                 });
+                // --- END OF CORRECTION ---
 
                 // Add XML comments
                 var xmlFile = $"{System.Reflection.Assembly.GetExecutingAssembly().GetName().Name}.xml";
@@ -53,19 +55,23 @@ namespace KurguWebsite.API.Extensions
                 options.OperationFilter<SwaggerDefaultValues>();
                 options.OperationFilter<FileUploadOperationFilter>();
 
-                // Custom schema IDs
-                options.CustomSchemaIds(type => type.FullName);
+                // Custom schema IDs to prevent conflicts
+                options.CustomSchemaIds(type => type.FullName?.Replace("+", "."));
 
-                // Add example filters
+                // Add example filters for Swagger UI
                 options.ExampleFilters();
             });
 
+            // This service provides examples for your DTOs
             services.AddSwaggerExamplesFromAssemblyOf<Program>();
 
             return services;
         }
     }
 
+    /// <summary>
+    /// Configures Swagger to generate a document for each discovered API version.
+    /// </summary>
     public class ConfigureSwaggerOptions : IConfigureOptions<SwaggerGenOptions>
     {
         private readonly IApiVersionDescriptionProvider _provider;
@@ -89,24 +95,14 @@ namespace KurguWebsite.API.Extensions
             {
                 Title = "Kurgu Website API",
                 Version = description.ApiVersion.ToString(),
-                Description = "Professional IT Services Company API",
-                Contact = new OpenApiContact
-                {
-                    Name = "Kurgu IT Services",
-                    Email = "api@kurguwebsite.com",
-                    Url = new Uri("https://kurguwebsite.com")
-                },
-                License = new OpenApiLicense
-                {
-                    Name = "Proprietary",
-                    Url = new Uri("https://kurguwebsite.com/license")
-                },
-                TermsOfService = new Uri("https://kurguwebsite.com/terms")
+                Description = "A professional API for Kurgu IT Services.",
+                Contact = new OpenApiContact { Name = "Kurgu IT", Email = "dev@kurguwebsite.com" },
+                License = new OpenApiLicense { Name = "MIT License" }
             };
 
             if (description.IsDeprecated)
             {
-                info.Description += " This API version has been deprecated.";
+                info.Description += " (This API version has been deprecated)";
             }
 
             return info;

@@ -1,5 +1,6 @@
 ﻿using KurguWebsite.Domain.Common;
 using KurguWebsite.Domain.Enums;
+using KurguWebsite.Domain.Events;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -46,6 +47,7 @@ namespace KurguWebsite.Domain.Entities
         public void UpdateContent(string? content)
         {
             Content = content;
+            AddDomainEvent(new PageUpdatedEvent(this.Id));
         }
 
         public void UpdateHeroSection(
@@ -62,6 +64,7 @@ namespace KurguWebsite.Domain.Entities
             HeroBackgroundImage = heroBackgroundImage;
             HeroButtonText = heroButtonText;
             HeroButtonUrl = heroButtonUrl;
+            AddDomainEvent(new PageUpdatedEvent(this.Id));
         }
 
         public void UpdateSeo(string? metaTitle, string? metaDescription, string? metaKeywords)
@@ -69,6 +72,7 @@ namespace KurguWebsite.Domain.Entities
             MetaTitle = metaTitle;
             MetaDescription = metaDescription;
             MetaKeywords = metaKeywords;
+            AddDomainEvent(new PageUpdatedEvent(this.Id));
         }
 
         private static string GenerateSlug(string title)

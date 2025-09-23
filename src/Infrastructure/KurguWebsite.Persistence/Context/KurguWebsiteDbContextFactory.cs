@@ -22,7 +22,7 @@ namespace KurguWebsite.Persistence.Context
             var optionsBuilder = new DbContextOptionsBuilder<KurguWebsiteDbContext>();
             optionsBuilder.UseSqlServer(configuration.GetConnectionString("DefaultConnection"));
 
-            return new KurguWebsiteDbContext(optionsBuilder.Options);
+            return new KurguWebsiteDbContext(optionsBuilder.Options, new NoOpMediator());
         }
     }
 }

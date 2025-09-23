@@ -1,4 +1,5 @@
 ﻿using KurguWebsite.Domain.Common;
+using KurguWebsite.Domain.Events;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -58,7 +59,7 @@ namespace KurguWebsite.Domain.Entities
                 IsActive = true,
                 DisplayOrder = 0
             };
-
+            caseStudy.AddDomainEvent(new CaseStudyCreatedEvent(caseStudy.Id));
             return caseStudy;
         }
 
@@ -78,6 +79,7 @@ namespace KurguWebsite.Domain.Entities
             Challenge = challenge;
             Solution = solution;
             Result = result;
+            AddDomainEvent(new CaseStudyUpdatedEvent(this.Id));
         }
 
         // Set service relationship

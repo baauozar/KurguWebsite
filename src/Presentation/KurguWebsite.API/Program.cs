@@ -35,7 +35,10 @@ try
     Log.Information("Starting KurguWebsite API");
 
     var builder = WebApplication.CreateBuilder(args);
-
+  /*  builder.Services.AddRouting(options =>
+    {
+        options.LowercaseUrls = true;
+    });*/
     // Use Serilog
     builder.Host.UseSerilog();
     builder.WebHost.CaptureStartupErrors(true)

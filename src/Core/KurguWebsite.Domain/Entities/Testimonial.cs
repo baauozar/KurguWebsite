@@ -1,4 +1,5 @@
 ﻿using KurguWebsite.Domain.Common;
+using KurguWebsite.Domain.Events;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -34,7 +35,7 @@ namespace KurguWebsite.Domain.Entities
             if (rating < 1 || rating > 5)
                 throw new ArgumentException("Rating must be between 1 and 5");
 
-            return new Testimonial
+            var testimonial =  new Testimonial
             {
                 ClientName = clientName,
                 ClientTitle = clientTitle,
@@ -44,6 +45,8 @@ namespace KurguWebsite.Domain.Entities
                 TestimonialDate = DateTime.UtcNow,
                 IsActive = true
             };
+            testimonial.AddDomainEvent(new TestimonialCreatedEvent(testimonial.Id));
+            return testimonial;
         }
 
         public void Update(
@@ -58,6 +61,7 @@ namespace KurguWebsite.Domain.Entities
             CompanyName = companyName;
             Content = content;
             Rating = rating;
+            AddDomainEvent(new TestimonialUpdatedEvent(this.Id));
         }
 
         public void SetFeatured(bool isFeatured) => IsFeatured = isFeatured;

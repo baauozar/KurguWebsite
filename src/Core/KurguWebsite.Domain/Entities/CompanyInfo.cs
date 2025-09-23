@@ -1,4 +1,5 @@
 ﻿using KurguWebsite.Domain.Common;
+using KurguWebsite.Domain.Events;
 using KurguWebsite.Domain.ValueObjects;
 using System;
 using System.Collections.Generic;
@@ -54,6 +55,7 @@ namespace KurguWebsite.Domain.Entities
             Vision = vision;
             Slogan = slogan;
             CopyrightText = $"{companyName}. © {DateTime.Now.Year}. All Rights Reserved";
+            AddDomainEvent(new CompanyInfoUpdatedEvent(this.Id));
         }
 
         public void UpdateLogos(string? logoPath, string? logoLightPath)
@@ -70,6 +72,7 @@ namespace KurguWebsite.Domain.Entities
         public void UpdateAddress(Address address)
         {
             OfficeAddress = address ?? throw new ArgumentNullException(nameof(address));
+            AddDomainEvent(new CompanyInfoUpdatedEvent(this.Id));
         }
 
         public void UpdateSocialMedia(SocialMediaLinks? socialMedia)

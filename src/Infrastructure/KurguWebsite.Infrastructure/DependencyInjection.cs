@@ -119,18 +119,22 @@ namespace KurguWebsite.Infrastructure
                     }
                 });
 
-                options.AddPolicy("Development", builder =>
-                {
-                    var devOrigins = configuration.GetSection("Cors:Development:AllowedOrigins")
-                        .Get<string[]>() ?? new[] { "http://localhost:3000", "http://localhost:3001" };
+                /*   options.AddPolicy("Development", builder =>
+                   {
+                       var devOrigins = configuration.GetSection("Cors:Development:AllowedOrigins")
+                           .Get<string[]>() ?? new[] { "http://localhost:3000", "http://localhost:3001" };
 
-                    builder
-                        .WithOrigins(devOrigins)
-                        .AllowAnyMethod()
-                        .AllowAnyHeader()
-                        .AllowCredentials()
-                        .SetPreflightMaxAge(TimeSpan.FromSeconds(3600));
-                });
+                       builder
+                           .WithOrigins(devOrigins)
+                           .AllowAnyMethod()
+                           .AllowAnyHeader()
+                           .AllowCredentials()
+                           .SetPreflightMaxAge(TimeSpan.FromSeconds(3600));
+                   });*/
+                options.AddPolicy("Development", builder =>
+                 builder.WithOrigins("https://localhost:44319", "http://localhost:7858") // Add your UI and API ports
+                .AllowAnyHeader()
+                .AllowAnyMethod());
             });
 
             // ADD RATE LIMITING

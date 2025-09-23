@@ -12,5 +12,6 @@ namespace KurguWebsite.Application.Common.Interfaces.Repositories
         Task<IReadOnlyList<Service>> GetFeaturedServicesAsync();
         Task<IReadOnlyList<Service>> GetServicesByCategoryAsync(ServiceCategory category);
         Task<bool> SlugExistsAsync(string slug, Guid? excludeId = null);
+        Task<Service?> GetBySlugWithFeaturesAsync(string slug);
     }
 }

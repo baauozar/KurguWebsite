@@ -1,241 +1,140 @@
-﻿using KurguWebsite.Application.Common.Interfaces.Services;
+﻿using Asp.Versioning;
+using KurguWebsite.Application.Common.Models;
 using KurguWebsite.Application.DTOs.Service;
+using KurguWebsite.Application.Features.Services.Commands;
+using KurguWebsite.Application.Features.Services.Queries;
 using KurguWebsite.WebAPI.Controllers;
+using MediatR;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.RateLimiting;
-using Asp.Versioning;
+
 namespace KurguWebsite.API.Controllers.V1
 {
     [ApiVersion("1.0")]
-    [EnableRateLimiting("ApiLimit")]
+    [Route("api/v{version:apiVersion}/[controller]")]
     public class ServicesController : BaseApiController
     {
-        private readonly IServiceManagementService _serviceService;
-        private readonly ILogger<ServicesController> _logger;
+        private readonly IMediator _mediator;
 
-        public ServicesController(
-            IServiceManagementService serviceService,
-            ILogger<ServicesController> logger)
+        public ServicesController(IMediator mediator) => _mediator = mediator;
+
+        /// <summary>
+        /// Searches, sorts, and paginates services.
+        /// </summary>
+        /// <param name="queryParams">Parameters for searching, sorting, and pagination.</param>
+        /// <returns>A paginated list of services.</returns>
+        // ... other usings
+
+        [HttpGet("search")]
+        [AllowAnonymous]
+        [ProducesResponseType(typeof(PaginatedList<ServiceDto>), StatusCodes.Status200OK)] // This is now correct
+        public async Task<IActionResult> Search([FromQuery] QueryParameters queryParams)
         {
-            _serviceService = serviceService;
-            _logger = logger;
+            var result = await _mediator.Send(new GetPaginatedServicesQuery { Params = queryParams });
+
+            // --- THIS IS THE FIX ---
+            // Instead of returning the whole 'result' object, return the 'Data' property.
+            // This matches the `ProducesResponseType` attribute above.
+            return Ok(result.Data);
         }
 
         /// <summary>
-        /// Get all services
+        /// Gets all active services.
         /// </summary>
+        /// <returns>A list of active services.</returns>
         [HttpGet]
         [AllowAnonymous]
         [ResponseCache(Duration = 300)]
-        [ProducesResponseType(typeof(IEnumerable<ServiceDto>), StatusCodes.Status200OK)]
-        public async Task<IActionResult> GetServices()
+        [ProducesResponseType(typeof(List<ServiceDto>), StatusCodes.Status200OK)]
+        public async Task<IActionResult> GetAll()
         {
-            var result = await _serviceService.GetActiveServicesAsync();
-
-            if (!result.Succeeded)
-                return BadRequest(new { errors = result.Errors });
-
+            var result = await _mediator.Send(new GetAllServicesQuery());
             return Ok(result.Data);
         }
 
         /// <summary>
-        /// Get featured services
+        /// Gets a specific service with its features by its SEO-friendly slug.
         /// </summary>
-        [HttpGet("featured")]
-        [AllowAnonymous]
-        [ResponseCache(Duration = 300)]
-        [ProducesResponseType(typeof(IEnumerable<ServiceDto>), StatusCodes.Status200OK)]
-        public async Task<IActionResult> GetFeaturedServices()
-        {
-            var result = await _serviceService.GetFeaturedServicesAsync();
-
-            if (!result.Succeeded)
-                return BadRequest(new { errors = result.Errors });
-
-            return Ok(result.Data);
-        }
-
-        /// <summary>
-        /// Get service by ID
-        /// </summary>
-        [HttpGet("{id:guid}")]
-        [AllowAnonymous]
-        [ProducesResponseType(typeof(ServiceDto), StatusCodes.Status200OK)]
-        [ProducesResponseType(StatusCodes.Status404NotFound)]
-        public async Task<IActionResult> GetService(Guid id)
-        {
-            var result = await _serviceService.GetByIdAsync(id);
-
-            if (!result.Succeeded)
-                return NotFound(new { message = result.Message });
-
-            return Ok(result.Data);
-        }
-
-        /// <summary>
-        /// Get service by slug
-        /// </summary>
+        /// <param name="slug">The slug of the service.</param>
+        /// <returns>The requested service with its details.</returns>
         [HttpGet("slug/{slug}")]
         [AllowAnonymous]
         [ResponseCache(Duration = 300)]
         [ProducesResponseType(typeof(ServiceDetailDto), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
-        public async Task<IActionResult> GetServiceBySlug(string slug)
+        public async Task<IActionResult> GetDetailBySlug(string slug)
         {
-            var result = await _serviceService.GetServiceDetailAsync(slug);
-
-            if (!result.Succeeded)
-                return NotFound(new { message = result.Message });
-
-            return Ok(result.Data);
+            var result = await _mediator.Send(new GetServiceDetailBySlugQuery { Slug = slug });
+            return result.Succeeded ? Ok(result.Data) : NotFound(result.Errors);
         }
 
         /// <summary>
-        /// Get paginated services
+        /// Gets a specific service by its unique ID.
         /// </summary>
-        [HttpGet("paginated")]
+        /// <param name="id">The GUID of the service.</param>
+        /// <returns>The requested service.</returns>
+        [HttpGet("{id:guid}")]
         [AllowAnonymous]
-        [ProducesResponseType(typeof(object), StatusCodes.Status200OK)]
-        public async Task<IActionResult> GetPaginatedServices(
-            [FromQuery] int pageNumber = 1,
-            [FromQuery] int pageSize = 10)
+        [ProducesResponseType(typeof(ServiceDto), StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public async Task<IActionResult> GetById(Guid id)
         {
-            var result = await _serviceService.GetPaginatedAsync(pageNumber, pageSize);
-
-            if (!result.Succeeded)
-                return BadRequest(new { errors = result.Errors });
-
-            return Ok(new
-            {
-                result.Data?.Items,
-                result.Data?.PageNumber,
-                result.Data?.TotalPages,
-                result.Data?.TotalCount,
-                result.Data?.HasPreviousPage,
-                result.Data?.HasNextPage
-            });
+            var result = await _mediator.Send(new GetServiceByIdQuery { Id = id });
+            return result.Succeeded ? Ok(result.Data) : NotFound(result.Errors);
         }
 
         /// <summary>
-        /// Create new service (Admin only)
+        /// Creates a new service. (Admin Only)
         /// </summary>
+        /// <param name="command">The command containing the service data.</param>
+        /// <returns>The newly created service.</returns>
         [HttpPost]
         [Authorize(Roles = "Admin")]
         [ProducesResponseType(typeof(ServiceDto), StatusCodes.Status201Created)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
-        public async Task<IActionResult> CreateService([FromBody] CreateServiceDto dto)
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
+        public async Task<IActionResult> Create(CreateServiceCommand command)
         {
-            _logger.LogInformation("Creating new service: {Title}", dto.Title);
-
-            var result = await _serviceService.CreateAsync(dto);
-
-            if (!result.Succeeded)
-            {
-                _logger.LogWarning("Failed to create service: {Errors}", string.Join(", ", result.Errors));
-                return BadRequest(new { errors = result.Errors });
-            }
-
-            _logger.LogInformation("Service created successfully with ID: {Id}", result.Data?.Id);
-            return CreatedAtAction(nameof(GetService), new { id = result.Data?.Id }, result.Data);
+            var result = await _mediator.Send(command);
+            return result.Succeeded ? CreatedAtAction(nameof(GetById), new { id = result.Data.Id }, result.Data) : BadRequest(result.Errors);
         }
 
         /// <summary>
-        /// Update service (Admin only)
+        /// Updates an existing service. (Admin Only)
         /// </summary>
+        /// <param name="id">The ID of the service to update.</param>
+        /// <param name="command">The command containing the updated data.</param>
+        /// <returns>The updated service.</returns>
         [HttpPut("{id:guid}")]
         [Authorize(Roles = "Admin")]
         [ProducesResponseType(typeof(ServiceDto), StatusCodes.Status200OK)]
-        [ProducesResponseType(StatusCodes.Status404NotFound)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
-        public async Task<IActionResult> UpdateService(Guid id, [FromBody] UpdateServiceDto dto)
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
+        public async Task<IActionResult> Update(Guid id, UpdateServiceCommand command)
         {
-            _logger.LogInformation("Updating service: {Id}", id);
-
-            var result = await _serviceService.UpdateAsync(id, dto);
-
-            if (!result.Succeeded)
-            {
-                if (result.Errors.Any(e => e.Contains("not found", StringComparison.OrdinalIgnoreCase)))
-                    return NotFound(new { message = result.Message });
-
-                return BadRequest(new { errors = result.Errors });
-            }
-
-            _logger.LogInformation("Service updated successfully: {Id}", id);
-            return Ok(result.Data);
+            if (id != command.Id) return BadRequest("ID mismatch");
+            var result = await _mediator.Send(command);
+            return result.Succeeded ? Ok(result.Data) : NotFound(result.Errors);
         }
 
         /// <summary>
-        /// Delete service (Admin only)
+        /// Deletes a service. (Admin Only)
         /// </summary>
+        /// <param name="id">The ID of the service to delete.</param>
+        /// <returns>No content.</returns>
         [HttpDelete("{id:guid}")]
         [Authorize(Roles = "Admin")]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
-        public async Task<IActionResult> DeleteService(Guid id)
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
+        public async Task<IActionResult> Delete(Guid id)
         {
-            _logger.LogInformation("Deleting service: {Id}", id);
-
-            var result = await _serviceService.DeleteAsync(id);
-
-            if (!result.Succeeded)
-                return NotFound(new { message = result.Message });
-
-            _logger.LogInformation("Service deleted successfully: {Id}", id);
-            return NoContent();
-        }
-
-        /// <summary>
-        /// Toggle service status (Admin only)
-        /// </summary>
-        [HttpPatch("{id:guid}/toggle-status")]
-        [Authorize(Roles = "Admin")]
-        [ProducesResponseType(StatusCodes.Status200OK)]
-        [ProducesResponseType(StatusCodes.Status404NotFound)]
-        public async Task<IActionResult> ToggleServiceStatus(Guid id)
-        {
-            var result = await _serviceService.ToggleStatusAsync(id);
-
-            if (!result.Succeeded)
-                return NotFound(new { message = result.Message });
-
-            return Ok(new { message = result.Message });
-        }
-
-        /// <summary>
-        /// Toggle service featured status (Admin only)
-        /// </summary>
-        [HttpPatch("{id:guid}/toggle-featured")]
-        [Authorize(Roles = "Admin")]
-        [ProducesResponseType(StatusCodes.Status200OK)]
-        [ProducesResponseType(StatusCodes.Status404NotFound)]
-        public async Task<IActionResult> ToggleServiceFeatured(Guid id)
-        {
-            var result = await _serviceService.ToggleFeaturedAsync(id);
-
-            if (!result.Succeeded)
-                return NotFound(new { message = result.Message });
-
-            return Ok(new { message = result.Message });
-        }
-
-        /// <summary>
-        /// Update service display order (Admin only)
-        /// </summary>
-        [HttpPatch("{id:guid}/display-order")]
-        [Authorize(Roles = "Admin")]
-        [ProducesResponseType(StatusCodes.Status200OK)]
-        [ProducesResponseType(StatusCodes.Status404NotFound)]
-        public async Task<IActionResult> UpdateDisplayOrder(Guid id, [FromBody] int displayOrder)
-        {
-            var result = await _serviceService.UpdateDisplayOrderAsync(id, displayOrder);
-
-            if (!result.Succeeded)
-                return NotFound(new { message = result.Message });
-
-            return Ok(new { message = result.Message });
+            var result = await _mediator.Send(new DeleteServiceCommand { Id = id });
+            return result.Succeeded ? NoContent() : NotFound(result.Errors);
         }
     }
 }

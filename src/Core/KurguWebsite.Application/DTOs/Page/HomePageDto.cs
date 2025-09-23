@@ -1,6 +1,7 @@
 ﻿using KurguWebsite.Application.DTOs.CaseStudy;
 using KurguWebsite.Application.DTOs.CompanyInfo;
 using KurguWebsite.Application.DTOs.Partner;
+using KurguWebsite.Application.DTOs.ProcessStep;
 using KurguWebsite.Application.DTOs.Service;
 using KurguWebsite.Application.DTOs.Testimonial;
 using System;

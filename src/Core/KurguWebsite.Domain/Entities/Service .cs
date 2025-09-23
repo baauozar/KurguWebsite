@@ -1,5 +1,6 @@
 ﻿using KurguWebsite.Domain.Common;
 using KurguWebsite.Domain.Enums;
+using KurguWebsite.Domain.Events;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -57,7 +58,7 @@ namespace KurguWebsite.Domain.Entities
                 IsActive = true,
                 DisplayOrder = 0
             };
-
+            service.AddDomainEvent(new ServiceCreatedEvent(service.Id));
             return service;
         }
 
@@ -76,6 +77,7 @@ namespace KurguWebsite.Domain.Entities
             FullDescription = fullDescription;
             IconPath = iconPath;
             Category = category;
+            AddDomainEvent(new ServiceUpdatedEvent(this.Id));
         }
 
         public void UpdateSeo(string? metaTitle, string? metaDescription, string? metaKeywords)
@@ -97,7 +99,8 @@ namespace KurguWebsite.Domain.Entities
 
         public void Activate() => IsActive = true;
         public void Deactivate() => IsActive = false;
-
+        
+    
         public void AddFeature(ServiceFeature feature)
         {
             if (feature != null && !_features.Contains(feature))

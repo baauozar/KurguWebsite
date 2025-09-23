@@ -13,6 +13,7 @@ namespace KurguWebsite.Domain.Common
             IsDeleted = true;
             DeletedDate = DateTime.UtcNow;
             DeletedBy = userId;
+
         }
 
         public void Restore()

@@ -1,5 +1,6 @@
 ﻿using KurguWebsite.Domain.Common;
 using KurguWebsite.Domain.Enums;
+using KurguWebsite.Domain.Events;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -25,7 +26,7 @@ namespace KurguWebsite.Domain.Entities
             string logoPath,
             PartnerType type)
         {
-            return new Partner
+            var partner = new Partner
             {
                 Name = name,
                 LogoPath = logoPath,
@@ -33,6 +34,9 @@ namespace KurguWebsite.Domain.Entities
                 IsActive = true,
                 DisplayOrder = 0
             };
+
+            partner.AddDomainEvent(new PartnerCreatedEvent(partner.Id));
+            return partner;
         }
 
         public void Update(
@@ -47,6 +51,7 @@ namespace KurguWebsite.Domain.Entities
             WebsiteUrl = websiteUrl;
             Description = description;
             Type = type;
+            AddDomainEvent(new PartnerUpdatedEvent(this.Id));
         }
 
         // ADD MISSING METHOD

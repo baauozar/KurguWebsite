@@ -1,4 +1,5 @@
-﻿using System;
+﻿using MediatR;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -6,15 +7,8 @@ using System.Threading.Tasks;
 
 namespace KurguWebsite.Domain.Events
 {
-    public abstract class DomainEvent
+    public abstract class DomainEvent : INotification
     {
-        public DateTime OccurredOn { get; }
-        public Guid AggregateId { get; }
-
-        protected DomainEvent(Guid aggregateId)
-        {
-            OccurredOn = DateTime.UtcNow;
-            AggregateId = aggregateId;
-        }
+        public DateTime DateOccurred { get; protected set; } = DateTime.UtcNow;
     }
 }

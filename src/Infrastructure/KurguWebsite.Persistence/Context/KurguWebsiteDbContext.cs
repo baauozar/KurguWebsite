@@ -1,6 +1,8 @@
-﻿using KurguWebsite.Infrastructure.Identity;
-using KurguWebsite.Domain.Common;
+﻿using KurguWebsite.Domain.Common;
 using KurguWebsite.Domain.Entities;
+using KurguWebsite.Domain.Events;
+using KurguWebsite.Infrastructure.Identity;
+using MediatR;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
@@ -18,8 +20,11 @@ namespace KurguWebsite.Persistence.Context
         IdentityRoleClaim<Guid>,
         IdentityUserToken<Guid>>
     {
-        public KurguWebsiteDbContext(DbContextOptions<KurguWebsiteDbContext> options) : base(options)
+        private readonly IMediator _mediator;
+
+        public KurguWebsiteDbContext(DbContextOptions<KurguWebsiteDbContext> options, IMediator mediator) : base(options)
         {
+            _mediator = mediator;
         }
 
         // DbSets
@@ -37,7 +42,7 @@ namespace KurguWebsite.Persistence.Context
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
-
+            modelBuilder.Ignore<DomainEvent>();
             modelBuilder.ApplyConfigurationsFromAssembly(Assembly.GetExecutingAssembly());
 
             // Rename Identity tables
@@ -50,35 +55,30 @@ namespace KurguWebsite.Persistence.Context
             modelBuilder.Entity<IdentityUserToken<Guid>>().ToTable("UserTokens");
         }
 
-        public override Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
+        public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = new CancellationToken())
         {
-            UpdateAuditableEntities();
-            return base.SaveChangesAsync(cancellationToken);
+            await DispatchEvents(cancellationToken); // Pass the cancellation token
+            return await base.SaveChangesAsync(cancellationToken);
         }
 
-        public override int SaveChanges()
+        private async Task DispatchEvents(CancellationToken cancellationToken)
         {
-            UpdateAuditableEntities();
-            return base.SaveChanges();
-        }
+            var domainEventEntities = ChangeTracker.Entries<BaseEntity>()
+                .Select(e => e.Entity)
+                // This is the corrected line: DomainEvent -> DomainEvents
+                .Where(e => e.DomainEvents.Any())
+                .ToArray();
 
-        private void UpdateAuditableEntities()
-        {
-            var entries = ChangeTracker.Entries<BaseEntity>()
-                .Where(e => e.State == EntityState.Added || e.State == EntityState.Modified);
-
-            foreach (var entry in entries)
+            foreach (var entity in domainEventEntities)
             {
-                if (entry.State == EntityState.Added)
-                    entry.Entity.SetCreatedBy(GetCurrentUserId());
-                else if (entry.State == EntityState.Modified)
-                    entry.Entity.SetModifiedBy(GetCurrentUserId());
+                var events = entity.DomainEvents.ToArray();
+                entity.ClearDomainEvents();
+                foreach (var domainEvent in events)
+                {
+                    // Pass the cancellation token to the publish method
+                    await _mediator.Publish(domainEvent, cancellationToken);
+                }
             }
-        }
-
-        private string GetCurrentUserId()
-        {
-            return "System"; // Replace with ICurrentUserService in real app
         }
     }
 }

@@ -14,5 +14,7 @@ namespace KurguWebsite.Application.DTOs.CompanyInfo
         public string? Vision { get; set; }
         public string? Slogan { get; set; }
         public string? CopyrightText { get; set; }
+        public string? LogoPath { get; set; }
+        public string? LogoLightPath { get; set; }
     }
 }

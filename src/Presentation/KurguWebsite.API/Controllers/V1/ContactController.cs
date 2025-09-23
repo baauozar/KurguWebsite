@@ -1,170 +1,107 @@
-﻿using KurguWebsite.Application.Common.Interfaces.Services;
+﻿using Asp.Versioning;
+using KurguWebsite.Application.Common.Models;
 using KurguWebsite.Application.DTOs.Contact;
+using KurguWebsite.Application.Features.ContactMessages.Commands;
+using KurguWebsite.Application.Features.ContactMessages.Queries;
+using KurguWebsite.WebAPI.Controllers;
+using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
-using Asp.Versioning;
-namespace KurguWebsite.WebAPI.Controllers.V1
+
+namespace KurguWebsite.API.Controllers.V1
 {
     [ApiVersion("1.0")]
+    [Route("api/v{version:apiVersion}/[controller]")]
     public class ContactController : BaseApiController
     {
-        private readonly IContactMessageService _contactService;
-        private readonly ILogger<ContactController> _logger;
+        private readonly IMediator _mediator;
 
-        public ContactController(
-            IContactMessageService contactService,
-            ILogger<ContactController> logger)
-        {
-            _contactService = contactService;
-            _logger = logger;
-        }
+        public ContactController(IMediator mediator) => _mediator = mediator;
 
         /// <summary>
-        /// Submit contact form
+        /// Submits a new message from the public contact form.
         /// </summary>
+        /// <param name="command">The command containing the contact message data.</param>
+        /// <returns>The submitted message data.</returns>
         [HttpPost("submit")]
         [AllowAnonymous]
         [EnableRateLimiting("ContactFormLimit")]
-        [ValidateAntiForgeryToken]
-        [ProducesResponseType(typeof(ContactMessageDto), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ContactMessageDto), StatusCodes.Status201Created)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status429TooManyRequests)]
-        public async Task<IActionResult> SubmitContactForm([FromBody] CreateContactMessageDto dto)
+        public async Task<IActionResult> SubmitContactForm(SubmitContactMessageCommand command)
         {
-            _logger.LogInformation("Contact form submission from: {Email}, IP: {IP}",
-                dto.Email, GetIpAddress());
-
-            var result = await _contactService.SubmitMessageAsync(dto);
-
-            if (!result.Succeeded)
-            {
-                _logger.LogWarning("Contact form submission failed: {Errors}",
-                    string.Join(", ", result.Errors));
-                return BadRequest(new { errors = result.Errors });
-            }
-
-            _logger.LogInformation("Contact form submitted successfully from: {Email}", dto.Email);
-            return Ok(new
-            {
-                message = "Your message has been received. We'll get back to you soon!",
-                data = result.Data
-            });
+            var result = await _mediator.Send(command);
+            return result.Succeeded ? CreatedAtAction(nameof(GetMessage), new { id = result.Data.Id }, result.Data) : BadRequest(result.Errors);
         }
 
         /// <summary>
-        /// Get all contact messages (Admin only)
+        /// Gets a paginated list of all contact messages. (Admin/Manager Only)
         /// </summary>
+        /// <param name="queryParams">Parameters for pagination.</param>
+        /// <returns>A paginated list of contact messages.</returns>
         [HttpGet]
         [Authorize(Roles = "Admin,Manager")]
-        [EnableRateLimiting("ApiLimit")]
-        [ProducesResponseType(typeof(object), StatusCodes.Status200OK)]
-        public async Task<IActionResult> GetContactMessages(
-            [FromQuery] int pageNumber = 1,
-            [FromQuery] int pageSize = 20)
+        [ProducesResponseType(typeof(PaginatedList<ContactMessageDto>), StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
+        public async Task<IActionResult> GetContactMessages([FromQuery] QueryParameters queryParams)
         {
-            var result = await _contactService.GetPaginatedAsync(pageNumber, pageSize);
-
-            if (!result.Succeeded)
-                return BadRequest(new { errors = result.Errors });
-
-            return Ok(new
-            {
-                result.Data?.Items,
-                result.Data?.PageNumber,
-                result.Data?.TotalPages,
-                result.Data?.TotalCount,
-                result.Data?.HasPreviousPage,
-                result.Data?.HasNextPage
-            });
-        }
-
-        /// <summary>
-        /// Get unread messages (Admin only)
-        /// </summary>
-        [HttpGet("unread")]
-        [Authorize(Roles = "Admin,Manager")]
-        [ProducesResponseType(typeof(IEnumerable<ContactMessageDto>), StatusCodes.Status200OK)]
-        public async Task<IActionResult> GetUnreadMessages()
-        {
-            var result = await _contactService.GetUnreadAsync();
-
-            if (!result.Succeeded)
-                return BadRequest(new { errors = result.Errors });
-
+            var query = new GetPaginatedContactMessagesQuery { Params = queryParams };
+            var result = await _mediator.Send(query);
             return Ok(result.Data);
         }
 
         /// <summary>
-        /// Get unread message count
+        /// Gets a specific contact message by its ID. (Admin/Manager Only)
         /// </summary>
-        [HttpGet("unread-count")]
-        [Authorize(Roles = "Admin,Manager")]
-        [ProducesResponseType(typeof(object), StatusCodes.Status200OK)]
-        public async Task<IActionResult> GetUnreadCount()
-        {
-            var result = await _contactService.GetUnreadCountAsync();
-
-            if (!result.Succeeded)
-                return BadRequest(new { errors = result.Errors });
-
-            return Ok(new { count = result.Data });
-        }
-
-        /// <summary>
-        /// Get contact message by ID
-        /// </summary>
+        /// <param name="id">The GUID of the contact message.</param>
+        /// <returns>The requested contact message.</returns>
         [HttpGet("{id:guid}")]
         [Authorize(Roles = "Admin,Manager")]
         [ProducesResponseType(typeof(ContactMessageDto), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
         public async Task<IActionResult> GetMessage(Guid id)
         {
-            var result = await _contactService.GetByIdAsync(id);
-
-            if (!result.Succeeded)
-                return NotFound(new { message = result.Message });
-
-            return Ok(result.Data);
+            var result = await _mediator.Send(new GetContactMessageByIdQuery { Id = id });
+            return result.Succeeded ? Ok(result.Data) : NotFound(result.Errors);
         }
 
         /// <summary>
-        /// Mark message as read
+        /// Marks a specific message as read. (Admin/Manager Only)
         /// </summary>
+        /// <param name="id">The ID of the message to mark as read.</param>
+        /// <returns>A success message.</returns>
         [HttpPatch("{id:guid}/mark-read")]
         [Authorize(Roles = "Admin,Manager")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
         public async Task<IActionResult> MarkAsRead(Guid id)
         {
-            var result = await _contactService.MarkAsReadAsync(id);
-
-            if (!result.Succeeded)
-                return NotFound(new { message = result.Message });
-
-            _logger.LogInformation("Message marked as read: {Id} by {User}",
-                id, User.Identity?.Name);
-            return Ok(new { message = "Message marked as read" });
+            var result = await _mediator.Send(new MarkContactMessageAsReadCommand { Id = id });
+            return result.Succeeded ? Ok(new { message = "Message marked as read" }) : NotFound(result.Errors);
         }
 
         /// <summary>
-        /// Mark message as replied
+        /// Marks a specific message as replied. (Admin/Manager Only)
         /// </summary>
+        /// <param name="id">The ID of the message to mark as replied.</param>
+        /// <returns>A success message.</returns>
         [HttpPatch("{id:guid}/mark-replied")]
         [Authorize(Roles = "Admin,Manager")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
         public async Task<IActionResult> MarkAsReplied(Guid id)
         {
-            var userId = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value ?? "";
-            var result = await _contactService.MarkAsRepliedAsync(id, userId);
-
-            if (!result.Succeeded)
-                return NotFound(new { message = result.Message });
-
-            _logger.LogInformation("Message marked as replied: {Id} by {User}",
-                id, User.Identity?.Name);
-            return Ok(new { message = "Message marked as replied" });
+            var result = await _mediator.Send(new MarkContactMessageAsRepliedCommand { Id = id });
+            return result.Succeeded ? Ok(new { message = "Message marked as replied" }) : NotFound(result.Errors);
         }
     }
 }

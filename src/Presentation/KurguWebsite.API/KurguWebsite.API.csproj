@@ -10,8 +10,9 @@
 
 	<ItemGroup>
 		<!-- API Core -->
-		<PackageReference Include="Asp.Versioning.Mvc" Version="8.0.0" />
-		<PackageReference Include="Asp.Versioning.Mvc.ApiExplorer" Version="8.0.0" />
+		<PackageReference Include="Asp.Versioning.Mvc" Version="8.1.0" />
+		<PackageReference Include="Asp.Versioning.Mvc.ApiExplorer" Version="8.1.0" />
+		<PackageReference Include="AspNetCore.HealthChecks.UI.Client" Version="8.0.1" />
 		<PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="8.0.0">
 			<PrivateAssets>all</PrivateAssets>
 			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
@@ -25,7 +26,6 @@
 
 		<!-- Health Checks -->
 		<PackageReference Include="AspNetCore.HealthChecks.SqlServer" Version="8.0.0" />
-		<PackageReference Include="AspNetCore.HealthChecks.UI.Client" Version="8.1.0" />
 
 		<!-- Logging -->
 		<PackageReference Include="Serilog.AspNetCore" Version="8.0.0" />

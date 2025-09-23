@@ -67,5 +67,12 @@ namespace KurguWebsite.Persistence.Repositories
 
             return await query.AnyAsync();
         }
+
+        public async Task<Service?> GetBySlugWithFeaturesAsync(string slug)
+        {
+            return await _dbSet
+                .Include(s => s.Features) // This line loads the related features
+                .FirstOrDefaultAsync(s => s.Slug == slug && s.IsActive);
+        }
     }
 }
