@@ -34,7 +34,8 @@ namespace KurguWebsite.Application.Features.Pages.Commands
 
             page.UpdateContent(request.Content);
             page.UpdateSeo(request.MetaTitle, request.MetaDescription, request.MetaKeywords);
-            page.SetModifiedBy(_currentUserService.UserId ?? "System");
+
+     
 
             await _unitOfWork.Pages.UpdateAsync(page);
             await _unitOfWork.CommitAsync(cancellationToken);

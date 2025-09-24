@@ -22,8 +22,8 @@ namespace KurguWebsite.Application.Features.ContactMessages.Commands
 
         public async Task<Result<ContactMessageDto>> Handle(SubmitContactMessageCommand request, CancellationToken cancellationToken)
         {
-            var message = ContactMessage.Create(request.Name, request.Email, request.Subject, request.Message,request.Phone);
-            // The ContactMessageReceivedEvent is already added in the entity's Create method
+            // Corrected order: name, email, phone, subject, message
+            var message = ContactMessage.Create(request.Name, request.Email, request.Phone, request.Subject, request.Message);
 
             await _unitOfWork.ContactMessages.AddAsync(message);
             await _unitOfWork.CommitAsync();

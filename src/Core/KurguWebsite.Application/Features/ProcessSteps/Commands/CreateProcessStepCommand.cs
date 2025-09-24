@@ -28,7 +28,7 @@ namespace KurguWebsite.Application.Features.ProcessSteps.Commands
         public async Task<Result<ProcessStepDto>> Handle(CreateProcessStepCommand request, CancellationToken cancellationToken)
         {
             var processStep = ProcessStep.Create(request.StepNumber, request.Title, request.Description);
-            processStep.SetCreatedBy(_currentUserService.UserId ?? "System");
+        
 
             await _unitOfWork.ProcessSteps.AddAsync(processStep);
             await _unitOfWork.CommitAsync(cancellationToken);

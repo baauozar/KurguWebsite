@@ -30,9 +30,11 @@ namespace KurguWebsite.Application.Features.CompanyInfo.Commands
             var companyInfo = await _unitOfWork.CompanyInfo.GetCompanyInfoAsync();
             if (companyInfo == null) return Result<CompanyInfoDto>.Failure("Company Info not found.");
 
-            var contactInfo = ContactInfo.Create(request.SupportPhone, request.SalesPhone, request.Email);
-            companyInfo.UpdateContactInfo(contactInfo);
-            companyInfo.SetModifiedBy(_currentUserService.UserId ?? "System");
+            // 1. Create the ContactInfo value object first.
+            var newContactInfo = ContactInfo.Create(request.SupportEmail, request.SalesEmail, request.Email);
+
+            // 2. Pass the single object to the update method.
+            companyInfo.UpdateContactInfo(newContactInfo);
 
             await _unitOfWork.CompanyInfo.UpdateAsync(companyInfo);
             await _unitOfWork.CommitAsync(cancellationToken);

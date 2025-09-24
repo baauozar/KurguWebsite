@@ -32,7 +32,8 @@ namespace KurguWebsite.Application.Features.CompanyInfo.Commands
 
             var socialMedia = SocialMediaLinks.Create(request.Facebook, request.Twitter, request.LinkedIn, request.Instagram, request.YouTube);
             companyInfo.UpdateSocialMedia(socialMedia);
-            companyInfo.SetModifiedBy(_currentUserService.UserId ?? "System");
+
+            // REMOVED: companyInfo.SetModifiedBy(_currentUserService.UserId ?? "System");
 
             await _unitOfWork.CompanyInfo.UpdateAsync(companyInfo);
             await _unitOfWork.CommitAsync(cancellationToken);

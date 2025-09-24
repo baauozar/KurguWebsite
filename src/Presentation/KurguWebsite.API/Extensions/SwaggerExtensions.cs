@@ -19,14 +19,13 @@ namespace KurguWebsite.API.Extensions
                 // It uses the standard HTTP Bearer scheme for authentication.
                 options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
                 {
-                    In = ParameterLocation.Header,
-                    Description = "Please enter into field the word 'Bearer' followed by a space and the JWT value.",
                     Name = "Authorization",
-                    Type = SecuritySchemeType.Http, // Use Http for Bearer
+                    In = ParameterLocation.Header,
+                    Type = SecuritySchemeType.Http,
+                    Scheme = "Bearer",
                     BearerFormat = "JWT",
-                    Scheme = "Bearer" // The scheme name is 'Bearer'
+                    Description = "Paste your **JWT token only** here (no 'Bearer ' prefix)."
                 });
-
                 options.AddSecurityRequirement(new OpenApiSecurityRequirement
                 {
                     {

@@ -33,7 +33,7 @@ namespace KurguWebsite.Application.Features.ProcessSteps.Commands
             if (processStep == null) return Result<ProcessStepDto>.Failure("Process Step not found.");
 
             processStep.Update(request.Title, request.Description, request.IconClass);
-            processStep.SetModifiedBy(_currentUserService.UserId ?? "System");
+        
 
             await _unitOfWork.ProcessSteps.UpdateAsync(processStep);
             await _unitOfWork.CommitAsync(cancellationToken);

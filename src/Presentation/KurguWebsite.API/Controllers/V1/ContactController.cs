@@ -3,7 +3,6 @@ using KurguWebsite.Application.Common.Models;
 using KurguWebsite.Application.DTOs.Contact;
 using KurguWebsite.Application.Features.ContactMessages.Commands;
 using KurguWebsite.Application.Features.ContactMessages.Queries;
-using KurguWebsite.WebAPI.Controllers;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;

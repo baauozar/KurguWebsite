@@ -3,7 +3,6 @@ using KurguWebsite.Application.DTOs.Page;
 using KurguWebsite.Application.Features.Pages.Commands;
 using KurguWebsite.Application.Features.Pages.Queries;
 using KurguWebsite.Domain.Enums;
-using KurguWebsite.WebAPI.Controllers;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;

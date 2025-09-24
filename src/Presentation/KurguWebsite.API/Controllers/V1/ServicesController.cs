@@ -3,7 +3,6 @@ using KurguWebsite.Application.Common.Models;
 using KurguWebsite.Application.DTOs.Service;
 using KurguWebsite.Application.Features.Services.Commands;
 using KurguWebsite.Application.Features.Services.Queries;
-using KurguWebsite.WebAPI.Controllers;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;

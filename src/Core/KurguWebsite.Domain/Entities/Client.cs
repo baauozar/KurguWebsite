@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace KurguWebsite.Domain.Entities
 {
-    public class Client: BaseEntity
+    public class Client: AuditableEntity
     {
         public string? Name { get; set; }
         public string? LogoUrl { get; set; }

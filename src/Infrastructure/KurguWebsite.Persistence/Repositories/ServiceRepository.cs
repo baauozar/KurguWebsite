@@ -13,8 +13,10 @@ namespace KurguWebsite.Persistence.Repositories
 {
     public class ServiceRepository : GenericRepository<Service>, IServiceRepository
     {
+        private readonly KurguWebsiteDbContext _context;
         public ServiceRepository(KurguWebsiteDbContext context) : base(context)
         {
+            _context = context;
         }
 
         public async Task<Service?> GetBySlugAsync(string slug)
@@ -74,5 +76,6 @@ namespace KurguWebsite.Persistence.Repositories
                 .Include(s => s.Features) // This line loads the related features
                 .FirstOrDefaultAsync(s => s.Slug == slug && s.IsActive);
         }
+
     }
 }

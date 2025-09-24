@@ -32,8 +32,8 @@ namespace KurguWebsite.Application.Features.CompanyInfo.Commands
 
             var address = Address.Create(request.Street, request.Suite, request.City, request.State, request.PostalCode, request.Country);
             companyInfo.UpdateAddress(address);
-            companyInfo.SetModifiedBy(_currentUserService.UserId ?? "System");
 
+            
             await _unitOfWork.CompanyInfo.UpdateAsync(companyInfo);
             await _unitOfWork.CommitAsync(cancellationToken);
 

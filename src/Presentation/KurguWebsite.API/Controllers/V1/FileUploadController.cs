@@ -3,7 +3,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
 using Asp.Versioning;
-namespace KurguWebsite.WebAPI.Controllers.V1
+namespace KurguWebsite.API.Controllers.V1
 {
     [ApiVersion("1.0")]
     [Authorize]

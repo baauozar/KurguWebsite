@@ -28,7 +28,7 @@ namespace KurguWebsite.Application.Features.Services.Commands
         public async Task<Result<ServiceDto>> Handle(CreateServiceCommand request, CancellationToken cancellationToken)
         {
             var service = Service.Create(request.Title, request.Description,request.ShortDescription, request.IconPath,request.Category);
-            service.SetCreatedBy(_currentUserService.UserId ?? "System");
+           
 
             await _unitOfWork.Services.AddAsync(service);
             await _unitOfWork.CommitAsync(cancellationToken);

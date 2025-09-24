@@ -28,7 +28,7 @@ namespace KurguWebsite.Application.Features.Testimonials.Commands
         public async Task<Result<TestimonialDto>> Handle(CreateTestimonialCommand request, CancellationToken cancellationToken)
         {
             var testimonial = Testimonial.Create(request.ClientName, request.ClientTitle, request.CompanyName, request.Content, request.Rating);
-            testimonial.SetCreatedBy(_currentUserService.UserId ?? "System");
+   
 
             await _unitOfWork.Testimonials.AddAsync(testimonial);
             await _unitOfWork.CommitAsync(cancellationToken);

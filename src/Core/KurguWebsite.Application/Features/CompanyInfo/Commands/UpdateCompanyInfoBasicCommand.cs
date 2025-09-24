@@ -31,7 +31,8 @@ namespace KurguWebsite.Application.Features.CompanyInfo.Commands
 
             companyInfo.UpdateBasicInfo(request.CompanyName, request.About, request.Mission, request.Vision, request.Slogan);
             companyInfo.UpdateLogos(request.LogoPath, request.LogoLightPath);
-            companyInfo.SetModifiedBy(_currentUserService.UserId ?? "System");
+
+           
 
             await _unitOfWork.CompanyInfo.UpdateAsync(companyInfo);
             await _unitOfWork.CommitAsync(cancellationToken);

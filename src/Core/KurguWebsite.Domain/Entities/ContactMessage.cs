@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace KurguWebsite.Domain.Entities
 {
-    public class ContactMessage : BaseEntity
+    public class ContactMessage : AuditableEntity
     {
         public string Name { get; private set; } = string.Empty;
         public string Email { get; private set; } = string.Empty;

@@ -32,11 +32,12 @@ namespace KurguWebsite.Application.Features.CaseStudies.Commands
             var caseStudy = await _unitOfWork.CaseStudies.GetByIdAsync(request.Id);
             if (caseStudy == null) return Result<CaseStudyDto>.Failure("Case Study not found.");
 
-            caseStudy.Update(request.Title, request.ClientName, request.Description, request.Challenge,request.Solution,request.Result);
-            caseStudy.SetModifiedBy(_currentUserService.UserId ?? "System");
+            caseStudy.Update(request.Title, request.ClientName, request.Description, request.Challenge, request.Solution, request.Result);
+
+            // REMOVED: caseStudy.SetModifiedBy(_currentUserService.UserId ?? "System");
 
             await _unitOfWork.CaseStudies.UpdateAsync(caseStudy);
-            await _unitOfWork.CommitAsync();
+            await _unitOfWork.CommitAsync(); // DbContext will automatically set LastModifiedBy here
 
             await _mediator.Publish(new CacheInvalidationEvent(CacheKeys.CaseStudies, CacheKeys.FeaturedCaseStudies), cancellationToken);
 

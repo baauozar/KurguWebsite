@@ -34,7 +34,7 @@ namespace KurguWebsite.Application.Features.Partners.Commands
         {
             var partner = Partner.Create(request.Name, request.LogoPath, request.Type);
             partner.Update(request.Name, request.LogoPath, request.WebsiteUrl, request.Description, request.Type);
-            partner.SetCreatedBy(_currentUserService.UserId ?? "System");
+       
 
             await _unitOfWork.Partners.AddAsync(partner);
             await _unitOfWork.CommitAsync(cancellationToken);

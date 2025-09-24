@@ -1,4 +1,5 @@
-﻿using KurguWebsite.Domain.Common;
+﻿using KurguWebsite.Application.Common.Interfaces;
+using KurguWebsite.Domain.Common;
 using KurguWebsite.Domain.Entities;
 using KurguWebsite.Domain.Events;
 using KurguWebsite.Infrastructure.Identity;
@@ -21,10 +22,12 @@ namespace KurguWebsite.Persistence.Context
         IdentityUserToken<Guid>>
     {
         private readonly IMediator _mediator;
+        private readonly ICurrentUserService _currentUser;
 
-        public KurguWebsiteDbContext(DbContextOptions<KurguWebsiteDbContext> options, IMediator mediator) : base(options)
+        public KurguWebsiteDbContext(DbContextOptions<KurguWebsiteDbContext> options, IMediator mediator, ICurrentUserService currentUser) : base(options)
         {
             _mediator = mediator;
+            _currentUser = currentUser;
         }
 
         // DbSets
@@ -55,9 +58,28 @@ namespace KurguWebsite.Persistence.Context
             modelBuilder.Entity<IdentityUserToken<Guid>>().ToTable("UserTokens");
         }
 
+        // In KurguWebsiteDbContext.cs
         public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = new CancellationToken())
         {
-            await DispatchEvents(cancellationToken); // Pass the cancellation token
+            foreach (var entry in ChangeTracker.Entries<BaseEntity>())
+            {
+                if (entry.State == EntityState.Added)
+                {
+                    // Set all properties for new entities here
+                    entry.Entity.Id = Guid.NewGuid();
+                    entry.Entity.CreatedDate = DateTime.UtcNow;
+                    entry.Entity.CreatedBy = _currentUser.UserId ?? "system";
+                }
+
+                if (entry.State == EntityState.Modified)
+                {
+                    // Set all properties for modified entities here
+                    entry.Entity.LastModifiedDate = DateTime.UtcNow;
+                    entry.Entity.LastModifiedBy = _currentUser.UserId ?? "system";
+                }
+            }
+
+            await DispatchEvents(cancellationToken);
             return await base.SaveChangesAsync(cancellationToken);
         }
 

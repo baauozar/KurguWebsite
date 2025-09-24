@@ -1,7 +1,7 @@
 ﻿using Microsoft.Extensions.Diagnostics.HealthChecks;
 using System.Diagnostics;
 
-namespace KurguWebsite.WebAPI.Helpers
+namespace KurguWebsite.API.Helpers
 {
     public class CustomHealthCheck : IHealthCheck
     {

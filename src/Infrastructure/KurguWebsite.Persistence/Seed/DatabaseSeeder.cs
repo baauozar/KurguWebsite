@@ -99,7 +99,7 @@ namespace KurguWebsite.Persistence.Seed
                     "To be the most trusted technology partner globally.",
                     "Innovation, Excellence, Partnership");
 
-                company.SetCreatedBy("Seeder");
+               
 
                 await context.CompanyInfo.AddAsync(company);
             }
@@ -121,7 +121,7 @@ namespace KurguWebsite.Persistence.Seed
                 {
                     services[i].SetDisplayOrder(i + 1);
                     services[i].SetFeatured(i < 2);
-                    services[i].SetCreatedBy("Seeder");
+                 
                 }
 
                 await context.Services.AddRangeAsync(services);
@@ -141,7 +141,7 @@ namespace KurguWebsite.Persistence.Seed
                 };
 
                 foreach (var page in pages)
-                    page.SetCreatedBy("Seeder");
+                   
 
                 await context.Pages.AddRangeAsync(pages);
             }
@@ -162,7 +162,7 @@ namespace KurguWebsite.Persistence.Seed
                 {
                     t.SetDisplayOrder(1);
                     t.SetFeatured(true);
-                    t.SetCreatedBy("Seeder");
+                 
                 }
 
                 await context.Testimonials.AddRangeAsync(testimonials);
@@ -181,7 +181,7 @@ namespace KurguWebsite.Persistence.Seed
                 };
 
                 foreach (var p in partners)
-                    p.SetCreatedBy("Seeder");
+                    
 
                 await context.Partners.AddRangeAsync(partners);
             }
@@ -202,7 +202,7 @@ namespace KurguWebsite.Persistence.Seed
                 };
 
                 foreach (var step in steps)
-                    step.SetCreatedBy("Seeder");
+                    
 
                 await context.ProcessSteps.AddRangeAsync(steps);
             }
@@ -225,7 +225,7 @@ namespace KurguWebsite.Persistence.Seed
                 {
                     cases[i].SetService(services[i].Id);
                     cases[i].SetFeatured(true);
-                    cases[i].SetCreatedBy("Seeder");
+                  
                 }
 
                 await context.CaseStudies.AddRangeAsync(cases);

@@ -2,7 +2,7 @@
 using Microsoft.AspNetCore.Mvc.Filters;
 using KurguWebsite.Application.Common.Exceptions;
 
-namespace KurguWebsite.WebAPI.Filters
+namespace KurguWebsite.API.Filters
 {
     public class ApiExceptionFilter : ExceptionFilterAttribute
     {

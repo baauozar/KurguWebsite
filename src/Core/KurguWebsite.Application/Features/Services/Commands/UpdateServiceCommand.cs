@@ -33,8 +33,7 @@ namespace KurguWebsite.Application.Features.Services.Commands
             if (service == null) return Result<ServiceDto>.Failure("Service not found.");
 
             service.Update(request.Title, request.Description, request.IconPath,request.FullDescription,request.ShortDescription,request.Category);
-            service.SetModifiedBy(_currentUserService.UserId ?? "System");
-
+           
             await _unitOfWork.Services.UpdateAsync(service);
             await _unitOfWork.CommitAsync(cancellationToken);
 

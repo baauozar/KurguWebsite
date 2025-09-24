@@ -1,4 +1,5 @@
-﻿using System;
+﻿// In BaseEntity.cs
+using System;
 using System.Collections.Generic;
 using KurguWebsite.Domain.Events;
 
@@ -6,48 +7,20 @@ namespace KurguWebsite.Domain.Common
 {
     public abstract class BaseEntity
     {
-        // --- YOUR EXISTING AUDITING PROPERTIES (KEEP THESE) ---
-        public Guid Id { get; protected set; }
-        public DateTime CreatedDate { get; private set; }
-        public DateTime? LastModifiedDate { get; private set; }
-        public string? CreatedBy { get; private set; }
-        public string? LastModifiedBy { get; private set; }
+        public Guid Id { get; set; } // Make setter public or internal
+        public DateTime CreatedDate { get; set; } // Make setter public or internal
+        public string? CreatedBy { get; set; } // Make setter public or internal
+        public DateTime? LastModifiedDate { get; set; }
+        public string? LastModifiedBy { get; set; }
 
-        protected BaseEntity()
-        {
-            Id = Guid.NewGuid();
-            CreatedDate = DateTime.UtcNow;
-        }
+        // Remove all logic from the constructor
+        protected BaseEntity() { }
 
-        public void SetCreatedBy(string userId)
-        {
-            CreatedBy = userId;
-        }
-
-        public void SetModifiedBy(string userId)
-        {
-            LastModifiedBy = userId;
-            LastModifiedDate = DateTime.UtcNow;
-        }
-
-        // --- NEW DOMAIN EVENT PROPERTIES (ADD THESE) ---
+        // The domain event properties remain the same...
         private readonly List<DomainEvent> _domainEvents = new List<DomainEvent>();
-
         public IReadOnlyCollection<DomainEvent> DomainEvents => _domainEvents.AsReadOnly();
-
-        public void AddDomainEvent(DomainEvent domainEvent)
-        {
-            _domainEvents.Add(domainEvent);
-        }
-
-        public void RemoveDomainEvent(DomainEvent domainEvent)
-        {
-            _domainEvents.Remove(domainEvent);
-        }
-
-        public void ClearDomainEvents()
-        {
-            _domainEvents.Clear();
-        }
+        public void AddDomainEvent(DomainEvent domainEvent) => _domainEvents.Add(domainEvent);
+        public void RemoveDomainEvent(DomainEvent domainEvent) => _domainEvents.Remove(domainEvent);
+        public void ClearDomainEvents() => _domainEvents.Clear();
     }
 }

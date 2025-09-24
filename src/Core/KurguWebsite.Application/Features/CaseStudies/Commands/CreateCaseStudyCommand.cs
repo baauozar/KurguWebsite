@@ -28,7 +28,7 @@ namespace KurguWebsite.Application.Features.CaseStudies.Commands
         public async Task<Result<CaseStudyDto>> Handle(CreateCaseStudyCommand request, CancellationToken cancellationToken)
         {
             var caseStudy = CaseStudy.Create(request.Title, request.ClientName, request.Description,request.ImagePath,request.CompletedDate);
-            caseStudy.SetCreatedBy(_currentUserService.UserId ?? "System");
+
 
             await _unitOfWork.CaseStudies.AddAsync(caseStudy);
             await _unitOfWork.CommitAsync();

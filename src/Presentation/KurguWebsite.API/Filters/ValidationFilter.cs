@@ -1,7 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
-
-namespace KurguWebsite.WebAPI.Filters
+namespace KurguWebsite.API.Filters
 {
     public class ValidationFilter : IActionFilter
     {

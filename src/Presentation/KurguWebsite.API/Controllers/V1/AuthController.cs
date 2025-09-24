@@ -7,12 +7,13 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
 using System.Security.Claims;
 
-namespace KurguWebsite.WebAPI.Controllers.V1
+namespace KurguWebsite.API.Controllers.V1
 {
-    [Authorize]
+  
     [ApiController]
-    [ApiVersion("1.0")]
     [Route("api/v{version:apiVersion}/auth")]
+    [ApiVersion("1.0")]
+
     public class AuthController : BaseApiController
     {
         private readonly IAuthenticationService _authService;
@@ -97,7 +98,7 @@ namespace KurguWebsite.WebAPI.Controllers.V1
         /// <param name="request">The current and new password details.</param>
         /// <returns>A success message.</returns>
         [HttpPost("change-password")]
-      
+        [Authorize]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
@@ -119,7 +120,7 @@ namespace KurguWebsite.WebAPI.Controllers.V1
         /// </summary>
         /// <returns>The user's profile.</returns>
         [HttpGet("profile")]
-    
+        [Authorize]
         [ProducesResponseType(typeof(UserProfileResponse), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
         public IActionResult GetProfile()
@@ -144,7 +145,7 @@ namespace KurguWebsite.WebAPI.Controllers.V1
                 HttpOnly = true,
                 Secure = true, // Should be true in production
                 SameSite = SameSiteMode.Strict,
-                Expires = DateTime.UtcNow.AddDays(7)
+                Expires = DateTime.UtcNow.AddHours(7)
             };
             Response.Cookies.Append("refreshToken", refreshToken, cookieOptions);
         }

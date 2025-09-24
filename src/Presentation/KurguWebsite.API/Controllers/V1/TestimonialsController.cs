@@ -3,7 +3,6 @@ using KurguWebsite.Application.Common.Models;
 using KurguWebsite.Application.DTOs.Testimonial;
 using KurguWebsite.Application.Features.Testimonials.Commands;
 using KurguWebsite.Application.Features.Testimonials.Queries;
-using KurguWebsite.WebAPI.Controllers;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;

@@ -7,15 +7,16 @@ using KurguWebsite.Infrastructure.Middleware;
 using KurguWebsite.Persistence;
 using KurguWebsite.Persistence.Context;
 using KurguWebsite.Persistence.Seed;
-using KurguWebsite.WebAPI.Filters;
-using KurguWebsite.WebAPI.Helpers;
-using KurguWebsite.WebAPI.Middleware;
+using KurguWebsite.API.Filters;
+using KurguWebsite.API.Helpers;
+using KurguWebsite.API.Middleware;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Serilog;
 using Serilog.Events;
 using System.Text.Json.Serialization;
+using System.Reflection;
 
 // Configure Serilog
 Log.Logger = new LoggerConfiguration()
@@ -35,21 +36,19 @@ try
     Log.Information("Starting KurguWebsite API");
 
     var builder = WebApplication.CreateBuilder(args);
-  /*  builder.Services.AddRouting(options =>
+    builder.Services.AddRouting(options =>
     {
         options.LowercaseUrls = true;
-    });*/
-    // Use Serilog
+    });
+
     builder.Host.UseSerilog();
     builder.WebHost.CaptureStartupErrors(true)
         .UseSetting("detailedErrors", "true");
 
-    // Add services
     ConfigureServices(builder.Services, builder.Configuration);
 
     var app = builder.Build();
 
-    // Configure pipeline
     await ConfigureAsync(app, app.Environment);
 
     app.Run();
@@ -66,12 +65,13 @@ finally
 // -------------------- Services --------------------
 void ConfigureServices(IServiceCollection services, IConfiguration configuration)
 {
-    // Add Application, Infrastructure, Persistence layers
+    // *** THE FIX IS HERE ***
+    // We now register Persistence first, so that the Infrastructure layer's 
+    // explicit JWT authentication setup can override the default Identity settings.
+    services.AddPersistence(configuration);
     services.AddApplication();
     services.AddInfrastructure(configuration);
-    services.AddPersistence(configuration);
 
-    // Controllers with filters
     services.AddControllers(options =>
     {
         options.Filters.Add(new ProducesAttribute("application/json"));
@@ -106,8 +106,6 @@ void ConfigureServices(IServiceCollection services, IConfiguration configuration
         };
     });
 
-    // API Versioning + Swagger
-    // API Versioning + Swagger
     services.AddApiVersioning(options =>
     {
         options.DefaultApiVersion = new ApiVersion(1, 0);
@@ -119,7 +117,6 @@ void ConfigureServices(IServiceCollection services, IConfiguration configuration
     })
     .AddMvc().AddApiExplorer(options =>
     {
-        // This is where the options from AddVersionedApiExplorer moved to
         options.GroupNameFormat = "'v'VVV";
         options.SubstituteApiVersionInUrl = true;
     });
@@ -127,21 +124,17 @@ void ConfigureServices(IServiceCollection services, IConfiguration configuration
     services.AddEndpointsApiExplorer();
     services.ConfigureSwagger();
 
-    // Health Checks
     services.AddHealthChecks()
         .AddDbContextCheck<KurguWebsiteDbContext>("Database")
         .AddCheck<CustomHealthCheck>("Custom");
 
-    // Response compression & caching
     services.AddResponseCompression(options => options.EnableForHttps = true);
     services.AddResponseCaching();
 
-    // Other essentials
     services.AddHttpContextAccessor();
     services.AddDataProtection();
     services.AddAntiforgery(options => options.HeaderName = "X-CSRF-TOKEN");
 
-    // AutoMapper
     services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
 }
 
@@ -149,7 +142,7 @@ void ConfigureServices(IServiceCollection services, IConfiguration configuration
 async Task ConfigureAsync(WebApplication app, IWebHostEnvironment env)
 {
     app.UseMiddleware<GlobalExceptionMiddleware>();
-    app.UseSecurityHeaders(); // customize your options
+    app.UseSecurityHeaders();
     app.UseAntiXss();
     app.UseSerilogRequestLogging();
 
@@ -183,7 +176,7 @@ async Task ConfigureAsync(WebApplication app, IWebHostEnvironment env)
                 options.SwaggerEndpoint($"/swagger/{desc.GroupName}/swagger.json",
                     $"Kurgu Website API {desc.GroupName}");
             }
-            options.RoutePrefix = string.Empty;
+            options.RoutePrefix = "swagger";
         });
     }
 
@@ -193,7 +186,6 @@ async Task ConfigureAsync(WebApplication app, IWebHostEnvironment env)
         ResponseWriter = HealthChecks.UI.Client.UIResponseWriter.WriteHealthCheckUIResponse
     });
 
-    // --------- Seed database in Development ---------
     if (env.IsDevelopment())
     {
         using var scope = app.Services.CreateScope();
@@ -214,3 +206,4 @@ async Task ConfigureAsync(WebApplication app, IWebHostEnvironment env)
 }
 
 public partial class Program { }
+

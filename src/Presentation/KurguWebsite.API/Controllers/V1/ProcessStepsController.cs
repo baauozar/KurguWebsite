@@ -2,7 +2,6 @@
 using KurguWebsite.Application.DTOs.ProcessStep;
 using KurguWebsite.Application.Features.ProcessSteps.Commands;
 using KurguWebsite.Application.Features.ProcessSteps.Queries;
-using KurguWebsite.WebAPI.Controllers;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;

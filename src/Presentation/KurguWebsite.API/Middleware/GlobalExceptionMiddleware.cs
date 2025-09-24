@@ -3,7 +3,7 @@ using System.Text.Json;
 using KurguWebsite.Application.Common.Exceptions;
 using KurguWebsite.Domain.Exceptions;
 
-namespace KurguWebsite.WebAPI.Middleware
+namespace KurguWebsite.API.Middleware
 {
     public class GlobalExceptionMiddleware
     {

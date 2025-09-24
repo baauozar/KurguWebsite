@@ -1,10 +1,12 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using KurguWebsite.Application.Common.Interfaces;
+using MediatR;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Design;
 using Microsoft.Extensions.Configuration;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace KurguWebsite.Persistence.Context
@@ -13,7 +15,6 @@ namespace KurguWebsite.Persistence.Context
     {
         public KurguWebsiteDbContext CreateDbContext(string[] args)
         {
-            // Adjust path to point to your API project
             var configuration = new ConfigurationBuilder()
                 .SetBasePath(Path.Combine(Directory.GetCurrentDirectory(), "../../Presentation/KurguWebsite.API"))
                 .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
@@ -22,7 +23,25 @@ namespace KurguWebsite.Persistence.Context
             var optionsBuilder = new DbContextOptionsBuilder<KurguWebsiteDbContext>();
             optionsBuilder.UseSqlServer(configuration.GetConnectionString("DefaultConnection"));
 
-            return new KurguWebsiteDbContext(optionsBuilder.Options, new NoOpMediator());
+            return new KurguWebsiteDbContext(
+                optionsBuilder.Options,
+                new NoOpMediator(),
+                new DesignTimeCurrentUserService()
+            );
         }
     }
+
+    // This mock now fully implements the ICurrentUserService interface for design-time tools.
+    public class DesignTimeCurrentUserService : ICurrentUserService
+    {
+        public string? UserId => null;
+        public Guid? UserGuidId => null;
+        public string? UserName => null;
+        public string? Email => null;
+        public bool IsAuthenticated => false;
+        public bool IsAdmin => false;
+        public bool IsInRole(string role) => false;
+    }
+
+
 }

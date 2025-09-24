@@ -2,7 +2,6 @@
 using KurguWebsite.Application.DTOs.CompanyInfo;
 using KurguWebsite.Application.Features.CompanyInfo.Commands;
 using KurguWebsite.Application.Features.CompanyInfo.Queries;
-using KurguWebsite.WebAPI.Controllers;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
