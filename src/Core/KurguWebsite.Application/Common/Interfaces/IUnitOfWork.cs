@@ -21,6 +21,7 @@ namespace KurguWebsite.Application.Common.Interfaces
         IRefreshTokenRepository RefreshTokens { get; } // Added
         IServiceFeatureRepository ServiceFeatures { get; }
         ICaseStudyMetricRepository CaseStudyMetrics { get; }
+        IAuditLogRepository AuditLogs { get; }
 
         Task<int> CommitAsync();
         Task<int> CommitAsync(CancellationToken cancellationToken);

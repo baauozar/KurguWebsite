@@ -27,6 +27,7 @@ namespace KurguWebsite.Persistence.Repositories
         private IRefreshTokenRepository? _refreshTokens;
         private IServiceFeatureRepository? _ServiceFeatures;
         private ICaseStudyMetricRepository? _caseStudyMetrics;
+        private IAuditLogRepository? _auditLogs;
 
         public UnitOfWork(KurguWebsiteDbContext context)
         {
@@ -45,7 +46,9 @@ namespace KurguWebsite.Persistence.Repositories
 
         public IServiceFeatureRepository ServiceFeatures => _ServiceFeatures??= new ServiceFeatureRepository(_context);
 
-        public ICaseStudyMetricRepository CaseStudyMetrics => _caseStudyMetrics=new CaseStudyMetricRepository(_context);
+        public ICaseStudyMetricRepository CaseStudyMetrics => _caseStudyMetrics??=new CaseStudyMetricRepository(_context);
+
+        public IAuditLogRepository AuditLogs => _auditLogs??=new AuditLogRepository(_context);
 
         public async Task<int> CommitAsync()
         {

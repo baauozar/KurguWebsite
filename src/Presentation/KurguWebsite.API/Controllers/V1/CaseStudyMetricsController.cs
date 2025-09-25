@@ -1,4 +1,4 @@
-﻿/*using Asp.Versioning;
+﻿using Asp.Versioning;
 using KurguWebsite.Application.DTOs.CaseStudy;
 using KurguWebsite.Application.Features.CaseStudies.Commands;
 using KurguWebsite.Application.Features.CaseStudies.Queries;
@@ -15,6 +15,12 @@ namespace KurguWebsite.API.Controllers.V1
     public class CaseStudyMetricsController : BaseApiController
     {
         private readonly IMediator _mediator;
+
+        public CaseStudyMetricsController(IMediator mediator)
+        {
+            _mediator = mediator;
+        }
+
         [HttpGet("{id}")]
         public async Task<IActionResult> GetById(Guid id)
         {
@@ -46,4 +52,4 @@ namespace KurguWebsite.API.Controllers.V1
             return HandleResult(await this._mediator.Send(new DeleteCaseStudyMetricCommand { Id = id }));
         }
     }
-}*/
+}

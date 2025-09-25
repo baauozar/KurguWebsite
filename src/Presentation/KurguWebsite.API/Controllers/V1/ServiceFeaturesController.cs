@@ -14,6 +14,12 @@ namespace KurguWebsite.API.Controllers.V1
     public class ServiceFeaturesController : BaseApiController
     {
         private readonly IMediator _mediator;
+
+        public ServiceFeaturesController(IMediator mediator)
+        {
+            _mediator = mediator;
+        }
+
         [HttpGet("{id}")]
         public async Task<IActionResult> GetById(Guid id)
         {

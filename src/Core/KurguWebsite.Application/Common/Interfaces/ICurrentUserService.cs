@@ -8,7 +8,7 @@
         bool IsAuthenticated { get; }
         bool IsAdmin { get; }
         bool IsInRole(string role);
-
+        string? IpAddress { get; }
         // New helper
         Guid? UserGuidId { get; }
     }

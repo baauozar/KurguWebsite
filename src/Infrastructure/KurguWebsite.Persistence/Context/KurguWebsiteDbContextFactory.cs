@@ -40,6 +40,9 @@ namespace KurguWebsite.Persistence.Context
         public string? Email => null;
         public bool IsAuthenticated => false;
         public bool IsAdmin => false;
+
+        public string? IpAddress => null;
+
         public bool IsInRole(string role) => false;
     }
 

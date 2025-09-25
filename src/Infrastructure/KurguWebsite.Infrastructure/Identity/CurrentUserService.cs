@@ -34,6 +34,21 @@ namespace KurguWebsite.Infrastructure.Identity
 
         public bool IsAdmin => _httpContextAccessor.HttpContext?.User?.IsInRole("Admin") ?? false;
 
+        // --- ADDED THIS PROPERTY ---
+        public string? IpAddress
+        {
+            get
+            {
+                var ip = _httpContextAccessor.HttpContext?.Connection?.RemoteIpAddress?.ToString();
+                if (ip == "::1") // Handle IPv6 loopback
+                {
+                    return "127.0.0.1";
+                }
+                return ip;
+            }
+        }
+        // -------------------------
+
         public bool IsInRole(string role)
         {
             return _httpContextAccessor.HttpContext?.User?.IsInRole(role) ?? false;

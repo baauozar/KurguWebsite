@@ -17,7 +17,7 @@ namespace KurguWebsite.Persistence.Repositories
             _context = context;
             _dbSet = _context.Set<T>();
         }
-
+        public IQueryable<T> Entities => _context.Set<T>();
         public virtual async Task<T?> GetByIdAsync(Guid id)
         {
             return await _dbSet.FindAsync(id);
