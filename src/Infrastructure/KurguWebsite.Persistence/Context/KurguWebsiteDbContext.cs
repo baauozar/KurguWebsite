@@ -41,6 +41,7 @@ namespace KurguWebsite.Persistence.Context
         public DbSet<CompanyInfo> CompanyInfo { get; set; }
         public DbSet<ProcessStep> ProcessSteps { get; set; }
         public DbSet<RefreshToken> RefreshTokens { get; set; }
+        public DbSet<CaseStudyMetric> CaseStudyMetrics { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {

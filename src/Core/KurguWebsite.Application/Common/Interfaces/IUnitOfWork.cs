@@ -19,6 +19,8 @@ namespace KurguWebsite.Application.Common.Interfaces
         ICompanyInfoRepository CompanyInfo { get; }
         IProcessStepRepository ProcessSteps { get; }
         IRefreshTokenRepository RefreshTokens { get; } // Added
+        IServiceFeatureRepository ServiceFeatures { get; }
+        ICaseStudyMetricRepository CaseStudyMetrics { get; }
 
         Task<int> CommitAsync();
         Task<int> CommitAsync(CancellationToken cancellationToken);

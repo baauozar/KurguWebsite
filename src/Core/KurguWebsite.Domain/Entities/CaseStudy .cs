@@ -32,6 +32,9 @@ namespace KurguWebsite.Domain.Entities
         // Technologies list
         private readonly List<string> _technologies = new();
         public IReadOnlyCollection<string> Technologies => _technologies.AsReadOnly();
+        private readonly List<CaseStudyMetric> _metrics = new();
+        public IReadOnlyCollection<CaseStudyMetric> Metrics => _metrics.AsReadOnly();
+
 
         // Private constructor for EF
         private CaseStudy() { }

@@ -15,5 +15,26 @@ namespace KurguWebsite.Domain.Entities
         public string? Icon { get; set; }
 
         public virtual CaseStudy CaseStudy { get; set; }
+        private CaseStudyMetric() { }
+
+        // Factory method for creating a new metric
+        public static CaseStudyMetric Create(Guid caseStudyId, string metricName, string metricValue, string? icon)
+        {
+            return new CaseStudyMetric
+            {
+                CaseStudyId = caseStudyId,
+                MetricName = metricName,
+                MetricValue = metricValue,
+                Icon = icon
+            };
+        }
+
+        // Method for updating an existing metric
+        public void Update(string metricName, string metricValue, string? icon)
+        {
+            MetricName = metricName;
+            MetricValue = metricValue;
+            Icon = icon;
+        }
     }
 }
