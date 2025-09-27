@@ -1,15 +1,11 @@
-﻿using KurguWebsite.Application.Common.Extensions;
+﻿using AutoMapper;
 using KurguWebsite.Application.Common.Models;
+using KurguWebsite.Application.DTOs.Audit;
 using KurguWebsite.Application.Interfaces.Repositories;
-using KurguWebsite.Application.Mappings;
 using KurguWebsite.Domain.Entities;
 using KurguWebsite.Persistence.Context;
+using KurguWebsite.Persistence.Extensions;
 using Microsoft.EntityFrameworkCore;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace KurguWebsite.Persistence.Repositories
 {
@@ -34,8 +30,23 @@ namespace KurguWebsite.Persistence.Repositories
             // Build the query and use your extension method to create the paginated list
             return await _context.AuditLogs
                 .OrderByDescending(log => log.Timestamp)
-                .PaginatedListAsync(pageNumber, pageSize);
+                .ToPaginatedListAsync(pageNumber, pageSize);
         }
         public IQueryable<AuditLog> Entities => _context.AuditLogs;
+        public Task<PaginatedList<AuditLogDto>> GetPagedAsync(
+          int pageNumber,
+          int pageSize,
+          IConfigurationProvider configuration,
+          CancellationToken cancellationToken = default)
+        {
+            return _context.AuditLogs
+                .AsNoTracking()
+                .OrderByDescending(x => x.Timestamp)
+                .ToPaginatedListAsync<AuditLog, AuditLogDto>(
+                    configuration,
+                    pageNumber,
+                    pageSize,
+                    cancellationToken);
+        }
     }
 }

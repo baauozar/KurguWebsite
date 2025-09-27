@@ -1,14 +1,9 @@
 ﻿using AutoMapper;
-using KurguWebsite.Application.Common.Extensions;
 using KurguWebsite.Application.Common.Interfaces;
 using KurguWebsite.Application.Common.Models;
 using KurguWebsite.Application.DTOs.Audit;
-using KurguWebsite.Application.Mappings;
-using KurguWebsite.Domain.Entities;
 using MediatR;
-using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
+
 
 namespace KurguWebsite.Application.Features.AuditLogs.Queries
 {
@@ -18,26 +13,28 @@ namespace KurguWebsite.Application.Features.AuditLogs.Queries
         public int PageSize { get; init; } = 20;
     }
 
-    public class GetPaginatedAuditLogsQueryHandler : IRequestHandler<GetPaginatedAuditLogsQuery, PaginatedList<AuditLogDto>>
+    public class GetPaginatedAuditLogsQueryHandler
+        : IRequestHandler<GetPaginatedAuditLogsQuery, PaginatedList<AuditLogDto>>
     {
-        private readonly IUnitOfWork _unitOfWork;
+        private readonly IUnitOfWork _uow;
         private readonly IMapper _mapper;
 
-        public GetPaginatedAuditLogsQueryHandler(IUnitOfWork unitOfWork, IMapper mapper)
+        public GetPaginatedAuditLogsQueryHandler(IUnitOfWork uow, IMapper mapper)
         {
-            _unitOfWork = unitOfWork;
+            _uow = uow;
             _mapper = mapper;
         }
 
-        public async Task<PaginatedList<AuditLogDto>> Handle(GetPaginatedAuditLogsQuery request, CancellationToken cancellationToken)
+        public Task<PaginatedList<AuditLogDto>> Handle(
+            GetPaginatedAuditLogsQuery request,
+            CancellationToken ct)
         {
-            // CORRECTED: Use the 'Entities' property to build the query efficiently
-            return await _unitOfWork.AuditLogs.Entities
-       .OrderByDescending(x => x.Timestamp)
-       .ToPaginatedListAsync<AuditLog, AuditLogDto>(
-           _mapper.ConfigurationProvider,
-           request.PageNumber,
-           request.PageSize);
+            // Delegate EF and pagination to Infra via the repository method
+            return _uow.AuditLogs.GetPagedAsync(
+                request.PageNumber,
+                request.PageSize,
+                _mapper.ConfigurationProvider,
+                ct);
         }
     }
 }

@@ -1,7 +1,6 @@
-﻿using AutoMapper;
+﻿/*using AutoMapper;
 using AutoMapper.QueryableExtensions;
 using KurguWebsite.Application.Common.Models;
-using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -27,4 +26,4 @@ namespace KurguWebsite.Application.Mappings
             return queryable.ProjectTo<TDestination>(configuration).ToListAsync();
         }
     }
-}
+}*/

@@ -2,7 +2,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\Core\KurguWebsite.Application\KurguWebsite.Application.csproj" />
-    <ProjectReference Include="..\KurguWebsite.Infrastructure\KurguWebsite.Infrastructure.csproj" />
+    <ProjectReference Include="..\..\Core\KurguWebsite.Domain\KurguWebsite.Domain.csproj" />
   </ItemGroup>
 
   <ItemGroup>
