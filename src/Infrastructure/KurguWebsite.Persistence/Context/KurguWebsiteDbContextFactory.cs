@@ -1,13 +1,11 @@
 ﻿using KurguWebsite.Application.Common.Interfaces;
+using KurguWebsite.Domain.Common;
+using KurguWebsite.Domain.Events;
+using KurguWebsite.Infrastructure.Services;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Design;
 using Microsoft.Extensions.Configuration;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
 
 namespace KurguWebsite.Persistence.Context
 {
@@ -22,12 +20,13 @@ namespace KurguWebsite.Persistence.Context
 
             var optionsBuilder = new DbContextOptionsBuilder<KurguWebsiteDbContext>();
             optionsBuilder.UseSqlServer(configuration.GetConnectionString("DefaultConnection"));
-
+            var mediator = new NoOpMediator(); // Your dummy mediator
+            var currentUser = new DesignTimeCurrentUserService();
             return new KurguWebsiteDbContext(
-                optionsBuilder.Options,
-                new NoOpMediator(),
-                new DesignTimeCurrentUserService()
-            );
+               optionsBuilder.Options,
+                mediator,
+                currentUser
+           );
         }
     }
 

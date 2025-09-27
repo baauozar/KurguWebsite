@@ -76,6 +76,15 @@ namespace KurguWebsite.Persistence.Repositories
                 .Include(s => s.Features) // This line loads the related features
                 .FirstOrDefaultAsync(s => s.Slug == slug && s.IsActive);
         }
-
+        public IQueryable<Service> GetActiveQueryable()
+        {
+            return _context.Services
+                .Where(s => s.IsActive)
+                .OrderBy(s => s.DisplayOrder);
+        }
+        public IQueryable<Service> GetActiveServicesQueryable()
+        {
+            return _dbSet.Where(s => s.IsActive);
+        }
     }
 }

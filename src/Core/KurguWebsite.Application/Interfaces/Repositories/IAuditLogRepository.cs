@@ -1,4 +1,5 @@
-﻿using KurguWebsite.Domain.Entities;
+﻿using KurguWebsite.Application.Common.Models;
+using KurguWebsite.Domain.Entities;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -7,8 +8,13 @@ using System.Threading.Tasks;
 
 namespace KurguWebsite.Application.Interfaces.Repositories
 {
-    public interface IAuditLogRepository : IGenericRepository<AuditLog>
+    public interface IAuditLogRepository
     {
         Task<List<AuditLog>> GetLogsByUserIdAsync(string userId);
+
+        // Get paginated logs
+        Task<PaginatedList<AuditLog>> GetPaginatedLogsAsync(int pageNumber, int pageSize);
+        IQueryable<AuditLog> Entities { get; }
+
     }
 }

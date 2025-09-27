@@ -8,5 +8,8 @@ namespace KurguWebsite.Application.Common.Interfaces.Repositories
         Task<IReadOnlyList<Testimonial>> GetActiveTestimonialsAsync();
         Task<IReadOnlyList<Testimonial>> GetFeaturedTestimonialsAsync();
         Task<Testimonial?> GetRandomTestimonialAsync();
+
+        IQueryable<Testimonial> GetAllQueryable();
+        Task<IReadOnlyList<Testimonial>> GetAllActiveAsync();
     }
 }

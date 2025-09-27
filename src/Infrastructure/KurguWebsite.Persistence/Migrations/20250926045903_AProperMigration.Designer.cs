@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace KurguWebsite.Persistence.Migrations
 {
     [DbContext(typeof(KurguWebsiteDbContext))]
-    [Migration("20250925055713_fixtables")]
-    partial class fixtables
+    [Migration("20250926045903_AProperMigration")]
+    partial class AProperMigration
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -37,15 +37,13 @@ namespace KurguWebsite.Persistence.Migrations
                         .HasColumnType("nvarchar(50)");
 
                     b.Property<string>("CreatedBy")
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<DateTime>("CreatedDate")
                         .HasColumnType("datetime2");
 
                     b.Property<string>("DeletedBy")
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<DateTime?>("DeletedDate")
                         .HasColumnType("datetime2");
@@ -66,13 +64,10 @@ namespace KurguWebsite.Persistence.Migrations
                         .HasColumnType("nvarchar(50)");
 
                     b.Property<bool>("IsDeleted")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("bit")
-                        .HasDefaultValue(false);
+                        .HasColumnType("bit");
 
                     b.Property<string>("LastModifiedBy")
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<DateTime?>("LastModifiedDate")
                         .HasColumnType("datetime2");
@@ -100,7 +95,7 @@ namespace KurguWebsite.Persistence.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("AuditLogs");
+                    b.ToTable("AuditLogs", (string)null);
                 });
 
             modelBuilder.Entity("KurguWebsite.Domain.Entities.CaseStudy", b =>

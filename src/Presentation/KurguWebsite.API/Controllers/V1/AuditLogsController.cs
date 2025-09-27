@@ -7,6 +7,8 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace KurguWebsite.API.Controllers.V1
 {
+    [ApiController]
+    [Route("api/v{version:apiVersion}/[controller]")]
     [ApiVersion("1.0")]
     [Authorize(Roles = "Admin")] // Only Admins should be able to view audit logs
     public class AuditLogsController : BaseApiController

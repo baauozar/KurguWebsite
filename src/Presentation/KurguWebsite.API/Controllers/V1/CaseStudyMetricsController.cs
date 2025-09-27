@@ -9,8 +9,9 @@ using System.Threading.Tasks;
 
 namespace KurguWebsite.API.Controllers.V1
 {
-    [ApiVersion("1.0")]
+    [ApiController]
     [Route("api/v{version:apiVersion}/[controller]")]
+    [ApiVersion("1.0")]
 
     public class CaseStudyMetricsController : BaseApiController
     {

@@ -9,12 +9,7 @@ using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.ChangeTracking;
 using Newtonsoft.Json;
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Reflection;
-using System.Threading;
-using System.Threading.Tasks;
 
 namespace KurguWebsite.Persistence.Context
 {
@@ -29,7 +24,6 @@ namespace KurguWebsite.Persistence.Context
             _currentUser = currentUser;
         }
 
-        // --- Your DbSets remain the same ---
         public DbSet<Service> Services { get; set; }
         public DbSet<ServiceFeature> ServiceFeatures { get; set; }
         public DbSet<CaseStudy> CaseStudies { get; set; }
@@ -47,7 +41,12 @@ namespace KurguWebsite.Persistence.Context
         {
             base.OnModelCreating(modelBuilder);
             modelBuilder.Ignore<DomainEvent>();
+
+            // This line automatically finds and applies all IEntityTypeConfiguration classes
+            // from the current assembly, including your AuditLogConfiguration.
             modelBuilder.ApplyConfigurationsFromAssembly(Assembly.GetExecutingAssembly());
+
+            // Renaming Identity tables for clarity
             modelBuilder.Entity<ApplicationUser>().ToTable("Users");
             modelBuilder.Entity<IdentityRole<Guid>>().ToTable("Roles");
             modelBuilder.Entity<IdentityUserRole<Guid>>().ToTable("UserRoles");
@@ -55,60 +54,38 @@ namespace KurguWebsite.Persistence.Context
             modelBuilder.Entity<IdentityUserLogin<Guid>>().ToTable("UserLogins");
             modelBuilder.Entity<IdentityRoleClaim<Guid>>().ToTable("RoleClaims");
             modelBuilder.Entity<IdentityUserToken<Guid>>().ToTable("UserTokens");
-
-         
         }
 
         public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = new CancellationToken())
         {
-            var now = DateTime.UtcNow;
-            var currentUserId = _currentUser.UserId ?? "system";
+            var auditEntries = GetAuditEntries();
 
-            // First, convert hard deletes into soft deletes
-            foreach (var entry in ChangeTracker.Entries<BaseEntity>())
-            {
-                if (entry.State == EntityState.Deleted && entry.Entity is AuditableEntity auditable)
-                {
-                    // Soft delete
-                    entry.State = EntityState.Modified;
-                    auditable.SoftDelete(currentUserId);
-                }
-            }
-
-            // Then, apply created/modified metadata
             foreach (var entry in ChangeTracker.Entries<BaseEntity>())
             {
                 if (entry.State == EntityState.Added)
                 {
                     entry.Entity.Id = Guid.NewGuid();
-                    entry.Entity.CreatedDate = now;
-                    entry.Entity.CreatedBy = currentUserId;
+                    entry.Entity.CreatedDate = DateTime.UtcNow;
+                    entry.Entity.CreatedBy = _currentUser.UserId ?? "system";
                 }
-                else if (entry.State == EntityState.Modified)
+                if (entry.State == EntityState.Modified)
                 {
-                    entry.Entity.LastModifiedDate = now;
-                    entry.Entity.LastModifiedBy = currentUserId;
+                    entry.Entity.LastModifiedDate = DateTime.UtcNow;
+                    entry.Entity.LastModifiedBy = _currentUser.UserId ?? "system";
                 }
             }
 
-            // Generate audit logs for all changes
-            var auditEntries = OnBeforeSaveChanges();
+            if (auditEntries.Any())
+            {
+                await AuditLogs.AddRangeAsync(auditEntries, cancellationToken);
+            }
 
-            // Save main changes
             var result = await base.SaveChangesAsync(cancellationToken);
-
-            // Save audit logs
-            await OnAfterSaveChanges(auditEntries, cancellationToken);
-
-            // Dispatch domain events
             await DispatchEvents(cancellationToken);
-
             return result;
         }
 
-
-        // --- NEW HELPER METHODS FOR AUDITING ---
-        private List<AuditLog> OnBeforeSaveChanges()
+        private List<AuditLog> GetAuditEntries()
         {
             ChangeTracker.DetectChanges();
             var entries = new List<AuditLog>();
@@ -123,7 +100,12 @@ namespace KurguWebsite.Persistence.Context
                     UserId = _currentUser.UserId ?? "System",
                     UserName = _currentUser.UserName ?? "System",
                     Timestamp = DateTime.UtcNow,
-                    IpAddress = _currentUser.IpAddress ?? "Unknown"
+                    IpAddress = _currentUser.IpAddress ?? "Unknown",
+                    // --- START: THE FIX ---
+                    // Initialize with a default empty JSON object to prevent null database inserts.
+                    OldValues = "{}",
+                    NewValues = "{}"
+                    // --- END: THE FIX ---
                 };
 
                 var primaryKey = entry.Properties.FirstOrDefault(p => p.Metadata.IsPrimaryKey());
@@ -137,10 +119,12 @@ namespace KurguWebsite.Persistence.Context
                     case EntityState.Added:
                         auditEntry.Action = "CREATE";
                         auditEntry.NewValues = GetValuesJson(entry.Properties);
+                        // OldValues correctly remains the default "{}"
                         break;
                     case EntityState.Deleted:
                         auditEntry.Action = "DELETE";
                         auditEntry.OldValues = GetValuesJson(entry.OriginalValues);
+                        // NewValues correctly remains the default "{}"
                         break;
                     case EntityState.Modified:
                         auditEntry.Action = "UPDATE";
@@ -153,22 +137,16 @@ namespace KurguWebsite.Persistence.Context
             return entries;
         }
 
-        private async Task OnAfterSaveChanges(List<AuditLog> auditEntries, CancellationToken cancellationToken)
-        {
-            if (auditEntries == null || !auditEntries.Any()) return;
-
-            await AuditLogs.AddRangeAsync(auditEntries, cancellationToken);
-            await base.SaveChangesAsync(cancellationToken);
-        }
-
         private string GetValuesJson(IEnumerable<PropertyEntry> properties)
         {
+            if (properties == null || !properties.Any()) return "{}";
             var values = properties.ToDictionary(p => p.Metadata.Name, p => p.CurrentValue);
             return JsonConvert.SerializeObject(values, new JsonSerializerSettings { ReferenceLoopHandling = ReferenceLoopHandling.Ignore });
         }
 
         private string GetValuesJson(PropertyValues propertyValues)
         {
+            if (propertyValues == null) return "{}";
             var values = propertyValues.Properties.ToDictionary(p => p.Name, p => propertyValues[p]);
             return JsonConvert.SerializeObject(values, new JsonSerializerSettings { ReferenceLoopHandling = ReferenceLoopHandling.Ignore });
         }
@@ -192,3 +170,4 @@ namespace KurguWebsite.Persistence.Context
         }
     }
 }
+

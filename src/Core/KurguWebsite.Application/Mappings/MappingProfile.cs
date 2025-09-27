@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using KurguWebsite.Application.DTOs.Audit;
 using KurguWebsite.Application.DTOs.CaseStudy;
 using KurguWebsite.Application.DTOs.CompanyInfo;
 using KurguWebsite.Application.DTOs.Contact;
@@ -72,6 +73,10 @@ namespace KurguWebsite.Application.Mappings
             // ContactMessage mappings
             CreateMap<ContactMessage, ContactMessageDto>();
             CreateMap<CreateContactMessageDto, ContactMessage>();
+            // Add at the end of your MappingProfiles constructor
+            CreateMap<AuditLog, AuditLogDto>()
+                .ForMember(dest => dest.UserName, opt => opt.MapFrom(src => src.UserName)); // optional if you need to map a related property
+
         }
     }
 }

@@ -24,6 +24,7 @@ namespace KurguWebsite.Infrastructure
             // Core Services
             services.AddScoped<IAppEnvironment, AppEnvironment>();
             services.AddSingleton<IDateTime, DateTimeService>();
+          
 
             // Caching
             services.AddMemoryCache();
@@ -36,6 +37,7 @@ namespace KurguWebsite.Infrastructure
             services.AddScoped<JwtService>();
             services.AddScoped<IAuthenticationService, EnhancedAuthenticationService>();
             services.AddScoped<ICurrentUserService, CurrentUserService>();
+
 
             // JWT Configuration
             var jwtSettings = configuration.GetSection("Jwt");

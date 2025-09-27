@@ -47,5 +47,18 @@ namespace KurguWebsite.Persistence.Repositories
             var index = random.Next(activeTestimonials.Count);
             return activeTestimonials[index];
         }
+        public IQueryable<Testimonial> GetAllQueryable()
+        {
+            return _dbSet.AsNoTracking();
+        }
+
+        public async Task<IReadOnlyList<Testimonial>> GetAllActiveAsync()
+        {
+            return await _dbSet
+                .Where(t => t.IsActive)
+                .OrderBy(t => t.DisplayOrder)
+                .AsNoTracking()
+                .ToListAsync();
+        }
     }
 }
