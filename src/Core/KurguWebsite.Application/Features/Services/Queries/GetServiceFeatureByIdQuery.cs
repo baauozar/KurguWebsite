@@ -12,7 +12,8 @@ public class GetServiceFeatureByIdQuery : IRequest<Result<ServiceFeatureDto>>
     public Guid Id { get; set; }
 }
 
-public class GetServiceFeatureByIdQueryHandler : IRequestHandler<GetServiceFeatureByIdQuery, Result<ServiceFeatureDto>>
+public class GetServiceFeatureByIdQueryHandler
+    : IRequestHandler<GetServiceFeatureByIdQuery, Result<ServiceFeatureDto>>
 {
     private readonly IUnitOfWork _unitOfWork;
     private readonly IMapper _mapper;
@@ -23,16 +24,15 @@ public class GetServiceFeatureByIdQueryHandler : IRequestHandler<GetServiceFeatu
         _mapper = mapper;
     }
 
-    public async Task<Result<ServiceFeatureDto>> Handle(GetServiceFeatureByIdQuery request, CancellationToken cancellationToken)
+    public async Task<Result<ServiceFeatureDto>> Handle(
+        GetServiceFeatureByIdQuery request,
+        CancellationToken cancellationToken)
     {
-        var serviceFeature = await _unitOfWork.ServiceFeatures.GetByIdAsync(request.Id);
+        var entity = await _unitOfWork.ServiceFeatures.GetByIdAsync(request.Id);
+        if (entity is null)
+            return Result<ServiceFeatureDto>.Failure("Service feature not found.");
 
-        if (serviceFeature == null)
-        {
-            return Result<ServiceFeatureDto>.Failure("Service Feature not found.");
-        }
-
-        var serviceFeatureDto = _mapper.Map<ServiceFeatureDto>(serviceFeature);
-        return Result<ServiceFeatureDto>.Success(serviceFeatureDto);
+        var dto = _mapper.Map<ServiceFeatureDto>(entity);
+        return Result<ServiceFeatureDto>.Success(dto);
     }
 }

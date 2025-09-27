@@ -2,11 +2,8 @@
 using AutoMapper;
 using KurguWebsite.Application.Common.Interfaces;
 using KurguWebsite.Application.Common.Models;
-using KurguWebsite.Application.DTOs.ServiceFeaturesDto;
+using KurguWebsite.Application.DTOs.Service;
 using MediatR;
-using System;
-using System.Threading;
-using System.Threading.Tasks;
 
 namespace KurguWebsite.Application.Features.Services.Commands
 {

@@ -26,9 +26,13 @@ namespace KurguWebsite.Application.Mappings
             CreateMap<Service, ServiceDto>();
             CreateMap<Service, ServiceDetailDto>()
                 .ForMember(dest => dest.Features, opt => opt.MapFrom(src => src.Features));
-            CreateMap<ServiceFeature, ServiceFeatureDto>();
+            CreateMap<ServiceFeature, CreateServiceFeatureDto>().ReverseMap();
+ 
+          
             CreateMap<CreateServiceDto, Service>();
             CreateMap<UpdateServiceDto, Service>();
+            CreateMap<ServiceFeature, ServiceFeatureDto>();
+
 
             // CaseStudy mappings
             CreateMap<CaseStudy, CaseStudyDto>()

@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace KurguWebsite.Application.DTOs.ServiceFeaturesDto
+namespace KurguWebsite.Application.DTOs.Service
 {
     public class UpdateServiceFeatureDto
     {

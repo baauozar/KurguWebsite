@@ -1,5 +1,6 @@
 ﻿using Asp.Versioning;
-using KurguWebsite.Application.DTOs.ServiceFeaturesDto;
+using KurguWebsite.Application.Common.Models;
+using KurguWebsite.Application.DTOs.Service;
 using KurguWebsite.Application.Features.Services.Commands;
 using KurguWebsite.Application.Features.Services.Queries;
 using MediatR;
@@ -50,6 +51,28 @@ namespace KurguWebsite.API.Controllers.V1
         public async Task<IActionResult> Delete(Guid id)
         {
             return HandleResult(await _mediator.Send(new DeleteServiceFeatureCommand { Id = id }));
+        }
+        [HttpGet]
+        [ProducesResponseType(typeof(List<ServiceFeatureDto>), StatusCodes.Status200OK)]
+        public async Task<IActionResult> GetAll(CancellationToken ct)
+        {
+            var result = await _mediator.Send(new GetAllServiceFeaturesQuery(), ct);
+            
+            return Ok(result.Data);
+        }
+        [HttpGet("paged")]
+        [ProducesResponseType(typeof(PaginatedList<ServiceFeatureDto>), StatusCodes.Status200OK)]
+        public async Task<IActionResult> GetPaged([FromQuery] Guid? serviceId, [FromQuery] PaginationParams paging, CancellationToken ct)
+        {
+            var result = await _mediator.Send(new GetServiceFeaturesPagedQuery
+            {
+                ServiceId = serviceId,
+                Paging = paging
+            }, ct);
+
+         
+          
+            return Ok(result.Data);
         }
     }
 }

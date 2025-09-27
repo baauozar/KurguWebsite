@@ -27,7 +27,7 @@ namespace KurguWebsite.API.Controllers.V1
         [HttpGet("search")]
         [AllowAnonymous]
         [ProducesResponseType(typeof(PaginatedList<ServiceDto>), StatusCodes.Status200OK)] // This is now correct
-        public async Task<IActionResult> Search([FromQuery] QueryParameters queryParams)
+        public async Task<IActionResult> Search([FromQuery] PaginationParams queryParams)
         {
             var result = await _mediator.Send(new GetPaginatedServicesQuery { Params = queryParams });
 

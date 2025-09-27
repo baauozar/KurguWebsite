@@ -10,7 +10,7 @@ namespace KurguWebsite.Application.Features.Services.Queries
 {
     public class GetPaginatedServicesQuery : IRequest<Result<PaginatedList<ServiceDto>>>
     {
-        public QueryParameters Params { get; set; }
+        public PaginationParams Params { get; set; }
     }
 
     public class GetPaginatedServicesQueryHandler : IRequestHandler<GetPaginatedServicesQuery, Result<PaginatedList<ServiceDto>>>
@@ -35,20 +35,29 @@ namespace KurguWebsite.Application.Features.Services.Queries
                 query = query.Where(s => s.Title.ToLower().Contains(term) || s.Description.ToLower().Contains(term));
             }
 
+          
             // --- Sorting ---
-            if (!string.IsNullOrWhiteSpace(request.Params.SortColumn))
+            var desc = request.Params.SortDescending;
+            switch (request.Params.SortBy?.Trim().ToLower())
             {
-                query = request.Params.SortColumn.ToLower() switch
-                {
-                    "title" => request.Params.SortOrder?.ToLower() == "desc" ? query.OrderByDescending(s => s.Title) : query.OrderBy(s => s.Title),
-                    "displayorder" => request.Params.SortOrder?.ToLower() == "desc" ? query.OrderByDescending(s => s.DisplayOrder) : query.OrderBy(s => s.DisplayOrder),
-                    "createddate" => request.Params.SortOrder?.ToLower() == "desc" ? query.OrderByDescending(s => s.CreatedDate) : query.OrderBy(s => s.CreatedDate),
-                    _ => query.OrderBy(s => s.DisplayOrder)
-                };
-            }
-            else
-            {
-                query = query.OrderBy(s => s.DisplayOrder);
+                case "title":
+                    query = desc ? query.OrderByDescending(s => s.Title)
+                                 : query.OrderBy(s => s.Title);
+                    break;
+
+                case "displayorder":
+                    query = desc ? query.OrderByDescending(s => s.DisplayOrder)
+                                 : query.OrderBy(s => s.DisplayOrder);
+                    break;
+
+                case "createddate":
+                    query = desc ? query.OrderByDescending(s => s.CreatedDate)
+                                 : query.OrderBy(s => s.CreatedDate);
+                    break;
+
+                default:
+                    query = query.OrderBy(s => s.DisplayOrder); // default sort
+                    break;
             }
 
             // --- Pagination & Projection ---

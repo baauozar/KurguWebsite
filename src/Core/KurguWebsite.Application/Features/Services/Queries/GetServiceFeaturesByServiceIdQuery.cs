@@ -12,7 +12,8 @@ public class GetServiceFeaturesByServiceIdQuery : IRequest<Result<List<ServiceFe
     public Guid ServiceId { get; set; }
 }
 
-public class GetServiceFeaturesByServiceIdQueryHandler : IRequestHandler<GetServiceFeaturesByServiceIdQuery, Result<List<ServiceFeatureDto>>>
+public class GetServiceFeaturesByServiceIdQueryHandler
+    : IRequestHandler<GetServiceFeaturesByServiceIdQuery, Result<List<ServiceFeatureDto>>>
 {
     private readonly IUnitOfWork _unitOfWork;
     private readonly IMapper _mapper;
@@ -23,10 +24,12 @@ public class GetServiceFeaturesByServiceIdQueryHandler : IRequestHandler<GetServ
         _mapper = mapper;
     }
 
-    public async Task<Result<List<ServiceFeatureDto>>> Handle(GetServiceFeaturesByServiceIdQuery request, CancellationToken cancellationToken)
+    public async Task<Result<List<ServiceFeatureDto>>> Handle(
+        GetServiceFeaturesByServiceIdQuery request,
+        CancellationToken cancellationToken)
     {
-        var serviceFeatures = await _unitOfWork.ServiceFeatures.GetByServiceIdAsync(request.ServiceId);
-        var serviceFeatureDtos = _mapper.Map<List<ServiceFeatureDto>>(serviceFeatures);
-        return Result<List<ServiceFeatureDto>>.Success(serviceFeatureDtos);
+        var entities = await _unitOfWork.ServiceFeatures.GetByServiceIdAsync(request.ServiceId);
+        var dtos = _mapper.Map<List<ServiceFeatureDto>>(entities);
+        return Result<List<ServiceFeatureDto>>.Success(dtos);
     }
 }
