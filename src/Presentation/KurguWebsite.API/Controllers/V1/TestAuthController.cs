@@ -1,7 +1,7 @@
 ﻿using Asp.Versioning;
 using KurguWebsite.API.Controllers;
 using KurguWebsite.Application.Common.Models;
-using KurguWebsite.Infrastructure.Identity;
+using KurguWebsite.Persistence.Context;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 

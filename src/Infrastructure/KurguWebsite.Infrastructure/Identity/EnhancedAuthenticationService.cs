@@ -1,6 +1,7 @@
 ﻿using KurguWebsite.Application.Common.Interfaces;
 using KurguWebsite.Application.Common.Models;
 using KurguWebsite.Domain.Entities;
+using KurguWebsite.Persistence.Context;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Logging;

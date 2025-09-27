@@ -2,7 +2,6 @@
 using KurguWebsite.Domain.Common;
 using KurguWebsite.Domain.Entities;
 using KurguWebsite.Domain.Events;
-using KurguWebsite.Infrastructure.Identity;
 using MediatR;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;

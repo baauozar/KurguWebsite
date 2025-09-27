@@ -5,7 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace KurguWebsite.Infrastructure.Identity
+namespace KurguWebsite.Persistence.Context
 {
     public class ApplicationUser : IdentityUser<Guid>
     {

@@ -1,10 +1,8 @@
 ﻿using KurguWebsite.Application.Common.Interfaces;
 using KurguWebsite.Application.Common.Models;
+using KurguWebsite.Persistence.Context;
 using Microsoft.AspNetCore.Identity;
-using System;
-using System.Linq;
 using System.Security.Claims;
-using System.Threading.Tasks;
 
 namespace KurguWebsite.Infrastructure.Identity
 {

@@ -1,8 +1,4 @@
 ﻿using KurguWebsite.Application.Common.Interfaces;
-using KurguWebsite.Domain.Common;
-using KurguWebsite.Domain.Events;
-using KurguWebsite.Infrastructure.Services;
-using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Design;
 using Microsoft.Extensions.Configuration;

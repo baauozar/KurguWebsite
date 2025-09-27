@@ -1,19 +1,26 @@
-﻿using KurguWebsite.Application.Common.Interfaces;
-using KurguWebsite.Infrastructure.Caching;
-using KurguWebsite.Infrastructure.Identity;
-using KurguWebsite.Infrastructure.Localization;
-using KurguWebsite.Infrastructure.SEO;
-using KurguWebsite.Infrastructure.Services;
-using KurguWebsite.Infrastructure.Services.DateTimeService;
-using KurguWebsite.Infrastructure.Services.Email;
+﻿// File: src/Infrastructure/KurguWebsite.Infrastructure/DependencyInjection.cs
+
+using KurguWebsite.Application.Common.Interfaces;
+// If your concrete implementations live in these namespaces, keep them.
+// Otherwise, change them to the correct namespaces where your classes are.
+using KurguWebsite.Infrastructure.Caching;                    // MemoryCacheService
+using KurguWebsite.Infrastructure.Identity;                   // CurrentUserService, EnhancedAuthenticationService (if here)
+using KurguWebsite.Infrastructure.Localization;               // LocalizationService
+using KurguWebsite.Infrastructure.SEO;                        // SeoService
+using KurguWebsite.Infrastructure.Services;                   // AppEnvironment, BackgroundJobService
+using KurguWebsite.Infrastructure.Services.DateTimeService;   // DateTimeService
+using KurguWebsite.Infrastructure.Services.Email;             // EmailService
+using KurguWebsite.Persistence.Context;     // DbContext lives in Persistence
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using System.Threading.RateLimiting;
+// using KurguWebsite.Infrastructure.FileStorage;            // EnhancedFileStorageService (if in a different ns)
 
 namespace KurguWebsite.Infrastructure
 {
@@ -21,92 +28,120 @@ namespace KurguWebsite.Infrastructure
     {
         public static IServiceCollection AddInfrastructure(this IServiceCollection services, IConfiguration configuration)
         {
-            // Core Services
-            services.AddScoped<IAppEnvironment, AppEnvironment>();
-            services.AddSingleton<IDateTime, DateTimeService>();
-          
-
-            // Caching
-            services.AddMemoryCache();
-            services.AddSingleton<ICacheService, MemoryCacheService>();
-
-            // File Storage (Updated with enhanced security)
-            services.AddScoped<IFileUploadService, EnhancedFileStorageService>();
-
-            // Identity & Authentication (Updated to use Enhanced version)
-            services.AddScoped<JwtService>();
-            services.AddScoped<IAuthenticationService, EnhancedAuthenticationService>();
-            services.AddScoped<ICurrentUserService, CurrentUserService>();
-
-
-            // JWT Configuration
-            var jwtSettings = configuration.GetSection("Jwt");
-            var secret = jwtSettings["Secret"];
-
-            if (!string.IsNullOrEmpty(secret))
+            // -------------------------
+            // Identity (EF store)
+            // -------------------------
+            services.AddIdentity<ApplicationUser, IdentityRole<Guid>>(options =>
             {
-                var key = Encoding.ASCII.GetBytes(secret);
+                options.User.RequireUniqueEmail = true;
 
-                services.AddAuthentication(options =>
+                options.Password.RequireDigit = true;
+                options.Password.RequiredLength = 6;
+                options.Password.RequireLowercase = true;
+                options.Password.RequireUppercase = true;
+                options.Password.RequireNonAlphanumeric = true;
+
+                options.Lockout.DefaultLockoutTimeSpan = TimeSpan.FromMinutes(5);
+                options.Lockout.MaxFailedAccessAttempts = 5;
+            })
+            .AddEntityFrameworkStores<KurguWebsiteDbContext>()
+            .AddDefaultTokenProviders();
+
+            // -------------------------
+            // JWT Authentication (optional)
+            // -------------------------
+            var jwt = configuration.GetSection("Jwt");
+            var secret = jwt["Secret"] ?? jwt["Key"]; // support either key name
+
+            if (!string.IsNullOrWhiteSpace(secret))
+            {
+                var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secret));
+
+                services.AddAuthentication(o =>
                 {
-                    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
-                    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+                    o.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+                    o.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
                 })
-                .AddJwtBearer(options =>
+                .AddJwtBearer(o =>
                 {
-                    options.RequireHttpsMetadata = true; // Changed to true for security
-                    options.SaveToken = true;
-                    options.TokenValidationParameters = new TokenValidationParameters
+                    o.RequireHttpsMetadata = true; // more secure
+                    o.SaveToken = true;
+                    o.TokenValidationParameters = new TokenValidationParameters
                     {
-                        ValidateIssuerSigningKey = true,
-                        IssuerSigningKey = new SymmetricSecurityKey(key),
                         ValidateIssuer = true,
-                        ValidIssuer = jwtSettings["Issuer"],
+                        ValidIssuer = jwt["Issuer"],
+
                         ValidateAudience = true,
-                        ValidAudience = jwtSettings["Audience"],
+                        ValidAudience = jwt["Audience"],
+
                         ValidateLifetime = true,
+                        RequireExpirationTime = true,
                         ClockSkew = TimeSpan.Zero,
-                        RequireExpirationTime = true
+
+                        ValidateIssuerSigningKey = true,
+                        IssuerSigningKey = key
                     };
 
-                    // Add JWT events for better security
-                    options.Events = new JwtBearerEvents
+                    o.Events = new JwtBearerEvents
                     {
                         OnAuthenticationFailed = context =>
                         {
-                            if (context.Exception.GetType() == typeof(SecurityTokenExpiredException))
-                            {
+                            if (context.Exception is SecurityTokenExpiredException)
                                 context.Response.Headers.Add("Token-Expired", "true");
-                            }
                             return Task.CompletedTask;
                         }
                     };
                 });
             }
 
+            // -------------------------
+            // Core cross-cutting services
+            // -------------------------
+            services.AddHttpContextAccessor();
+
+            services.AddScoped<IAppEnvironment, AppEnvironment>();
+            services.AddSingleton<IDateTime, DateTimeService>();
+
+            // Avoid name clash with Microsoft.AspNetCore.Authentication.IAuthenticationService
+            services.AddScoped<
+                KurguWebsite.Application.Common.Interfaces.IAuthenticationService,
+                EnhancedAuthenticationService>();
+
+            services.AddScoped<ICurrentUserService, CurrentUserService>();
+
+            // Caching
+            services.AddMemoryCache();
+            services.AddSingleton<ICacheService, MemoryCacheService>();
+
+            // File Storage (adjust namespace if different)
+            services.AddScoped<IFileUploadService, EnhancedFileStorageService>();
+
             // Localization
-            services.AddLocalization(options => options.ResourcesPath = "Resources");
+            services.AddLocalization(o => o.ResourcesPath = "Resources");
             services.AddSingleton<ILocalizationService, LocalizationService>();
             services.Configure<LocalizationOptions>(configuration.GetSection("Localization"));
 
             // SEO
             services.AddScoped<ISeoService, SeoService>();
 
-            // Email Service
+            // Email
             services.AddScoped<IEmailService, EmailService>();
+            // JWT helper
+            services.AddScoped<JwtService>();  // ✅ required so DI can construct EnhancedAuthenticationService
+
 
             // Background Jobs
             services.AddSingleton<IBackgroundJobService, BackgroundJobService>();
 
-            // HttpContext Accessor
-            services.AddHttpContextAccessor();
-
-            // FIXED CORS Configuration - More Secure
+            // -------------------------
+            // CORS
+            // -------------------------
             services.AddCors(options =>
             {
                 options.AddPolicy("Production", builder =>
                 {
-                    var allowedOrigins = configuration.GetSection("Cors:Production:AllowedOrigins")
+                    var allowedOrigins = configuration
+                        .GetSection("Cors:Production:AllowedOrigins")
                         .Get<string[]>() ?? Array.Empty<string>();
 
                     if (allowedOrigins.Length > 0)
@@ -117,38 +152,30 @@ namespace KurguWebsite.Infrastructure
                             .AllowAnyHeader()
                             .AllowCredentials()
                             .SetIsOriginAllowedToAllowWildcardSubdomains()
-                            .SetPreflightMaxAge(TimeSpan.FromSeconds(3600));
+                            .SetPreflightMaxAge(TimeSpan.FromHours(1));
                     }
                 });
 
-                /*   options.AddPolicy("Development", builder =>
-                   {
-                       var devOrigins = configuration.GetSection("Cors:Development:AllowedOrigins")
-                           .Get<string[]>() ?? new[] { "http://localhost:3000", "http://localhost:3001" };
-
-                       builder
-                           .WithOrigins(devOrigins)
-                           .AllowAnyMethod()
-                           .AllowAnyHeader()
-                           .AllowCredentials()
-                           .SetPreflightMaxAge(TimeSpan.FromSeconds(3600));
-                   });*/
                 options.AddPolicy("Development", builder =>
-                 builder.WithOrigins("https://localhost:44319", "http://localhost:7858") // Add your UI and API ports
-                .AllowAnyHeader()
-                .AllowAnyMethod());
+                    builder
+                        .WithOrigins("https://localhost:44319", "http://localhost:7858")
+                        .AllowAnyHeader()
+                        .AllowAnyMethod());
             });
 
-            // ADD RATE LIMITING
+            // -------------------------
+            // Rate Limiting (ASP.NET Core 8)
+            // -------------------------
             services.AddRateLimiter(options =>
             {
-                options.RejectionStatusCode = 429;
+                options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
 
-                // Global rate limit
-                options.GlobalLimiter = PartitionedRateLimiter.Create<HttpContext, string>(
-                    httpContext => RateLimitPartition.GetFixedWindowLimiter(
-                        partitionKey: httpContext.User.Identity?.Name ?? httpContext.Connection.RemoteIpAddress?.ToString() ?? "anonymous",
-                        factory: partition => new FixedWindowRateLimiterOptions
+                options.GlobalLimiter = PartitionedRateLimiter.Create<HttpContext, string>(httpContext =>
+                    RateLimitPartition.GetFixedWindowLimiter(
+                        partitionKey: httpContext.User.Identity?.Name
+                                      ?? httpContext.Connection.RemoteIpAddress?.ToString()
+                                      ?? "anonymous",
+                        factory: _ => new FixedWindowRateLimiterOptions
                         {
                             AutoReplenishment = true,
                             PermitLimit = 100,
@@ -156,11 +183,10 @@ namespace KurguWebsite.Infrastructure
                             Window = TimeSpan.FromMinutes(1)
                         }));
 
-                // Login endpoint rate limit
                 options.AddPolicy("LoginLimit", httpContext =>
                     RateLimitPartition.GetFixedWindowLimiter(
-                        partitionKey: httpContext.Connection.RemoteIpAddress?.ToString() ?? "anonymous",
-                        factory: partition => new FixedWindowRateLimiterOptions
+                        httpContext.Connection.RemoteIpAddress?.ToString() ?? "anonymous",
+                        _ => new FixedWindowRateLimiterOptions
                         {
                             AutoReplenishment = true,
                             PermitLimit = 5,
@@ -168,11 +194,10 @@ namespace KurguWebsite.Infrastructure
                             Window = TimeSpan.FromMinutes(15)
                         }));
 
-                // Registration endpoint rate limit
                 options.AddPolicy("RegistrationLimit", httpContext =>
                     RateLimitPartition.GetFixedWindowLimiter(
-                        partitionKey: httpContext.Connection.RemoteIpAddress?.ToString() ?? "anonymous",
-                        factory: partition => new FixedWindowRateLimiterOptions
+                        httpContext.Connection.RemoteIpAddress?.ToString() ?? "anonymous",
+                        _ => new FixedWindowRateLimiterOptions
                         {
                             AutoReplenishment = true,
                             PermitLimit = 3,
@@ -180,11 +205,12 @@ namespace KurguWebsite.Infrastructure
                             Window = TimeSpan.FromHours(1)
                         }));
 
-                // API endpoints rate limit
                 options.AddPolicy("ApiLimit", httpContext =>
                     RateLimitPartition.GetFixedWindowLimiter(
-                        partitionKey: httpContext.User.Identity?.Name ?? httpContext.Connection.RemoteIpAddress?.ToString() ?? "anonymous",
-                        factory: partition => new FixedWindowRateLimiterOptions
+                        httpContext.User.Identity?.Name
+                        ?? httpContext.Connection.RemoteIpAddress?.ToString()
+                        ?? "anonymous",
+                        _ => new FixedWindowRateLimiterOptions
                         {
                             AutoReplenishment = true,
                             PermitLimit = 100,
@@ -192,11 +218,12 @@ namespace KurguWebsite.Infrastructure
                             Window = TimeSpan.FromMinutes(1)
                         }));
 
-                // File upload rate limit
                 options.AddPolicy("FileUploadLimit", httpContext =>
                     RateLimitPartition.GetFixedWindowLimiter(
-                        partitionKey: httpContext.User.Identity?.Name ?? httpContext.Connection.RemoteIpAddress?.ToString() ?? "anonymous",
-                        factory: partition => new FixedWindowRateLimiterOptions
+                        httpContext.User.Identity?.Name
+                        ?? httpContext.Connection.RemoteIpAddress?.ToString()
+                        ?? "anonymous",
+                        _ => new FixedWindowRateLimiterOptions
                         {
                             AutoReplenishment = true,
                             PermitLimit = 10,
@@ -204,11 +231,10 @@ namespace KurguWebsite.Infrastructure
                             Window = TimeSpan.FromMinutes(10)
                         }));
 
-                // Password reset rate limit
                 options.AddPolicy("PasswordResetLimit", httpContext =>
                     RateLimitPartition.GetFixedWindowLimiter(
-                        partitionKey: httpContext.Connection.RemoteIpAddress?.ToString() ?? "anonymous",
-                        factory: partition => new FixedWindowRateLimiterOptions
+                        httpContext.Connection.RemoteIpAddress?.ToString() ?? "anonymous",
+                        _ => new FixedWindowRateLimiterOptions
                         {
                             AutoReplenishment = true,
                             PermitLimit = 3,
@@ -216,11 +242,10 @@ namespace KurguWebsite.Infrastructure
                             Window = TimeSpan.FromHours(1)
                         }));
 
-                // Contact form rate limit
                 options.AddPolicy("ContactFormLimit", httpContext =>
                     RateLimitPartition.GetFixedWindowLimiter(
-                        partitionKey: httpContext.Connection.RemoteIpAddress?.ToString() ?? "anonymous",
-                        factory: partition => new FixedWindowRateLimiterOptions
+                        httpContext.Connection.RemoteIpAddress?.ToString() ?? "anonymous",
+                        _ => new FixedWindowRateLimiterOptions
                         {
                             AutoReplenishment = true,
                             PermitLimit = 5,
@@ -228,12 +253,11 @@ namespace KurguWebsite.Infrastructure
                             Window = TimeSpan.FromHours(1)
                         }));
 
-                // Add custom rejection response
                 options.OnRejected = async (context, token) =>
                 {
-                    context.HttpContext.Response.StatusCode = 429;
+                    context.HttpContext.Response.StatusCode = StatusCodes.Status429TooManyRequests;
                     await context.HttpContext.Response.WriteAsync(
-                        "Too many requests. Please try again later.", cancellationToken: token);
+                        "Too many requests. Please try again later.", token);
                 };
             });
 

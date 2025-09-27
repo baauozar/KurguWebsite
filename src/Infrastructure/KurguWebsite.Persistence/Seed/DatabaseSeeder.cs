@@ -1,14 +1,10 @@
 ﻿using KurguWebsite.Domain.Entities;
 using KurguWebsite.Domain.Enums;
 using KurguWebsite.Domain.ValueObjects;
-using KurguWebsite.Infrastructure.Identity;
 using KurguWebsite.Persistence.Context;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
-using System;
-using System.Linq;
-using System.Threading.Tasks;
 
 namespace KurguWebsite.Persistence.Seed
 {
@@ -99,7 +95,7 @@ namespace KurguWebsite.Persistence.Seed
                     "To be the most trusted technology partner globally.",
                     "Innovation, Excellence, Partnership");
 
-               
+
 
                 await context.CompanyInfo.AddAsync(company);
             }
@@ -121,7 +117,7 @@ namespace KurguWebsite.Persistence.Seed
                 {
                     services[i].SetDisplayOrder(i + 1);
                     services[i].SetFeatured(i < 2);
-                 
+
                 }
 
                 await context.Services.AddRangeAsync(services);
@@ -141,9 +137,9 @@ namespace KurguWebsite.Persistence.Seed
                 };
 
                 foreach (var page in pages)
-                   
 
-                await context.Pages.AddRangeAsync(pages);
+
+                    await context.Pages.AddRangeAsync(pages);
             }
         }
 
@@ -162,7 +158,7 @@ namespace KurguWebsite.Persistence.Seed
                 {
                     t.SetDisplayOrder(1);
                     t.SetFeatured(true);
-                 
+
                 }
 
                 await context.Testimonials.AddRangeAsync(testimonials);
@@ -181,9 +177,9 @@ namespace KurguWebsite.Persistence.Seed
                 };
 
                 foreach (var p in partners)
-                    
 
-                await context.Partners.AddRangeAsync(partners);
+
+                    await context.Partners.AddRangeAsync(partners);
             }
         }
 
@@ -202,9 +198,9 @@ namespace KurguWebsite.Persistence.Seed
                 };
 
                 foreach (var step in steps)
-                    
 
-                await context.ProcessSteps.AddRangeAsync(steps);
+
+                    await context.ProcessSteps.AddRangeAsync(steps);
             }
         }
 
@@ -225,7 +221,7 @@ namespace KurguWebsite.Persistence.Seed
                 {
                     cases[i].SetService(services[i].Id);
                     cases[i].SetFeatured(true);
-                  
+
                 }
 
                 await context.CaseStudies.AddRangeAsync(cases);
