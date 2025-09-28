@@ -10,7 +10,7 @@ namespace KurguWebsite.API.Controllers.V1
     [ApiController]
     [Route("api/v{version:apiVersion}/[controller]")]
     [ApiVersion("1.0")]
-    [Authorize(Roles = "Admin")] // Only Admins should be able to view audit logs
+    [Authorize(Roles = "Admin")] 
     public class AuditLogsController : BaseApiController
     {
         private readonly IMediator mediat;
@@ -20,7 +20,12 @@ namespace KurguWebsite.API.Controllers.V1
             this.mediat = mediat;
         }
 
+        /// <summary>
+        /// View Application Logs. (Admin Only)
+        /// </summary>
+        ///  /// <returns>The requested application logs.</returns>
         [HttpGet]
+
         public async Task<IActionResult> GetAuditLogs([FromQuery] GetPaginatedAuditLogsQuery query)
         {
             var result = await mediat.Send(query);
