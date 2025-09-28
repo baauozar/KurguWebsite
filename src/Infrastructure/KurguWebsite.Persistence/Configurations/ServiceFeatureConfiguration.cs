@@ -1,11 +1,7 @@
-﻿using KurguWebsite.Domain.Entities;
+﻿// File: src/Persistence/KurguWebsite.Persistence/Configurations/ServiceFeatureConfiguration.cs
+using KurguWebsite.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace KurguWebsite.Persistence.Configurations
 {
@@ -31,6 +27,9 @@ namespace KurguWebsite.Persistence.Configurations
             builder.Property(e => e.DisplayOrder)
                 .HasDefaultValue(0);
 
+            builder.Property(e => e.ServiceId)
+                .IsRequired();
+
             // Relationship
             builder.HasOne(e => e.Service)
                 .WithMany(s => s.Features)
@@ -38,8 +37,9 @@ namespace KurguWebsite.Persistence.Configurations
                 .OnDelete(DeleteBehavior.Cascade);
 
             // Indexes
-            builder.HasIndex(e => e.ServiceId);
-            builder.HasIndex(e => e.DisplayOrder);
+            builder.HasIndex(e => new { e.ServiceId, e.DisplayOrder }).IsUnique(); // per-service ordering
+            // Optional: prevent duplicate titles within a service
+            // builder.HasIndex(e => new { e.ServiceId, e.Title }).IsUnique();
         }
     }
 }

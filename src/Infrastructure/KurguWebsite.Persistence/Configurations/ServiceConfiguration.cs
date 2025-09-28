@@ -1,11 +1,7 @@
-﻿using KurguWebsite.Domain.Entities;
+﻿// File: src/Persistence/KurguWebsite.Persistence/Configurations/ServiceConfiguration.cs
+using KurguWebsite.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace KurguWebsite.Persistence.Configurations
 {
@@ -67,7 +63,7 @@ namespace KurguWebsite.Persistence.Configurations
             builder.HasMany(e => e.CaseStudies)
                 .WithOne(c => c.Service)
                 .HasForeignKey(c => c.ServiceId)
-                .OnDelete(DeleteBehavior.SetNull);
+                .OnDelete(DeleteBehavior.SetNull); // ensure CaseStudy.ServiceId is nullable (Guid?)
 
             // Indexes
             builder.HasIndex(e => e.IsActive);

@@ -71,7 +71,7 @@ namespace KurguWebsite.Domain.Entities
             ServiceCategory category)
         {
             Title = title;
-            Slug = GenerateSlug(title);
+       
             Description = description;
             ShortDescription = shortDescription;
             FullDescription = fullDescription;
@@ -86,7 +86,12 @@ namespace KurguWebsite.Domain.Entities
             MetaDescription = metaDescription;
             MetaKeywords = metaKeywords;
         }
-
+        public void UpdateSlug(string slug)
+        {
+            if (string.IsNullOrWhiteSpace(slug))
+                throw new ArgumentException("Slug is required.", nameof(slug));
+            Slug = slug;
+        }
         public void SetDisplayOrder(int order)
         {
             DisplayOrder = order;
@@ -99,13 +104,18 @@ namespace KurguWebsite.Domain.Entities
 
         public void Activate() => IsActive = true;
         public void Deactivate() => IsActive = false;
-        
-    
-        public void AddFeature(ServiceFeature feature)
+
+
+        // Service.cs (inside class)
+        public void AddFeature(string title, string description, string? iconClass = null, int displayOrder = 0)
         {
-            if (feature != null && !_features.Contains(feature))
-                _features.Add(feature);
+            var feature = ServiceFeature.Create(this.Id, title, description, iconClass);
+            // make sure you can set the navigation without reflection:
+            feature.Service = this;                 // requires `internal set;` on ServiceFeature.Service
+                                                    // feature.ServiceId = this.Id;         // optional; EF will infer from navigation too
+            _features.Add(feature);
         }
+
 
         public void RemoveFeature(ServiceFeature feature)
         {

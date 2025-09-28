@@ -1,12 +1,6 @@
 ﻿using KurguWebsite.Domain.Common;
 using KurguWebsite.Domain.Enums;
 using KurguWebsite.Domain.Events;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Security.AccessControl;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace KurguWebsite.Domain.Entities
 {
@@ -35,17 +29,23 @@ namespace KurguWebsite.Domain.Entities
 
         public static Page Create(string title, PageType pageType)
         {
+            if (string.IsNullOrWhiteSpace(title))
+                throw new ArgumentException("Title is required.", nameof(title));
+
             return new Page
             {
                 Title = title,
-                Slug = GenerateSlug(title),
+                Slug = GenerateSlug(title), // base slug; app layer will replace with unique one
                 PageType = pageType,
                 IsActive = true
             };
         }
 
-        public void UpdateContent(string? content)
+        // Main update method (does NOT touch Slug)
+        public void Update(string title, PageType pageType, string? content)
         {
+            Title = title;
+            PageType = pageType;
             Content = content;
             AddDomainEvent(new PageUpdatedEvent(this.Id));
         }
@@ -75,9 +75,20 @@ namespace KurguWebsite.Domain.Entities
             AddDomainEvent(new PageUpdatedEvent(this.Id));
         }
 
-        private static string GenerateSlug(string title)
+        public void SetActive(bool isActive)
         {
-            return title.ToLower().Replace(" ", "-");
+            IsActive = isActive;
+            AddDomainEvent(new PageUpdatedEvent(this.Id));
         }
+
+        public void UpdateSlug(string slug)
+        {
+            if (string.IsNullOrWhiteSpace(slug))
+                throw new ArgumentException("Slug is required.", nameof(slug));
+            Slug = slug;
+        }
+
+        private static string GenerateSlug(string title)
+            => title.ToLower().Replace(" ", "-"); // keep simple; app layer sanitizes/uniquifies
     }
 }

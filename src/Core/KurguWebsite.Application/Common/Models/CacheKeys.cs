@@ -30,6 +30,7 @@ namespace KurguWebsite.Application.Common.Models
         public const string AboutPage = Prefix + "about_page";
         public const string ServicesPage = Prefix + "services_page";
         public const string ContactPage = Prefix + "contact_page";
+        public const string Page = Prefix + "page";
 
         public const string ProcessSteps = Prefix + "process_steps";
     }

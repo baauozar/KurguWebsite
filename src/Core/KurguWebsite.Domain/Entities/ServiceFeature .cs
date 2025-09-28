@@ -9,14 +9,14 @@ namespace KurguWebsite.Domain.Entities
 {
     public class ServiceFeature : AuditableEntity
     {
-        public Guid ServiceId { get; private set; }
+        public Guid ServiceId { get;  set; }
         public string Title { get; private set; } = string.Empty;
         public string Description { get; private set; } = string.Empty;
         public string? IconClass { get; private set; }
         public int DisplayOrder { get; private set; }
 
         // Navigation
-        public virtual Service Service { get; private set; } = null!;
+        public virtual Service Service { get;  set; } = null!;
 
         private ServiceFeature() { }
 

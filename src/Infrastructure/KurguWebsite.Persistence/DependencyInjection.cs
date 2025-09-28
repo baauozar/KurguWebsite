@@ -28,6 +28,8 @@ namespace KurguWebsite.Persistence
             services.AddScoped<IContactMessageRepository, ContactMessageRepository>();
             services.AddScoped<ICompanyInfoRepository, CompanyInfoRepository>();
             services.AddScoped<IProcessStepRepository, ProcessStepRepository>();
+            services.AddScoped<IServiceUniquenessChecker, ServiceUniquenessChecker>();
+
 
             // UoW
             services.AddScoped<IUnitOfWork, UnitOfWork>();

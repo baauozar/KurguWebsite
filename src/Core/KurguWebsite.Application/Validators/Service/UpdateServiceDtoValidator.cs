@@ -1,5 +1,6 @@
 ﻿using FluentValidation;
 using KurguWebsite.Application.DTOs.Service;
+using KurguWebsite.Application.Interfaces.Repositories;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -9,12 +10,22 @@ using System.Threading.Tasks;
 namespace KurguWebsite.Application.Validators.Service
 {
     public class UpdateServiceDtoValidator : AbstractValidator<UpdateServiceDto>
+
     {
-        public UpdateServiceDtoValidator()
+        private readonly IServiceUniquenessChecker _checker;
+        public UpdateServiceDtoValidator(IServiceUniquenessChecker checker)
         {
+            _checker = checker;
+
+            RuleFor(x => x.Id)
+                .NotEmpty().WithMessage("Id is required.");
+
             RuleFor(x => x.Title)
                 .NotEmpty().WithMessage("Title is required")
-                .MaximumLength(200).WithMessage("Title must not exceed 200 characters");
+                .MaximumLength(200).WithMessage("Title must not exceed 200 characters")
+                .MustAsync(async (cmd, title, ct) =>
+                    !await _checker.TitleExistsAsync(title, cmd.Id, ct))
+                .WithMessage("A service with this title already exists.");
 
             RuleFor(x => x.Description)
                 .NotEmpty().WithMessage("Description is required")
@@ -32,6 +43,7 @@ namespace KurguWebsite.Application.Validators.Service
 
             RuleFor(x => x.DisplayOrder)
                 .GreaterThanOrEqualTo(0).WithMessage("Display order must be non-negative");
+
         }
     }
 }

@@ -76,7 +76,7 @@ namespace KurguWebsite.Domain.Entities
             string? result)
         {
             Title = title;
-            Slug = GenerateSlug(title);
+   
             ClientName = clientName;
             Description = description;
             Challenge = challenge;
@@ -92,7 +92,12 @@ namespace KurguWebsite.Domain.Entities
             if (!serviceId.HasValue)
                 Service = null;
         }
-
+        public void UpdateSlug(string slug)
+        {
+            if (string.IsNullOrWhiteSpace(slug))
+                throw new ArgumentException("Slug is required.", nameof(slug));
+            Slug = slug;
+        }
         // Add technology
         public void AddTechnology(string technology)
         {
