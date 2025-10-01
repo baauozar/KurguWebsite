@@ -35,7 +35,7 @@ namespace KurguWebsite.API.Controllers
             return HttpContext.Request.Headers["User-Agent"].FirstOrDefault() ?? "Unknown";
         }
 
-        protected new IActionResult Unauthorized(string message = "Unauthorized")
+        protected  IActionResult Unauthorized(string message = "Unauthorized")
         {
             return base.Unauthorized(new { message });
         }

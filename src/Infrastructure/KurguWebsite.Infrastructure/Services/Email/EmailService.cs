@@ -18,15 +18,21 @@ namespace KurguWebsite.Infrastructure.Services.Email
         public EmailService(IConfiguration configuration)
         {
             _configuration = configuration;
-            _smtpServer = _configuration["Email:SmtpServer"];
+
+            _smtpServer = _configuration["Email:SmtpServer"]
+                ?? throw new InvalidOperationException("Email:SmtpServer is missing in configuration.");
             _smtpPort = int.Parse(_configuration["Email:SmtpPort"] ?? "587");
-            _smtpUsername = _configuration["Email:Username"];
-            _smtpPassword = _configuration["Email:Password"];
-            _fromEmail = _configuration["Email:FromEmail"];
-            _fromName = _configuration["Email:FromName"];
+            _smtpUsername = _configuration["Email:Username"]
+                ?? throw new InvalidOperationException("Email:Username is missing in configuration.");
+            _smtpPassword = _configuration["Email:Password"]
+                ?? throw new InvalidOperationException("Email:Password is missing in configuration.");
+            _fromEmail = _configuration["Email:FromEmail"]
+                ?? throw new InvalidOperationException("Email:FromEmail is missing in configuration.");
+            _fromName = _configuration["Email:FromName"]
+                ?? throw new InvalidOperationException("Email:FromName is missing in configuration.");
         }
 
-        // ✅ Core method using EmailMessage
+        //  Core method using EmailMessage
         public async Task<bool> SendEmailAsync(EmailMessage message)
         {
             try
@@ -67,9 +73,10 @@ namespace KurguWebsite.Infrastructure.Services.Email
                 await smtpClient.SendMailAsync(mailMessage);
                 return true;
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                // TODO: log error properly
+              
+
                 return false;
             }
         }

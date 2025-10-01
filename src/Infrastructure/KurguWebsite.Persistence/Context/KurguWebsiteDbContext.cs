@@ -9,6 +9,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.ChangeTracking;
 using Newtonsoft.Json;
 using System.Reflection;
+using System.Linq.Expressions;
 
 namespace KurguWebsite.Persistence.Context
 {
@@ -53,10 +54,29 @@ namespace KurguWebsite.Persistence.Context
             modelBuilder.Entity<IdentityUserLogin<Guid>>().ToTable("UserLogins");
             modelBuilder.Entity<IdentityRoleClaim<Guid>>().ToTable("RoleClaims");
             modelBuilder.Entity<IdentityUserToken<Guid>>().ToTable("UserTokens");
-        }
+            foreach (var entityType in modelBuilder.Model.GetEntityTypes())
+            {
+                // Only apply to types that inherit from AuditableEntity
+                if (typeof(AuditableEntity).IsAssignableFrom(entityType.ClrType))
+                {
+                    var parameter = Expression.Parameter(entityType.ClrType, "e");
 
+                    // (AuditableEntity)e
+                    var cast = Expression.Convert(parameter, typeof(AuditableEntity));
+
+                    // ((AuditableEntity)e).IsDeleted == false
+                    var isDeletedProp = Expression.Property(cast, nameof(AuditableEntity.IsDeleted));
+                    var condition = Expression.Equal(isDeletedProp, Expression.Constant(false));
+
+                    var lambda = Expression.Lambda(condition, parameter);
+
+                    modelBuilder.Entity(entityType.ClrType).HasQueryFilter(lambda);
+                }
+            }
+        }
         public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = new CancellationToken())
         {
+            InterceptHardDeletes();
             var auditEntries = GetAuditEntries();
 
             foreach (var entry in ChangeTracker.Entries<BaseEntity>())
@@ -164,6 +184,17 @@ namespace KurguWebsite.Persistence.Context
                 foreach (var domainEvent in events)
                 {
                     await _mediator.Publish(domainEvent, cancellationToken);
+                }
+            }
+        }
+        private void InterceptHardDeletes()
+        {
+            foreach (var entry in ChangeTracker.Entries<AuditableEntity>())
+            {
+                if (entry.State == EntityState.Deleted)
+                {
+                    entry.State = EntityState.Modified;
+                    entry.Entity.SoftDelete(_currentUser.UserId ?? "system");
                 }
             }
         }

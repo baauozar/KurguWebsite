@@ -8,8 +8,8 @@ namespace KurguWebsite.Application.DTOs.Service
 {
     public class UpdateServiceFeatureDto
     {
-        public string Title { get; set; }
-        public string Description { get; set; }
+        public required string Title { get; set; }
+        public required  string Description { get; set; }
         public string? IconClass { get; set; }
     }
 }

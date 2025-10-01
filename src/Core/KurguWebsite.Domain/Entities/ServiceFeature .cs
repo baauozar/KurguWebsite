@@ -21,10 +21,11 @@ namespace KurguWebsite.Domain.Entities
         private ServiceFeature() { }
 
         public static ServiceFeature Create(
-            Guid serviceId,
-            string title,
-            string description,
-            string? iconClass = null)
+     Guid serviceId,
+     string title,
+     string description,
+     string? iconClass = null,
+     int displayOrder = 0)                 // <— added
         {
             return new ServiceFeature
             {
@@ -32,7 +33,7 @@ namespace KurguWebsite.Domain.Entities
                 Title = title,
                 Description = description,
                 IconClass = iconClass,
-                DisplayOrder = 0
+                DisplayOrder = displayOrder       // <— set it
             };
         }
 

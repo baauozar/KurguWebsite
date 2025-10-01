@@ -10,7 +10,7 @@ namespace KurguWebsite.Application.Features.Services.Commands
 {
     public class UpdateServiceCommand : UpdateServiceDto, IRequest<Result<ServiceDto>>
     {
-        public Guid Id { get; set; }
+       new public Guid Id { get; set; }
     }
 
     public class UpdateServiceCommandHandler : IRequestHandler<UpdateServiceCommand, Result<ServiceDto>>

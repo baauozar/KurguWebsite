@@ -1,15 +1,10 @@
 ﻿using FluentValidation;
-using KurguWebsite.Application.DTOs.Service;
+using KurguWebsite.Application.Features.Services.Commands;
 using KurguWebsite.Application.Interfaces.Repositories;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace KurguWebsite.Application.Validators.Service
 {
-    public class CreateServiceDtoValidator : AbstractValidator<CreateServiceDto>
+    public class CreateServiceDtoValidator : AbstractValidator<CreateServiceCommand>
     {
         private readonly IServiceUniquenessChecker _checker;
 

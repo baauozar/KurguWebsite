@@ -11,7 +11,7 @@ namespace KurguWebsite.Application.Features.ContactMessages.Queries
     {
         public int PageNumber { get; set; } = 1;
         public int PageSize { get; set; } = 20;
-        public QueryParameters Params { get; set; }
+        public QueryParameters Params { get; set; }= new QueryParameters();
     }
 
     public class GetPaginatedContactMessagesQueryHandler : IRequestHandler<GetPaginatedContactMessagesQuery, Result<PaginatedList<ContactMessageDto>>>

@@ -8,7 +8,7 @@ namespace KurguWebsite.Application.Features.Services.Queries
 {
     public class GetServiceDetailBySlugQuery : IRequest<Result<ServiceDetailDto>>
     {
-        public string Slug { get; set; }
+        public string Slug { get; set; } = string.Empty;
     }
 
     public class GetServiceDetailBySlugQueryHandler : IRequestHandler<GetServiceDetailBySlugQuery, Result<ServiceDetailDto>>

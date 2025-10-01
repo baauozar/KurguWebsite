@@ -8,7 +8,7 @@ namespace KurguWebsite.Application.Features.CaseStudies.Queries
 {
     public class GetCaseStudyBySlugQuery : IRequest<Result<CaseStudyDto>>
     {
-        public string Slug { get; set; }
+        public string Slug { get; set; }=string.Empty;
     }
 
     public class GetCaseStudyBySlugQueryHandler : IRequestHandler<GetCaseStudyBySlugQuery, Result<CaseStudyDto>>

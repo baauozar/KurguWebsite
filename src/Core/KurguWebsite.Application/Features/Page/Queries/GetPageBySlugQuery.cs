@@ -8,7 +8,7 @@ namespace KurguWebsite.Application.Features.Pages.Queries
 {
     public class GetPageBySlugQuery : IRequest<Result<PageDto>>
     {
-        public string Slug { get; set; }
+        public string Slug { get; set; }=string.Empty;
     }
 
     public class GetPageBySlugQueryHandler : IRequestHandler<GetPageBySlugQuery, Result<PageDto>>

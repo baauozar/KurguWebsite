@@ -5,7 +5,6 @@ using KurguWebsite.Application.DTOs.Page;
 using KurguWebsite.Application.Interfaces.Repositories; // IPageUniquenessChecker
 using KurguWebsite.Domain.Events;
 using MediatR;
-using System;
 
 namespace KurguWebsite.Application.Features.Pages.Commands
 {
@@ -45,7 +44,7 @@ namespace KurguWebsite.Application.Features.Pages.Commands
             if (entity is null)
                 return Result<PageDto>.Failure("Page not found.");
 
-            // If title changed, regenerate a UNIQUE slug
+            // If title changed, regenerate a UNIQUE canonical slug from Title
             var titleChanged = !string.Equals(entity.Title, request.Title, StringComparison.Ordinal);
             if (titleChanged)
             {
@@ -60,8 +59,9 @@ namespace KurguWebsite.Application.Features.Pages.Commands
                 entity.UpdateSlug(candidate);
             }
 
-            // Update other fields
-            entity.Update(request.Title, request.PageType??entity.PageType, request.Content);
+            // Update other fields (coalesce nullable PageType?)
+            var pageType = request.PageType ?? entity.PageType;
+            entity.Update(request.Title, pageType, request.Content);
             entity.UpdateHeroSection(
                 request.HeroTitle, request.HeroSubtitle, request.HeroDescription,
                 request.HeroBackgroundImage, request.HeroButtonText, request.HeroButtonUrl);
@@ -70,6 +70,7 @@ namespace KurguWebsite.Application.Features.Pages.Commands
             await _unitOfWork.Pages.UpdateAsync(entity);
             await _unitOfWork.CommitAsync(); // use CommitAsync(cancellationToken) if your UoW supports it
 
+            // Use plural key to match your other code paths (Service/CaseStudy)
             await _mediator.Publish(new CacheInvalidationEvent(CacheKeys.Page, CacheKeys.HomePage), cancellationToken);
 
             return Result<PageDto>.Success(_mapper.Map<PageDto>(entity));

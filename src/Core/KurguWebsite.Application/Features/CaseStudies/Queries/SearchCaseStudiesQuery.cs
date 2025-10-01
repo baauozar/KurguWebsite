@@ -13,7 +13,7 @@ namespace KurguWebsite.Application.Features.CaseStudies.Queries
 {
     public class SearchCaseStudiesQuery : IRequest<Result<PaginatedList<CaseStudyDto>>>
     {
-        public QueryParameters Params { get; set; }
+         public QueryParameters Params { get; set; }=new QueryParameters();
     }
 
     public class SearchCaseStudiesQueryHandler : IRequestHandler<SearchCaseStudiesQuery, Result<PaginatedList<CaseStudyDto>>>

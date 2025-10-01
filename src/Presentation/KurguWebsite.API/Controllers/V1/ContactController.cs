@@ -32,8 +32,16 @@ namespace KurguWebsite.API.Controllers.V1
         public async Task<IActionResult> SubmitContactForm(SubmitContactMessageCommand command)
         {
             var result = await _mediator.Send(command);
-            return result.Succeeded ? CreatedAtAction(nameof(GetMessage), new { id = result.Data.Id }, result.Data) : BadRequest(result.Errors);
+
+            if (!result.Succeeded)
+                return BadRequest(result.Errors);
+
+            if (result.Data is null)
+                return BadRequest("No data was returned for a successful operation.");
+
+            return CreatedAtAction(nameof(GetMessage), new { id = result.Data.Id }, result.Data);
         }
+
 
         /// <summary>
         /// Gets a paginated list of all contact messages. (Admin/Manager Only)

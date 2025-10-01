@@ -10,7 +10,7 @@ namespace KurguWebsite.Application.Features.CaseStudies.Commands;
 
 public class CreateCaseStudyMetricCommand : CreateCaseStudyMetricDto, IRequest<Result<CaseStudyMetricDto>>
 {
-    public Guid CaseStudyId { get; set; }
+    new public Guid CaseStudyId { get; set; }
 }
 
 public class CreateCaseStudyMetricCommandHandler : IRequestHandler<CreateCaseStudyMetricCommand, Result<CaseStudyMetricDto>>

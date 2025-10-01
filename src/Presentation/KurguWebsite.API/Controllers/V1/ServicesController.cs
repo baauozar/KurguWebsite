@@ -96,8 +96,16 @@ namespace KurguWebsite.API.Controllers.V1
         public async Task<IActionResult> Create(CreateServiceCommand command)
         {
             var result = await _mediator.Send(command);
-            return result.Succeeded ? CreatedAtAction(nameof(GetById), new { id = result.Data.Id }, result.Data) : BadRequest(result.Errors);
+
+            if (!result.Succeeded)
+                return BadRequest(result.Errors);
+
+            if (result.Data is null)
+                return BadRequest("No service data was returned for a successful result.");
+
+            return CreatedAtAction(nameof(GetById), new { id = result.Data.Id }, result.Data);
         }
+
 
         /// <summary>
         /// Updates an existing service. (Admin Only)
@@ -134,6 +142,25 @@ namespace KurguWebsite.API.Controllers.V1
         {
             var result = await _mediator.Send(new DeleteServiceCommand { Id = id });
             return result.Succeeded ? NoContent() : NotFound(result.Errors);
+        }
+        [HttpPost("{id:guid}/restore")]
+        [Authorize(Roles = "Admin")]
+        [ProducesResponseType(typeof(ServiceDto), StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public async Task<IActionResult> Restore(Guid id)
+        {
+            var result = await _mediator.Send(new RestoreProcessStepsCommand { Id = id });
+            return result.Succeeded ? Ok(result.Data) : NotFound(result.Errors);
+        }
+
+        // NEW: restore many services at once
+        [HttpPost("restore-batch")]
+        [Authorize(Roles = "Admin")]
+        [ProducesResponseType(typeof(int), StatusCodes.Status200OK)]
+        public async Task<IActionResult> RestoreBatch([FromBody] RestoreProcessStepsBatchCommand command)
+        {
+            var result = await _mediator.Send(command);
+            return result.Succeeded ? Ok(result.Data) : BadRequest(result.Errors);
         }
     }
 }

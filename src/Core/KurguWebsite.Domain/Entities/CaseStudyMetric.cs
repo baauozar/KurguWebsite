@@ -14,7 +14,7 @@ namespace KurguWebsite.Domain.Entities
         public string? MetricValue { get; set; }
         public string? Icon { get; set; }
 
-        public virtual CaseStudy CaseStudy { get; set; }
+        public virtual CaseStudy? CaseStudy { get; set; }
         private CaseStudyMetric() { }
 
         // Factory method for creating a new metric
@@ -36,5 +36,6 @@ namespace KurguWebsite.Domain.Entities
             MetricValue = metricValue;
             Icon = icon;
         }
+
     }
 }

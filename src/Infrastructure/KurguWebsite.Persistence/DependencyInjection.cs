@@ -29,6 +29,9 @@ namespace KurguWebsite.Persistence
             services.AddScoped<ICompanyInfoRepository, CompanyInfoRepository>();
             services.AddScoped<IProcessStepRepository, ProcessStepRepository>();
             services.AddScoped<IServiceUniquenessChecker, ServiceUniquenessChecker>();
+            services.AddScoped<ICaseStudyUniquenessChecker, CaseStudyUniquenessChecker>();
+            services.AddScoped<IPageUniquenessChecker, PageUniquenessChecker>();
+            services.AddScoped<IServiceUniquenessChecker, ServiceUniquenessChecker>();
 
 
             // UoW

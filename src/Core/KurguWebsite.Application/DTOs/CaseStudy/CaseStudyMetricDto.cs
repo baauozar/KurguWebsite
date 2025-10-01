@@ -11,9 +11,9 @@ namespace KurguWebsite.Application.DTOs.CaseStudy
     public class CaseStudyMetricDto : IMapFrom<CaseStudyMetric>
     {
         public Guid Id { get; set; }
-        public Guid CaseStudyId { get; set; }
-        public string? MetricName { get; set; }
-        public string? MetricValue { get; set; }
+        public string MetricName { get; set; } = string.Empty;
+        public string MetricValue { get; set; } = string.Empty;
         public string? Icon { get; set; }
+        public Guid CaseStudyId { get; set; }
     }
 }

@@ -9,7 +9,7 @@ namespace KurguWebsite.Application.Features.Testimonials.Queries
 {
     public class GetPaginatedTestimonialsQuery : IRequest<Result<PaginatedList<TestimonialDto>>>
     {
-        public QueryParameters Params { get; set; }
+        public QueryParameters Params { get; set; } = new QueryParameters();
     }
 
     public class GetPaginatedTestimonialsQueryHandler : IRequestHandler<GetPaginatedTestimonialsQuery, Result<PaginatedList<TestimonialDto>>>

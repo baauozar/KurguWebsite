@@ -1,9 +1,9 @@
 ﻿using FluentValidation;
-using KurguWebsite.Application.DTOs.Contact;
+using KurguWebsite.Application.Features.ContactMessages.Commands;
 
 namespace KurguWebsite.Application.Validators.Contact
 {
-    public class CreateContactMessageDtoValidator : AbstractValidator<CreateContactMessageDto>
+    public class CreateContactMessageDtoValidator : AbstractValidator<SubmitContactMessageCommand>
     {
         public CreateContactMessageDtoValidator()
         {

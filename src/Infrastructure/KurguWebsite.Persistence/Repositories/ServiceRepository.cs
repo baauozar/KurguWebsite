@@ -13,7 +13,7 @@ namespace KurguWebsite.Persistence.Repositories
 {
     public class ServiceRepository : GenericRepository<Service>, IServiceRepository
     {
-        private readonly KurguWebsiteDbContext _context;
+        new private readonly KurguWebsiteDbContext _context;
         public ServiceRepository(KurguWebsiteDbContext context) : base(context)
         {
             _context = context;

@@ -10,7 +10,7 @@ namespace KurguWebsite.Application.Features.Services.Queries
 {
     public class GetPaginatedServicesQuery : IRequest<Result<PaginatedList<ServiceDto>>>
     {
-        public PaginationParams Params { get; set; }
+        public PaginationParams Params { get; set; }=new PaginationParams();
     }
 
     public class GetPaginatedServicesQueryHandler : IRequestHandler<GetPaginatedServicesQuery, Result<PaginatedList<ServiceDto>>>

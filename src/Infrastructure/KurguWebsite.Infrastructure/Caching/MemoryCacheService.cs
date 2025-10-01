@@ -18,17 +18,26 @@ namespace KurguWebsite.Infrastructure.Caching
             _memoryCache = memoryCache;
         }
 
-        public Task<T> GetAsync<T>(string key)
+        public Task<T?> GetAsync<T>(string key)
         {
-            return Task.FromResult(_memoryCache.Get<T>(key));
+            _memoryCache.TryGetValue(key, out T? value);
+            return Task.FromResult(value);
         }
 
-        public async Task<T> GetAsync<T>(string key, Func<Task<T>> factory, TimeSpan? expiration = null)
+        public async Task<T> GetAsync<T>(
+      string key,
+      Func<Task<T>> factory,
+      TimeSpan? expiration = null) where T : notnull
         {
-            if (_memoryCache.TryGetValue(key, out T cachedValue))
+            if (_memoryCache.TryGetValue(key, out T? cachedValue) && cachedValue is not null)
                 return cachedValue;
 
             var value = await factory();
+
+            // enforce non-null: fail fast if factory returned null
+            if (value is null)
+                throw new InvalidOperationException($"Factory returned null for cache key '{key}'.");
+
             await SetAsync(key, value, expiration);
             return value;
         }

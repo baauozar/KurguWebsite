@@ -18,6 +18,9 @@ namespace KurguWebsite.Persistence.Repositories
             _dbSet = _context.Set<T>();
         }
         public IQueryable<T> Entities => _context.Set<T>();
+
+        public IQueryable<T> EntitiesIncludingDeleted => _dbSet.IgnoreQueryFilters();
+
         public virtual async Task<T?> GetByIdAsync(Guid id)
         {
             return await _dbSet.FindAsync(id);
@@ -91,9 +94,18 @@ namespace KurguWebsite.Persistence.Repositories
             return Task.CompletedTask;
         }
 
-        public virtual Task DeleteAsync(T entity)
+        public Task DeleteAsync(T entity)
         {
-            _dbSet.Remove(entity);
+            if (entity is AuditableEntity aud)
+            {
+                // if you have ICurrentUserService, inject and use its UserId here
+                aud.SoftDelete("system");
+                _dbSet.Update(entity);
+            }
+            else
+            {
+                _dbSet.Remove(entity);
+            }
             return Task.CompletedTask;
         }
 
@@ -109,5 +121,32 @@ namespace KurguWebsite.Persistence.Repositories
         {
             return await _dbSet.AnyAsync(predicate);
         }
+        
+        public Task RestoreAsync(T entity)
+        {
+            if (entity is AuditableEntity auditable)
+            {
+                auditable.Restore();
+                _dbSet.Update(entity);
+            }
+            // If not AuditableEntity, nothing to restore.
+            return Task.CompletedTask;
+        }
+
+        public async Task RestoreByIdAsync(Guid id)
+        {
+            var entity = await _dbSet.IgnoreQueryFilters().FirstOrDefaultAsync(x => x.Id == id);
+            if (entity == null) return;
+
+            if (entity is AuditableEntity auditable)
+            {
+                auditable.Restore();
+                _dbSet.Update(entity);
+            }
+        }
+
+        public async Task<T?> GetByIdIncludingDeletedAsync(Guid id)
+         => await _dbSet.IgnoreQueryFilters().FirstOrDefaultAsync(e => e.Id == id);
+
     }
 }

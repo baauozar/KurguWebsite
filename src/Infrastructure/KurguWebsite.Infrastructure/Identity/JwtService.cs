@@ -19,13 +19,19 @@ namespace KurguWebsite.Infrastructure.Identity
 
         public JwtService(IConfiguration configuration)
         {
-            _configuration = configuration;
-            _secret = _configuration["Jwt:Secret"];
-            _issuer = _configuration["Jwt:Issuer"];
-            _audience = _configuration["Jwt:Audience"];
-            _expiryMinutes = int.Parse(_configuration["Jwt:ExpiryMinutes"] ?? "60");
-        }
+            _configuration = configuration ?? throw new ArgumentNullException(nameof(configuration));
 
+            _secret = configuration["Jwt:Secret"]
+                ?? throw new InvalidOperationException("Jwt:Secret is missing in configuration.");
+
+            _issuer = configuration["Jwt:Issuer"]
+                ?? throw new InvalidOperationException("Jwt:Issuer is missing in configuration.");
+
+            _audience = configuration["Jwt:Audience"]
+                ?? throw new InvalidOperationException("Jwt:Audience is missing in configuration.");
+
+            _expiryMinutes = int.Parse(configuration["Jwt:ExpiryMinutes"] ?? "60");
+        }
         public string GenerateToken(Guid userId, string email, string[] roles)
         {
             var tokenHandler = new JwtSecurityTokenHandler();

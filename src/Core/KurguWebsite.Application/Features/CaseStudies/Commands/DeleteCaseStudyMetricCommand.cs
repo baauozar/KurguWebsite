@@ -1,35 +1,31 @@
-﻿// src/Core/KurguWebsite.Application/Features/CaseStudies/Commands/DeleteCaseStudyMetricCommand.cs
-using KurguWebsite.Application.Common.Interfaces;
+﻿using KurguWebsite.Application.Common.Interfaces;
 using KurguWebsite.Application.Common.Models;
 using MediatR;
 
-namespace KurguWebsite.Application.Features.CaseStudies.Commands;
-
-public class DeleteCaseStudyMetricCommand : IRequest<ControlResult>
+public sealed class DeleteCaseStudyMetricCommand : IRequest<ControlResult>
 {
     public Guid Id { get; set; }
 }
 
-public class DeleteCaseStudyMetricCommandHandler : IRequestHandler<DeleteCaseStudyMetricCommand, ControlResult>
+public sealed class DeleteCaseStudyMetricCommandHandler : IRequestHandler<DeleteCaseStudyMetricCommand, ControlResult>
 {
-    private readonly IUnitOfWork _unitOfWork;
+    private readonly IUnitOfWork _uow;
+    private readonly ICurrentUserService _currentUser;
 
-    public DeleteCaseStudyMetricCommandHandler(IUnitOfWork unitOfWork)
+    public DeleteCaseStudyMetricCommandHandler(IUnitOfWork uow, ICurrentUserService currentUser)
     {
-        _unitOfWork = unitOfWork;
+        _uow = uow;
+        _currentUser = currentUser;
     }
 
-    public async Task<ControlResult> Handle(DeleteCaseStudyMetricCommand request, CancellationToken cancellationToken)
+    public async Task<ControlResult> Handle(DeleteCaseStudyMetricCommand request, CancellationToken ct)
     {
-        var caseStudyMetric = await _unitOfWork.CaseStudyMetrics.GetByIdAsync(request.Id);
+        var metric = await _uow.CaseStudyMetrics.GetByIdAsync(request.Id);
+        if (metric is null) return ControlResult.Failure("Metric not found.");
 
-        if (caseStudyMetric == null)
-        {
-            return ControlResult.Failure("Case Study Metric not found.");
-        }
-
-        await _unitOfWork.CaseStudyMetrics.DeleteAsync(caseStudyMetric);
-        await _unitOfWork.CommitAsync();
+        metric.SoftDelete(_currentUser.UserId ?? "System");
+        await _uow.CaseStudyMetrics.UpdateAsync(metric);
+        await _uow.CommitAsync();
 
         return ControlResult.Success();
     }

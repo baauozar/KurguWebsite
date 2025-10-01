@@ -107,14 +107,15 @@ namespace KurguWebsite.Domain.Entities
 
 
         // Service.cs (inside class)
-        public void AddFeature(string title, string description, string? iconClass = null, int displayOrder = 0)
+        // Service.cs
+        public void AddFeature(string title, string description, string? iconClass = null, int? displayOrder = null)
         {
-            var feature = ServiceFeature.Create(this.Id, title, description, iconClass);
-            // make sure you can set the navigation without reflection:
-            feature.Service = this;                 // requires `internal set;` on ServiceFeature.Service
-                                                    // feature.ServiceId = this.Id;         // optional; EF will infer from navigation too
+            var nextOrder = displayOrder ?? (_features.Count == 0 ? 0 : _features.Max(f => f.DisplayOrder) + 1);
+            var feature = ServiceFeature.Create(this.Id, title, description, iconClass, nextOrder);
+            feature.Service = this;
             _features.Add(feature);
         }
+
 
 
         public void RemoveFeature(ServiceFeature feature)

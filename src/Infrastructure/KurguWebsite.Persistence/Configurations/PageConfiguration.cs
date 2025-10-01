@@ -23,7 +23,7 @@ namespace KurguWebsite.Persistence.Configurations
 
             builder.Property(e => e.Slug)
                 .IsRequired()
-                .HasMaxLength(200);
+                .HasMaxLength(265);
 
             builder.HasIndex(e => e.Slug)
                 .IsUnique();

@@ -21,7 +21,7 @@ namespace KurguWebsite.Infrastructure.Middleware
             RequestDelegate next,
             IConfiguration configuration,
             ILogger<SecurityHeadersMiddleware> logger,
-            SecurityHeadersOptions options = null)
+            SecurityHeadersOptions? options = null)
         {
             _next = next;
             _configuration = configuration;
@@ -145,7 +145,7 @@ namespace KurguWebsite.Infrastructure.Middleware
     {
         public static IApplicationBuilder UseSecurityHeaders(
             this IApplicationBuilder builder,
-            SecurityHeadersOptions options = null)
+            SecurityHeadersOptions? options = null)
         {
             return builder.UseMiddleware<SecurityHeadersMiddleware>(options ?? new SecurityHeadersOptions());
         }

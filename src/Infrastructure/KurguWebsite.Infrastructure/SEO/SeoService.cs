@@ -3,6 +3,7 @@ using Microsoft.Extensions.Configuration;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 using System.Text.Json;
 using System.Text.RegularExpressions;
 using System.Xml.Linq;
@@ -34,12 +35,41 @@ namespace KurguWebsite.Infrastructure.SEO
         {
             if (string.IsNullOrWhiteSpace(slug)) return string.Empty;
 
-            slug = slug.ToLowerInvariant()
-                       .Replace("ç", "c").Replace("ş", "s").Replace("ğ", "g")
-                       .Replace("ü", "u").Replace("ö", "o").Replace("ı", "i").Replace("İ", "i");
+            // Normalize & Turkish fold first (upper/lower variants)
+            slug = slug.Normalize(NormalizationForm.FormD);
 
+            // Turkish-specific letter mapping first (handles dotted/undotted i correctly)
+            slug = slug
+                .Replace("İ", "I").Replace("İ", "I")  // uppercase dotted I to I (rare edge)
+                .Replace("ı", "i").Replace("İ", "I")
+                .Replace("ş", "s").Replace("Ş", "S")
+                .Replace("ğ", "g").Replace("Ğ", "G")
+                .Replace("ç", "c").Replace("Ç", "C")
+                .Replace("ö", "o").Replace("Ö", "O")
+                .Replace("ü", "u").Replace("Ü", "U");
+
+            // Remove combining marks (accents/diacritics)
+            slug = new string(slug.Where(ch => System.Globalization.CharUnicodeInfo.GetUnicodeCategory(ch) != System.Globalization.UnicodeCategory.NonSpacingMark).ToArray())
+                   .Normalize(NormalizationForm.FormC);
+
+            // Lowercase invariant (after mapping)
+            slug = slug.ToLowerInvariant();
+
+            // Remove anything not alphanumeric/space/hyphen
             slug = Regex.Replace(slug, @"[^a-z0-9\s-]", "");
-            slug = Regex.Replace(slug, @"\s+", "-").Trim('-');
+
+            // Collapse whitespace to single dashes
+            slug = Regex.Replace(slug, @"\s+", "-");
+
+            // Collapse multiple dashes
+            slug = Regex.Replace(slug, @"-+", "-");
+
+            // Trim dashes
+            slug = slug.Trim('-');
+
+            // Optional: hard cap length (keeps URLs short)
+            if (slug.Length > 200) slug = slug[..200].Trim('-');
+
             return slug;
         }
 
@@ -49,15 +79,18 @@ namespace KurguWebsite.Infrastructure.SEO
                    Regex.IsMatch(slug, @"^[a-z0-9]+(-[a-z0-9]+)*$");
         }
 
-        public SeoMetadata GenerateMetadata(string title, string description, string keywords = null)
+        public SeoMetadata GenerateMetadata(string title, string description, string? keywords = null)
         {
-            title = title?.Trim() ?? string.Empty;
-            description = description?.Trim() ?? string.Empty;
+            title ??= string.Empty;
+            description ??= string.Empty;
+
+            var t = title.Length > 60 ? $"{title.AsSpan(0, 57)}..." : title;
+            var d = description.Length > 160 ? $"{description.AsSpan(0, 157)}..." : description;
 
             return new SeoMetadata
             {
-                Title = title.Length > 60 ? title.Substring(0, 57) + "..." : title,
-                Description = description.Length > 160 ? description.Substring(0, 157) + "..." : description,
+                Title = t,
+                Description = d,
                 Keywords = string.IsNullOrWhiteSpace(keywords)
                     ? GenerateMetaKeywords($"{title} {description}")
                     : keywords
@@ -196,7 +229,15 @@ Disallow: /";
 
             return string.Join(Environment.NewLine, tags);
         }
+        private static string RemoveStopWordsForSlug(string text)
+        {
+            var words = Regex.Replace(text, @"\s+", " ").Trim()
+                             .Split(' ', StringSplitOptions.RemoveEmptyEntries);
 
+            var filtered = words.Where(w => !StopWords.Contains(w, StringComparer.OrdinalIgnoreCase));
+            var result = string.Join(' ', filtered);
+            return string.IsNullOrWhiteSpace(result) ? text : result;
+        }
     }
 
     public class SeoMetadata
