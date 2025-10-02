@@ -1,4 +1,4 @@
-﻿namespace KurguWebsite.WebUI.Areas.Admin.AdminModels.SharedAdmin
+﻿namespace KurguWebsite.WebUI.Areas.Admin.ViewModel.SharedAdmin
 {
     public record PagedRequest(int PageNumber = 1, int PageSize = 10, string? Search = null, string? Sort = null);
 

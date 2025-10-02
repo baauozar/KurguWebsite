@@ -14,8 +14,18 @@ namespace KurguWebsite.Infrastructure.Identity
             _httpContextAccessor = httpContextAccessor;
         }
 
-        public string? UserId => _httpContextAccessor.HttpContext?.User?.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        public string? UserId
+        {
+            get
+            {
+                // Try to get from HTTP context
+                var userId = _httpContextAccessor.HttpContext?.User?
+                    .FindFirstValue(ClaimTypes.NameIdentifier);
 
+                // If no HTTP context (like during seeding), return system user
+                return userId ?? "system";
+            }
+        }
         public Guid? UserGuidId
         {
             get
@@ -26,28 +36,36 @@ namespace KurguWebsite.Infrastructure.Identity
             }
         }
 
-        public string? UserName => _httpContextAccessor.HttpContext?.User?.Identity?.Name;
+        public string? UserName
+        {
+            get
+            {
+                var userName = _httpContextAccessor.HttpContext?.User?
+                    .FindFirstValue(ClaimTypes.Name);
 
+                return userName ?? "System";
+            }
+        }
         public string? Email => _httpContextAccessor.HttpContext?.User?.FindFirst(ClaimTypes.Email)?.Value;
 
-        public bool IsAuthenticated => _httpContextAccessor.HttpContext?.User?.Identity?.IsAuthenticated ?? false;
-
+        public bool IsAuthenticated
+        {
+            get
+            {
+                return _httpContextAccessor.HttpContext?.User?.Identity?.IsAuthenticated
+                       ?? false;
+            }
+        }
         public bool IsAdmin => _httpContextAccessor.HttpContext?.User?.IsInRole("Admin") ?? false;
 
-        // --- ADDED THIS PROPERTY ---
         public string? IpAddress
         {
             get
             {
-                var ip = _httpContextAccessor.HttpContext?.Connection?.RemoteIpAddress?.ToString();
-                if (ip == "::1") // Handle IPv6 loopback
-                {
-                    return "127.0.0.1";
-                }
-                return ip;
+                return _httpContextAccessor.HttpContext?.Connection?.RemoteIpAddress?.ToString()
+                       ?? "127.0.0.1";
             }
         }
-        // -------------------------
 
         public bool IsInRole(string role)
         {

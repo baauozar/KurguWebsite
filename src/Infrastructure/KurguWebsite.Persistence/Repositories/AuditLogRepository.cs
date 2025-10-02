@@ -48,5 +48,12 @@ namespace KurguWebsite.Persistence.Repositories
                     pageSize,
                     cancellationToken);
         }
+
+        public async Task<AuditLog?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
+        {
+            return await _context.AuditLogs
+                .AsNoTracking()
+                .FirstOrDefaultAsync(x => x.Id == id, cancellationToken);
+        }
     }
 }

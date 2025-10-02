@@ -12,6 +12,7 @@ using KurguWebsite.Infrastructure.Services.DateTimeService;   // DateTimeService
 using KurguWebsite.Infrastructure.Services.Email;             // EmailService
 using KurguWebsite.Persistence.Context;     // DbContext lives in Persistence
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
@@ -129,6 +130,10 @@ namespace KurguWebsite.Infrastructure
             services.AddScoped<IEmailService, EmailService>();
             // JWT helper
             services.AddScoped<JwtService>();  // ✅ required so DI can construct EnhancedAuthenticationService
+            services.AddScoped<IPermissionService, PermissionService>();
+
+            // Register Authorization
+        
 
 
             // Background Jobs

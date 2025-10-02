@@ -273,35 +273,30 @@ namespace KurguWebsite.Persistence.Migrations
 
                     b.Property<string>("CompanyName")
                         .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
 
                     b.Property<string>("CopyrightText")
                         .HasMaxLength(200)
                         .HasColumnType("nvarchar(200)");
 
                     b.Property<string>("CreatedBy")
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<DateTime>("CreatedDate")
                         .HasColumnType("datetime2");
 
                     b.Property<string>("DeletedBy")
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<DateTime?>("DeletedDate")
                         .HasColumnType("datetime2");
 
                     b.Property<bool>("IsDeleted")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("bit")
-                        .HasDefaultValue(false);
+                        .HasColumnType("bit");
 
                     b.Property<string>("LastModifiedBy")
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<DateTime?>("LastModifiedDate")
                         .HasColumnType("datetime2");
@@ -1209,37 +1204,31 @@ namespace KurguWebsite.Persistence.Migrations
                             b1.Property<string>("City")
                                 .IsRequired()
                                 .HasMaxLength(100)
-                                .HasColumnType("nvarchar(100)")
-                                .HasColumnName("City");
+                                .HasColumnType("nvarchar(100)");
 
                             b1.Property<string>("Country")
                                 .IsRequired()
-                                .HasMaxLength(50)
-                                .HasColumnType("nvarchar(50)")
-                                .HasColumnName("Country");
+                                .HasMaxLength(100)
+                                .HasColumnType("nvarchar(100)");
 
                             b1.Property<string>("PostalCode")
                                 .IsRequired()
                                 .HasMaxLength(20)
-                                .HasColumnType("nvarchar(20)")
-                                .HasColumnName("PostalCode");
+                                .HasColumnType("nvarchar(20)");
 
                             b1.Property<string>("State")
                                 .IsRequired()
-                                .HasMaxLength(50)
-                                .HasColumnType("nvarchar(50)")
-                                .HasColumnName("State");
+                                .HasMaxLength(100)
+                                .HasColumnType("nvarchar(100)");
 
                             b1.Property<string>("Street")
                                 .IsRequired()
                                 .HasMaxLength(200)
-                                .HasColumnType("nvarchar(200)")
-                                .HasColumnName("Street");
+                                .HasColumnType("nvarchar(200)");
 
                             b1.Property<string>("Suite")
                                 .HasMaxLength(50)
-                                .HasColumnType("nvarchar(50)")
-                                .HasColumnName("Suite");
+                                .HasColumnType("nvarchar(50)");
 
                             b1.HasKey("CompanyInfoId");
 
@@ -1257,30 +1246,25 @@ namespace KurguWebsite.Persistence.Migrations
                             b1.Property<string>("Email")
                                 .IsRequired()
                                 .HasMaxLength(100)
-                                .HasColumnType("nvarchar(100)")
-                                .HasColumnName("Email");
+                                .HasColumnType("nvarchar(100)");
 
                             b1.Property<string>("SalesEmail")
                                 .HasMaxLength(100)
-                                .HasColumnType("nvarchar(100)")
-                                .HasColumnName("SalesEmail");
+                                .HasColumnType("nvarchar(100)");
 
                             b1.Property<string>("SalesPhone")
                                 .IsRequired()
                                 .HasMaxLength(20)
-                                .HasColumnType("nvarchar(20)")
-                                .HasColumnName("SalesPhone");
+                                .HasColumnType("nvarchar(20)");
 
                             b1.Property<string>("SupportEmail")
                                 .HasMaxLength(100)
-                                .HasColumnType("nvarchar(100)")
-                                .HasColumnName("SupportEmail");
+                                .HasColumnType("nvarchar(100)");
 
                             b1.Property<string>("SupportPhone")
                                 .IsRequired()
                                 .HasMaxLength(20)
-                                .HasColumnType("nvarchar(20)")
-                                .HasColumnName("SupportPhone");
+                                .HasColumnType("nvarchar(20)");
 
                             b1.HasKey("CompanyInfoId");
 
@@ -1297,28 +1281,23 @@ namespace KurguWebsite.Persistence.Migrations
 
                             b1.Property<string>("Facebook")
                                 .HasMaxLength(200)
-                                .HasColumnType("nvarchar(200)")
-                                .HasColumnName("Facebook");
+                                .HasColumnType("nvarchar(200)");
 
                             b1.Property<string>("Instagram")
                                 .HasMaxLength(200)
-                                .HasColumnType("nvarchar(200)")
-                                .HasColumnName("Instagram");
+                                .HasColumnType("nvarchar(200)");
 
                             b1.Property<string>("LinkedIn")
                                 .HasMaxLength(200)
-                                .HasColumnType("nvarchar(200)")
-                                .HasColumnName("LinkedIn");
+                                .HasColumnType("nvarchar(200)");
 
                             b1.Property<string>("Twitter")
                                 .HasMaxLength(200)
-                                .HasColumnType("nvarchar(200)")
-                                .HasColumnName("Twitter");
+                                .HasColumnType("nvarchar(200)");
 
                             b1.Property<string>("YouTube")
                                 .HasMaxLength(200)
-                                .HasColumnType("nvarchar(200)")
-                                .HasColumnName("YouTube");
+                                .HasColumnType("nvarchar(200)");
 
                             b1.HasKey("CompanyInfoId");
 

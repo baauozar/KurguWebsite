@@ -22,6 +22,8 @@ namespace KurguWebsite.Application.Interfaces.Repositories
        int pageSize,
        IConfigurationProvider configuration,
        CancellationToken cancellationToken = default);
+        Task<AuditLog?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default);
+
 
     }
 }

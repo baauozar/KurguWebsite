@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace KurguWebsite.Persistence.Migrations
 {
     /// <inheritdoc />
-    public partial class AProperMigration : Migration
+    public partial class kurgu : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -43,7 +43,7 @@ namespace KurguWebsite.Persistence.Migrations
                 columns: table => new
                 {
                     Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    CompanyName = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
+                    CompanyName = table.Column<string>(type: "nvarchar(200)", maxLength: 200, nullable: false),
                     LogoPath = table.Column<string>(type: "nvarchar(500)", maxLength: 500, nullable: true),
                     LogoLightPath = table.Column<string>(type: "nvarchar(500)", maxLength: 500, nullable: true),
                     About = table.Column<string>(type: "nvarchar(2000)", maxLength: 2000, nullable: true),
@@ -51,29 +51,29 @@ namespace KurguWebsite.Persistence.Migrations
                     Vision = table.Column<string>(type: "nvarchar(1000)", maxLength: 1000, nullable: true),
                     Slogan = table.Column<string>(type: "nvarchar(200)", maxLength: 200, nullable: true),
                     CopyrightText = table.Column<string>(type: "nvarchar(200)", maxLength: 200, nullable: true),
-                    SupportPhone = table.Column<string>(type: "nvarchar(20)", maxLength: 20, nullable: false),
-                    SalesPhone = table.Column<string>(type: "nvarchar(20)", maxLength: 20, nullable: false),
-                    Email = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
-                    SupportEmail = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: true),
-                    SalesEmail = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: true),
-                    Street = table.Column<string>(type: "nvarchar(200)", maxLength: 200, nullable: false),
-                    Suite = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: true),
-                    City = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
-                    State = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false),
-                    PostalCode = table.Column<string>(type: "nvarchar(20)", maxLength: 20, nullable: false),
-                    Country = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false),
-                    Facebook = table.Column<string>(type: "nvarchar(200)", maxLength: 200, nullable: true),
-                    Twitter = table.Column<string>(type: "nvarchar(200)", maxLength: 200, nullable: true),
-                    LinkedIn = table.Column<string>(type: "nvarchar(200)", maxLength: 200, nullable: true),
-                    Instagram = table.Column<string>(type: "nvarchar(200)", maxLength: 200, nullable: true),
-                    YouTube = table.Column<string>(type: "nvarchar(200)", maxLength: 200, nullable: true),
+                    ContactInformation_SupportPhone = table.Column<string>(type: "nvarchar(20)", maxLength: 20, nullable: false),
+                    ContactInformation_SalesPhone = table.Column<string>(type: "nvarchar(20)", maxLength: 20, nullable: false),
+                    ContactInformation_Email = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
+                    ContactInformation_SupportEmail = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: true),
+                    ContactInformation_SalesEmail = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: true),
+                    OfficeAddress_Street = table.Column<string>(type: "nvarchar(200)", maxLength: 200, nullable: false),
+                    OfficeAddress_Suite = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: true),
+                    OfficeAddress_City = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
+                    OfficeAddress_State = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
+                    OfficeAddress_PostalCode = table.Column<string>(type: "nvarchar(20)", maxLength: 20, nullable: false),
+                    OfficeAddress_Country = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
+                    SocialMedia_Facebook = table.Column<string>(type: "nvarchar(200)", maxLength: 200, nullable: true),
+                    SocialMedia_Twitter = table.Column<string>(type: "nvarchar(200)", maxLength: 200, nullable: true),
+                    SocialMedia_LinkedIn = table.Column<string>(type: "nvarchar(200)", maxLength: 200, nullable: true),
+                    SocialMedia_Instagram = table.Column<string>(type: "nvarchar(200)", maxLength: 200, nullable: true),
+                    SocialMedia_YouTube = table.Column<string>(type: "nvarchar(200)", maxLength: 200, nullable: true),
                     CreatedDate = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    CreatedBy = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: true),
+                    CreatedBy = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     LastModifiedDate = table.Column<DateTime>(type: "datetime2", nullable: true),
-                    LastModifiedBy = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: true),
-                    IsDeleted = table.Column<bool>(type: "bit", nullable: false, defaultValue: false),
+                    LastModifiedBy = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    IsDeleted = table.Column<bool>(type: "bit", nullable: false),
                     DeletedDate = table.Column<DateTime>(type: "datetime2", nullable: true),
-                    DeletedBy = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: true)
+                    DeletedBy = table.Column<string>(type: "nvarchar(max)", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -113,7 +113,7 @@ namespace KurguWebsite.Persistence.Migrations
                 {
                     Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
                     Title = table.Column<string>(type: "nvarchar(200)", maxLength: 200, nullable: false),
-                    Slug = table.Column<string>(type: "nvarchar(200)", maxLength: 200, nullable: false),
+                    Slug = table.Column<string>(type: "nvarchar(265)", maxLength: 265, nullable: false),
                     Content = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     PageType = table.Column<int>(type: "int", nullable: false),
                     IsActive = table.Column<bool>(type: "bit", nullable: false),
@@ -232,7 +232,7 @@ namespace KurguWebsite.Persistence.Migrations
                 {
                     Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
                     Title = table.Column<string>(type: "nvarchar(200)", maxLength: 200, nullable: false),
-                    Slug = table.Column<string>(type: "nvarchar(200)", maxLength: 200, nullable: false),
+                    Slug = table.Column<string>(type: "nvarchar(265)", maxLength: 265, nullable: false),
                     Description = table.Column<string>(type: "nvarchar(1000)", maxLength: 1000, nullable: false),
                     ShortDescription = table.Column<string>(type: "nvarchar(300)", maxLength: 300, nullable: false),
                     FullDescription = table.Column<string>(type: "nvarchar(max)", nullable: true),
@@ -343,7 +343,7 @@ namespace KurguWebsite.Persistence.Migrations
                 {
                     Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
                     Title = table.Column<string>(type: "nvarchar(200)", maxLength: 200, nullable: false),
-                    Slug = table.Column<string>(type: "nvarchar(200)", maxLength: 200, nullable: false),
+                    Slug = table.Column<string>(type: "nvarchar(256)", maxLength: 256, nullable: false),
                     ClientName = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
                     Description = table.Column<string>(type: "nvarchar(2000)", maxLength: 2000, nullable: false),
                     Industry = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: true),
@@ -357,7 +357,7 @@ namespace KurguWebsite.Persistence.Migrations
                     IsFeatured = table.Column<bool>(type: "bit", nullable: false),
                     DisplayOrder = table.Column<int>(type: "int", nullable: false),
                     ServiceId = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
-                    Technologies = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    _technologies = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     CreatedDate = table.Column<DateTime>(type: "datetime2", nullable: false),
                     CreatedBy = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: true),
                     LastModifiedDate = table.Column<DateTime>(type: "datetime2", nullable: true),
@@ -497,16 +497,16 @@ namespace KurguWebsite.Persistence.Migrations
                 {
                     Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
                     CaseStudyId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    MetricName = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: true),
-                    MetricValue = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: true),
-                    Icon = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: true),
+                    MetricName = table.Column<string>(type: "nvarchar(150)", maxLength: 150, nullable: true),
+                    MetricValue = table.Column<string>(type: "nvarchar(150)", maxLength: 150, nullable: true),
+                    Icon = table.Column<string>(type: "nvarchar(150)", maxLength: 150, nullable: true),
                     CreatedDate = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    CreatedBy = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    CreatedBy = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: true),
                     LastModifiedDate = table.Column<DateTime>(type: "datetime2", nullable: true),
-                    LastModifiedBy = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    IsDeleted = table.Column<bool>(type: "bit", nullable: false),
+                    LastModifiedBy = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: true),
+                    IsDeleted = table.Column<bool>(type: "bit", nullable: false, defaultValue: false),
                     DeletedDate = table.Column<DateTime>(type: "datetime2", nullable: true),
-                    DeletedBy = table.Column<string>(type: "nvarchar(max)", nullable: true)
+                    DeletedBy = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: true)
                 },
                 constraints: table =>
                 {
@@ -516,7 +516,7 @@ namespace KurguWebsite.Persistence.Migrations
                         column: x => x.CaseStudyId,
                         principalTable: "CaseStudies",
                         principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
+                        onDelete: ReferentialAction.Restrict);
                 });
 
             migrationBuilder.CreateIndex(
@@ -546,9 +546,9 @@ namespace KurguWebsite.Persistence.Migrations
                 unique: true);
 
             migrationBuilder.CreateIndex(
-                name: "IX_CaseStudyMetrics_CaseStudyId",
+                name: "IX_CaseStudyMetrics_CaseStudyId_MetricName",
                 table: "CaseStudyMetrics",
-                column: "CaseStudyId");
+                columns: new[] { "CaseStudyId", "MetricName" });
 
             migrationBuilder.CreateIndex(
                 name: "IX_ContactMessages_CreatedDate",
@@ -646,14 +646,10 @@ namespace KurguWebsite.Persistence.Migrations
                 filter: "[NormalizedName] IS NOT NULL");
 
             migrationBuilder.CreateIndex(
-                name: "IX_ServiceFeatures_DisplayOrder",
+                name: "IX_ServiceFeatures_ServiceId_DisplayOrder",
                 table: "ServiceFeatures",
-                column: "DisplayOrder");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_ServiceFeatures_ServiceId",
-                table: "ServiceFeatures",
-                column: "ServiceId");
+                columns: new[] { "ServiceId", "DisplayOrder" },
+                unique: true);
 
             migrationBuilder.CreateIndex(
                 name: "IX_Services_Category",

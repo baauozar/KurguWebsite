@@ -1,7 +1,13 @@
+using KurguWebsite.WebUI.Authorization;
+using Microsoft.AspNetCore.Authorization;
+using static KurguWebsite.Domain.Constants.Permissions;
+
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddControllersWithViews();
+builder.Services.AddSingleton<IAuthorizationPolicyProvider, PermissionPolicyProvider>();
+builder.Services.AddSingleton<IAuthorizationHandler, PermissionAuthorizationHandler>();
 
 var app = builder.Build();
 
