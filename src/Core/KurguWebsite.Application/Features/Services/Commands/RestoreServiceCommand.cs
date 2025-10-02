@@ -7,36 +7,43 @@ using MediatR;
 
 namespace KurguWebsite.Application.Features.Services.Commands
 {
-    public class RestoreProcessStepsCommand : IRequest<Result<ServiceDto>>
+    // FIX: Correct class name
+    public class RestoreServiceCommand : IRequest<Result<ServiceDto>>
     {
         public Guid Id { get; set; }
     }
 
     public class RestoreServiceCommandHandler
-        : IRequestHandler<RestoreProcessStepsCommand, Result<ServiceDto>>
+        : IRequestHandler<RestoreServiceCommand, Result<ServiceDto>>
     {
         private readonly IUnitOfWork _uow;
         private readonly IMapper _mapper;
         private readonly IMediator _mediator;
+        private readonly ICurrentUserService _currentUserService;
 
-        public RestoreServiceCommandHandler(IUnitOfWork uow, IMapper mapper, IMediator mediator)
+        public RestoreServiceCommandHandler(IUnitOfWork uow, IMapper mapper, IMediator mediator, ICurrentUserService currentUserService)
         {
-            _uow = uow; _mapper = mapper; _mediator = mediator;
+            _uow = uow;
+            _mapper = mapper;
+            _mediator = mediator;
+            _currentUserService = currentUserService;
         }
 
-        public async Task<Result<ServiceDto>> Handle(RestoreProcessStepsCommand request, CancellationToken ct)
+        public async Task<Result<ServiceDto>> Handle(RestoreServiceCommand request, CancellationToken ct)
         {
-      
             var entity = await _uow.Services.GetByIdIncludingDeletedAsync(request.Id);
             if (entity is null) return Result<ServiceDto>.Failure("Service not found.");
 
             if (entity.IsDeleted)
             {
-                // Soft restore
                 await _uow.Services.RestoreAsync(entity);
+
+                // Track who restored
+                entity.LastModifiedBy = _currentUserService.UserId ?? "System";
+                entity.LastModifiedDate = DateTime.UtcNow;
+
                 await _uow.CommitAsync(ct);
 
-                // Invalidate caches as you do elsewhere
                 await _mediator.Publish(new CacheInvalidationEvent(CacheKeys.Services, CacheKeys.FeaturedServices), ct);
             }
 

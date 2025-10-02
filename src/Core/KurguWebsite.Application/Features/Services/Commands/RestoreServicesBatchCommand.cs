@@ -9,19 +9,24 @@ using System.Threading.Tasks;
 
 namespace KurguWebsite.Application.Features.Services.Commands
 {
-    public class RestoreProcessStepsBatchCommand : IRequest<Result<int>>
+    public class RestoreServicesBatchCommand : IRequest<Result<int>>
     {
         public List<Guid> Ids { get; set; } = new();
     }
 
     public class RestoreServicesBatchCommandHandler
-        : IRequestHandler<RestoreProcessStepsBatchCommand, Result<int>>
+        : IRequestHandler<RestoreServicesBatchCommand, Result<int>>
     {
         private readonly IUnitOfWork _uow;
+        private readonly ICurrentUserService _currentUserService; // ADD
 
-        public RestoreServicesBatchCommandHandler(IUnitOfWork uow) => _uow = uow;
+        public RestoreServicesBatchCommandHandler(IUnitOfWork uow, ICurrentUserService currentUserService)
+        {
+            _uow = uow;
+            _currentUserService = currentUserService;
+        }
 
-        public async Task<Result<int>> Handle(RestoreProcessStepsBatchCommand request, CancellationToken ct)
+        public async Task<Result<int>> Handle(RestoreServicesBatchCommand request, CancellationToken ct)
         {
             int restored = 0;
 
@@ -31,6 +36,11 @@ namespace KurguWebsite.Application.Features.Services.Commands
                 if (entity != null && entity.IsDeleted)
                 {
                     await _uow.Services.RestoreAsync(entity);
+
+                    // FIX: Track who restored
+                    entity.LastModifiedBy = _currentUserService.UserId ?? "System";
+                    entity.LastModifiedDate = DateTime.UtcNow;
+
                     restored++;
                 }
             }

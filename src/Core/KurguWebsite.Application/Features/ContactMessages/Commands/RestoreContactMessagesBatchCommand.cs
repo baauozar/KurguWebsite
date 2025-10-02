@@ -7,7 +7,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace KurguWebsite.Application.Features.ProcessSteps.Commands
+namespace KurguWebsite.Application.Features.ContactMessages.Commands
 {
     public class RestoreContactMessagesBatchCommand : IRequest<Result<int>>
     {
@@ -18,8 +18,12 @@ namespace KurguWebsite.Application.Features.ProcessSteps.Commands
         : IRequestHandler<RestoreContactMessagesBatchCommand, Result<int>>
     {
         private readonly IUnitOfWork _uow;
-
-        public RestoreContactMessagesBatchCommandHandler(IUnitOfWork uow) => _uow = uow;
+        private readonly ICurrentUserService _currentUserService;
+        public RestoreContactMessagesBatchCommandHandler(IUnitOfWork uow, ICurrentUserService currentUserService)
+        {
+            _uow = uow;
+            _currentUserService = currentUserService;
+        }
 
         public async Task<Result<int>> Handle(RestoreContactMessagesBatchCommand request, CancellationToken ct)
         {
@@ -31,6 +35,11 @@ namespace KurguWebsite.Application.Features.ProcessSteps.Commands
                 if (entity != null && entity.IsDeleted)
                 {
                     await _uow.ContactMessages.RestoreAsync(entity);
+
+                    // FIX: Track who restored
+                    entity.LastModifiedBy = _currentUserService.UserId ?? "System";
+                    entity.LastModifiedDate = DateTime.UtcNow;
+
                     restored++;
                 }
             }

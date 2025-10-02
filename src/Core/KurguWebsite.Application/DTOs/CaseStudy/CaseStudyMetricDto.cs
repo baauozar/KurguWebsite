@@ -14,6 +14,7 @@ namespace KurguWebsite.Application.DTOs.CaseStudy
         public string MetricName { get; set; } = string.Empty;
         public string MetricValue { get; set; } = string.Empty;
         public string? Icon { get; set; }
+        public int DisplayOrder { get; set; }
         public Guid CaseStudyId { get; set; }
     }
 }

@@ -46,7 +46,6 @@ namespace KurguWebsite.Application.Features.CaseStudies.Commands
             if (entity is null)
                 return Result<CaseStudyDto>.Failure("Case Study not found.");
 
-            // If title changed, regenerate a UNIQUE slug (Policy B)
             var titleChanged = !string.Equals(entity.Title, req.Title, StringComparison.Ordinal);
             if (titleChanged)
             {
@@ -61,7 +60,6 @@ namespace KurguWebsite.Application.Features.CaseStudies.Commands
                 entity.UpdateSlug(candidate);
             }
 
-            // Update the rest of the fields
             entity.Update(
                 title: req.Title,
                 clientName: req.ClientName,
@@ -71,8 +69,12 @@ namespace KurguWebsite.Application.Features.CaseStudies.Commands
                 result: req.Result
             );
 
+            // Track who modified
+            entity.LastModifiedBy = _currentUserService.UserId ?? "System";
+            entity.LastModifiedDate = DateTime.UtcNow;
+
             await _unitOfWork.CaseStudies.UpdateAsync(entity);
-            await _unitOfWork.CommitAsync(); // keep as-is if your UoW has no ct overload
+            await _unitOfWork.CommitAsync();
 
             await _mediator.Publish(
                 new CacheInvalidationEvent(CacheKeys.CaseStudies, CacheKeys.FeaturedCaseStudies),

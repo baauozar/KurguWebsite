@@ -13,17 +13,22 @@ namespace KurguWebsite.Application.Features.ContactMessages.Commands
     {
         private readonly IUnitOfWork _unitOfWork;
         private readonly IMapper _mapper;
+        private readonly ICurrentUserService _currentUserService;
 
-        public SubmitContactMessageCommandHandler(IUnitOfWork unitOfWork, IMapper mapper)
+        public SubmitContactMessageCommandHandler(IUnitOfWork unitOfWork, IMapper mapper, ICurrentUserService currentUserService)
         {
             _unitOfWork = unitOfWork;
             _mapper = mapper;
+            _currentUserService = currentUserService;
         }
 
         public async Task<Result<ContactMessageDto>> Handle(SubmitContactMessageCommand request, CancellationToken cancellationToken)
         {
-            // Corrected order: name, email, phone, subject, message
             var message = ContactMessage.Create(request.Name, request.Email, request.Phone, request.Subject, request.Message);
+
+            // Track creation (public submissions are "System" unless authenticated)
+            message.CreatedBy = _currentUserService.UserId ?? "Public";
+            message.CreatedDate = DateTime.UtcNow;
 
             await _unitOfWork.ContactMessages.AddAsync(message);
             await _unitOfWork.CommitAsync();

@@ -20,11 +20,13 @@ namespace KurguWebsite.Application.Features.CaseStudies.Commands
     {
         private readonly IUnitOfWork _unitOfWork;
         private readonly IMapper _mapper;
+        private readonly ICurrentUserService _currentUserService;
 
-        public UpdateCaseStudyMetricCommandHandler(IUnitOfWork unitOfWork, IMapper mapper)
+        public UpdateCaseStudyMetricCommandHandler(IUnitOfWork unitOfWork, IMapper mapper, ICurrentUserService currentUserService)
         {
             _unitOfWork = unitOfWork;
             _mapper = mapper;
+            _currentUserService = currentUserService;
         }
 
         public async Task<Result<CaseStudyMetricDto>> Handle(UpdateCaseStudyMetricCommand request, CancellationToken cancellationToken)
@@ -40,6 +42,10 @@ namespace KurguWebsite.Application.Features.CaseStudies.Commands
                 request.UpdateCaseStudyMetricDto.MetricName,
                 request.UpdateCaseStudyMetricDto.MetricValue,
                 request.UpdateCaseStudyMetricDto.Icon);
+
+            // Track who modified
+            caseStudyMetric.LastModifiedBy = _currentUserService.UserId ?? "System";
+            caseStudyMetric.LastModifiedDate = DateTime.UtcNow;
 
             await _unitOfWork.CaseStudyMetrics.UpdateAsync(caseStudyMetric);
             await _unitOfWork.CommitAsync();

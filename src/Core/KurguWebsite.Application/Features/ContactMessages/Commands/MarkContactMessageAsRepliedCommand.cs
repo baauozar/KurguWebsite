@@ -32,7 +32,11 @@ namespace KurguWebsite.Application.Features.ContactMessages.Commands
             }
 
             var userId = _currentUserService.UserId ?? "System";
-            message.MarkAsReplied(userId); // Assuming this method exists on your ContactMessage entity
+            message.MarkAsReplied(userId);
+
+            // FIX: Track who modified
+            message.LastModifiedBy = userId;
+            message.LastModifiedDate = DateTime.UtcNow;
 
             await _unitOfWork.ContactMessages.UpdateAsync(message);
             await _unitOfWork.CommitAsync(cancellationToken);

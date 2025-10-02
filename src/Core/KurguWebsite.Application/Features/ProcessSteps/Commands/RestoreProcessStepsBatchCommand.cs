@@ -18,8 +18,13 @@ namespace KurguWebsite.Application.Features.ProcessSteps.Commands
         : IRequestHandler<RestoreProcessStepsBatchCommand, Result<int>>
     {
         private readonly IUnitOfWork _uow;
+        private readonly ICurrentUserService _currentUserService; // ADD
 
-        public RestoreProcessStepsBatchCommandHandler(IUnitOfWork uow) => _uow = uow;
+        public RestoreProcessStepsBatchCommandHandler(IUnitOfWork uow, ICurrentUserService currentUserService)
+        {
+            _uow = uow;
+            _currentUserService = currentUserService;
+        }
 
         public async Task<Result<int>> Handle(RestoreProcessStepsBatchCommand request, CancellationToken ct)
         {
@@ -31,6 +36,11 @@ namespace KurguWebsite.Application.Features.ProcessSteps.Commands
                 if (entity != null && entity.IsDeleted)
                 {
                     await _uow.ProcessSteps.RestoreAsync(entity);
+
+                    // FIX: Track who restored
+                    entity.LastModifiedBy = _currentUserService.UserId ?? "System";
+                    entity.LastModifiedDate = DateTime.UtcNow;
+
                     restored++;
                 }
             }

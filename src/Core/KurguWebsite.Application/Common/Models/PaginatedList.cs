@@ -22,7 +22,7 @@ namespace KurguWebsite.Application.Common.Models
             TotalPages = (int)Math.Ceiling(count / (double)pageSize);
         }
 
-        // Sync, provider-agnostic (no EF Core)
+        // FIX: Keep synchronous method for in-memory collections
         public static PaginatedList<T> Create(IQueryable<T> source, int pageNumber, int pageSize)
         {
             var count = source.Count();
@@ -30,8 +30,15 @@ namespace KurguWebsite.Application.Common.Models
             return new PaginatedList<T>(items, count, pageNumber, pageSize);
         }
 
-        // Optional async wrapper to keep signatures
+        // FIX: This is for in-memory collections only
+        // If you need EF Core async, use the repository layer to return Task<PaginatedList<T>>
         public static Task<PaginatedList<T>> CreateAsync(IQueryable<T> source, int pageNumber, int pageSize)
             => Task.FromResult(Create(source, pageNumber, pageSize));
+
+        // ADD: Static factory for already-materialized lists (in-memory)
+        public static PaginatedList<T> CreateFromList(List<T> items, int totalCount, int pageNumber, int pageSize)
+        {
+            return new PaginatedList<T>(items, totalCount, pageNumber, pageSize);
+        }
     }
 }

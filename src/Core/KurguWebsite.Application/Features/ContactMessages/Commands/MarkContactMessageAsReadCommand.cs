@@ -26,6 +26,11 @@ namespace KurguWebsite.Application.Features.ContactMessages.Commands
             if (message == null) return ControlResult.Failure("Contact message not found.");
 
             message.MarkAsRead();
+
+            // FIX: Track who modified
+            message.LastModifiedBy = _currentUserService.UserId ?? "System";
+            message.LastModifiedDate = DateTime.UtcNow;
+
             await _unitOfWork.ContactMessages.UpdateAsync(message);
             await _unitOfWork.CommitAsync(cancellationToken);
 

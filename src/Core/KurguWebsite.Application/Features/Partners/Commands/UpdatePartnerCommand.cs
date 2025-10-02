@@ -38,7 +38,10 @@ namespace KurguWebsite.Application.Features.Partners.Commands
             if (partner == null) return Result<PartnerDto>.Failure("Partner not found.");
 
             partner.Update(request.Name, request.LogoPath, request.WebsiteUrl, request.Description, request.Type);
-  
+
+            // Track who modified
+            partner.LastModifiedBy = _currentUserService.UserId ?? "System";
+            partner.LastModifiedDate = DateTime.UtcNow;
 
             await _unitOfWork.Partners.UpdateAsync(partner);
             await _unitOfWork.CommitAsync(cancellationToken);

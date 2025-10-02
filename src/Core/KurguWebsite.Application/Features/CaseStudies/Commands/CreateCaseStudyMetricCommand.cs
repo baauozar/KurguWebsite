@@ -1,5 +1,4 @@
-﻿// src/Core/KurguWebsite.Application/Features/CaseStudies/Commands/CreateCaseStudyMetricCommand.cs
-using AutoMapper;
+﻿using AutoMapper;
 using KurguWebsite.Application.Common.Interfaces;
 using KurguWebsite.Application.Common.Models;
 using KurguWebsite.Application.DTOs.CaseStudy;
@@ -17,11 +16,13 @@ public class CreateCaseStudyMetricCommandHandler : IRequestHandler<CreateCaseStu
 {
     private readonly IUnitOfWork _unitOfWork;
     private readonly IMapper _mapper;
+    private readonly ICurrentUserService _currentUserService;
 
-    public CreateCaseStudyMetricCommandHandler(IUnitOfWork unitOfWork, IMapper mapper)
+    public CreateCaseStudyMetricCommandHandler(IUnitOfWork unitOfWork, IMapper mapper, ICurrentUserService currentUserService)
     {
         _unitOfWork = unitOfWork;
         _mapper = mapper;
+        _currentUserService = currentUserService;
     }
 
     public async Task<Result<CaseStudyMetricDto>> Handle(CreateCaseStudyMetricCommand request, CancellationToken cancellationToken)
@@ -32,7 +33,18 @@ public class CreateCaseStudyMetricCommandHandler : IRequestHandler<CreateCaseStu
             return Result<CaseStudyMetricDto>.Failure("Case Study not found.");
         }
 
-        var caseStudyMetric = CaseStudyMetric.Create(request.CaseStudyId,request.MetricName, request.MetricValue,request.Icon);
+        // FIX: Pass displayOrder parameter
+        var caseStudyMetric = CaseStudyMetric.Create(
+            request.CaseStudyId,
+            request.MetricName,
+            request.MetricValue,
+            request.Icon,
+            displayOrder: 0
+        );
+
+        // Track who created
+        caseStudyMetric.CreatedBy = _currentUserService.UserId ?? "System";
+        caseStudyMetric.CreatedDate = DateTime.UtcNow;
 
         await _unitOfWork.CaseStudyMetrics.AddAsync(caseStudyMetric);
         await _unitOfWork.CommitAsync();

@@ -21,11 +21,13 @@ namespace KurguWebsite.Application.Features.Services.Commands
     {
         private readonly IUnitOfWork _unitOfWork;
         private readonly IMapper _mapper;
+        private readonly ICurrentUserService _currentUserService;
 
-        public CreateServiceFeatureCommandHandler(IUnitOfWork uow, IMapper mapper)
+        public CreateServiceFeatureCommandHandler(IUnitOfWork uow, IMapper mapper, ICurrentUserService currentUserService)
         {
             _unitOfWork = uow;
             _mapper = mapper;
+            _currentUserService = currentUserService;
         }
 
         public async Task<Result<CreateServiceFeatureDto>> Handle(CreateServiceFeatureCommand request, CancellationToken ct)
@@ -46,10 +48,13 @@ namespace KurguWebsite.Application.Features.Services.Commands
                     .SetValue(entity, request.DisplayOrder);
             }
 
+            // Track who created
+            entity.CreatedBy = _currentUserService.UserId ?? "System";
+            entity.CreatedDate = DateTime.UtcNow;
+
             await _unitOfWork.ServiceFeatures.AddAsync(entity);
             await _unitOfWork.CommitAsync();
 
-            // Map to the SAME type you return
             var dto = _mapper.Map<CreateServiceFeatureDto>(entity);
             return Result<CreateServiceFeatureDto>.Success(dto);
         }

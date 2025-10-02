@@ -44,7 +44,6 @@ namespace KurguWebsite.Application.Features.Services.Commands
             if (await _unique.TitleExistsAsync(req.Title, null, ct))
                 return Result<ServiceDto>.Failure("A service with this title already exists.");
 
-            // Create aggregate (Create sets a base slug; we'll overwrite with a unique one)
             var entity = Service.Create(
                 title: req.Title,
                 description: req.Description,
@@ -53,7 +52,10 @@ namespace KurguWebsite.Application.Features.Services.Commands
                 category: req.Category
             );
 
-            // Unique slug
+            // Track who created
+            entity.CreatedBy = _currentUserService.UserId ?? "System";
+            entity.CreatedDate = DateTime.UtcNow;
+
             var baseSlug = _seo.SanitizeSlug(_seo.GenerateSlug(req.Title));
             if (string.IsNullOrWhiteSpace(baseSlug)) baseSlug = "service";
 
@@ -62,22 +64,18 @@ namespace KurguWebsite.Application.Features.Services.Commands
             while (await _unique.SlugExistsAsync(candidate, null, ct))
                 candidate = $"{baseSlug}-{i++}";
 
-            entity.UpdateSlug(candidate); // domain method (ensure it exists as discussed)
+            entity.UpdateSlug(candidate);
 
-            // Optional features
             if (req.Features is { Count: > 0 })
             {
                 foreach (var f in req.Features)
                 {
-                    // overload in Service: AddFeature(string title, string desc, string? iconClass = null, int displayOrder = 0)
-                    // replace this inside the foreach:
                     entity.AddFeature(f.Title, f.Description, f.IconClass);
-
                 }
             }
 
-            await _unitOfWork.Services.AddAsync(entity);         // matches your 1-arg signature
-            await _unitOfWork.CommitAsync(ct);                   // your CommitAsync(cancellationToken)
+            await _unitOfWork.Services.AddAsync(entity);
+            await _unitOfWork.CommitAsync(ct);
 
             await _mediator.Publish(new CacheInvalidationEvent(
                 CacheKeys.Services, CacheKeys.FeaturedServices, CacheKeys.HomePage), ct);

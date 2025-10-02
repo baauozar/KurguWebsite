@@ -30,10 +30,13 @@ namespace KurguWebsite.Application.Features.CompanyInfo.Commands
             var companyInfo = await _unitOfWork.CompanyInfo.GetCompanyInfoAsync();
             if (companyInfo == null) return Result<CompanyInfoDto>.Failure("Company Info not found.");
 
-            var address = Address.Create(request.Street, request.Suite, request.City, request.State, request.PostalCode, request.Country);
+            var address = Address.Create(request.Street ?? string.Empty, request.Suite, request.City ?? string.Empty, request.State ?? string.Empty, request.PostalCode ?? string.Empty, request.Country ?? string.Empty);
             companyInfo.UpdateAddress(address);
 
-            
+            // Track who modified
+            companyInfo.LastModifiedBy = _currentUserService.UserId ?? "System";
+            companyInfo.LastModifiedDate = DateTime.UtcNow;
+
             await _unitOfWork.CompanyInfo.UpdateAsync(companyInfo);
             await _unitOfWork.CommitAsync(cancellationToken);
 

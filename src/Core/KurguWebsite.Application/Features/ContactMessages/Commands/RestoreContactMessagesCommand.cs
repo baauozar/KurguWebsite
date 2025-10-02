@@ -2,43 +2,47 @@
 using KurguWebsite.Application.Common.Interfaces;
 using KurguWebsite.Application.Common.Models;
 using KurguWebsite.Application.DTOs.Contact;
-using KurguWebsite.Application.DTOs.ProcessStep;
 using KurguWebsite.Domain.Events;
 using MediatR;
 
 namespace KurguWebsite.Application.Features.ContactMessages.Commands
 {
-    public class RestoreContactMessagesCommand : IRequest<Result<ContactMessageDto>>
+    // FIX: Correct class name
+    public class RestoreContactMessageCommand : IRequest<Result<ContactMessageDto>>
     {
         public Guid Id { get; set; }
     }
 
-    public class RestoreContactMessagesCommandHandler
-        : IRequestHandler<RestoreContactMessagesCommand, Result<ContactMessageDto>>
+    public class RestoreContactMessageCommandHandler
+        : IRequestHandler<RestoreContactMessageCommand, Result<ContactMessageDto>>
     {
         private readonly IUnitOfWork _uow;
         private readonly IMapper _mapper;
         private readonly IMediator _mediator;
+        private readonly ICurrentUserService _currentUserService;
 
-        public RestoreContactMessagesCommandHandler(IUnitOfWork uow, IMapper mapper, IMediator mediator)
+        public RestoreContactMessageCommandHandler(IUnitOfWork uow, IMapper mapper, IMediator mediator, ICurrentUserService currentUserService)
         {
-            _uow = uow; _mapper = mapper; _mediator = mediator;
+            _uow = uow;
+            _mapper = mapper;
+            _mediator = mediator;
+            _currentUserService = currentUserService;
         }
 
-        public async Task<Result<ContactMessageDto>> Handle(RestoreContactMessagesCommand request, CancellationToken ct)
+        public async Task<Result<ContactMessageDto>> Handle(RestoreContactMessageCommand request, CancellationToken ct)
         {
-            // Load INCLUDING soft-deleted row
             var entity = await _uow.ContactMessages.GetByIdIncludingDeletedAsync(request.Id);
-            if (entity is null) return Result<ContactMessageDto>.Failure("Process not found.");
+            if (entity is null) return Result<ContactMessageDto>.Failure("Contact message not found.");
 
             if (entity.IsDeleted)
             {
-                // Soft restore
                 await _uow.ContactMessages.RestoreAsync(entity);
-                await _uow.CommitAsync(ct);
 
-                // Invalidate caches as you do elsewhere
-                await _mediator.Publish(new CacheInvalidationEvent(CacheKeys.Services, CacheKeys.FeaturedServices), ct);
+                // Track who restored
+                entity.LastModifiedBy = _currentUserService.UserId ?? "System";
+                entity.LastModifiedDate = DateTime.UtcNow;
+
+                await _uow.CommitAsync(ct);
             }
 
             return Result<ContactMessageDto>.Success(_mapper.Map<ContactMessageDto>(entity));

@@ -38,7 +38,6 @@ namespace KurguWebsite.Application.Features.CaseStudies.Commands
 
         public async Task<Result<CaseStudyDto>> Handle(CreateCaseStudyCommand request, CancellationToken cancellationToken)
         {
-            // Create aggregate (Create sets a base slug; we will overwrite with unique canonical)
             var entity = CaseStudy.Create(
                 title: request.Title,
                 clientName: request.ClientName,
@@ -47,11 +46,13 @@ namespace KurguWebsite.Application.Features.CaseStudies.Commands
                 completedDate: request.CompletedDate
             );
 
-            // ALWAYS derive slug from Title (like Service)
+            // Track who created
+            entity.CreatedBy = _currentUserService.UserId ?? "System";
+            entity.CreatedDate = DateTime.UtcNow;
+
             var canon = _seo.SanitizeSlug(_seo.GenerateSlug(request.Title));
             if (string.IsNullOrWhiteSpace(canon)) canon = "case-study";
 
-            // Ensure slug uniqueness
             var candidate = canon;
             var i = 2;
             while (await _unique.SlugExistsAsync(candidate, null, cancellationToken))
@@ -60,7 +61,7 @@ namespace KurguWebsite.Application.Features.CaseStudies.Commands
             entity.UpdateSlug(candidate);
 
             await _unitOfWork.CaseStudies.AddAsync(entity);
-            await _unitOfWork.CommitAsync(); // or CommitAsync(cancellationToken) if available
+            await _unitOfWork.CommitAsync();
 
             await _mediator.Publish(
                 new CacheInvalidationEvent(CacheKeys.CaseStudies, CacheKeys.FeaturedCaseStudies),

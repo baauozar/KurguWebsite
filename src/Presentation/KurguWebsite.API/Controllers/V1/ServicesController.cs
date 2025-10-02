@@ -1,6 +1,7 @@
 ﻿using Asp.Versioning;
 using KurguWebsite.Application.Common.Models;
 using KurguWebsite.Application.DTOs.Service;
+using KurguWebsite.Application.Features.ProcessSteps.Commands;
 using KurguWebsite.Application.Features.Services.Commands;
 using KurguWebsite.Application.Features.Services.Queries;
 using MediatR;
@@ -149,7 +150,7 @@ namespace KurguWebsite.API.Controllers.V1
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         public async Task<IActionResult> Restore(Guid id)
         {
-            var result = await _mediator.Send(new RestoreProcessStepsCommand { Id = id });
+            var result = await _mediator.Send(new RestoreServiceCommand { Id = id });
             return result.Succeeded ? Ok(result.Data) : NotFound(result.Errors);
         }
 
@@ -157,7 +158,7 @@ namespace KurguWebsite.API.Controllers.V1
         [HttpPost("restore-batch")]
         [Authorize(Roles = "Admin")]
         [ProducesResponseType(typeof(int), StatusCodes.Status200OK)]
-        public async Task<IActionResult> RestoreBatch([FromBody] RestoreProcessStepsBatchCommand command)
+        public async Task<IActionResult> RestoreBatch([FromBody] RestoreServicesBatchCommand command)
         {
             var result = await _mediator.Send(command);
             return result.Succeeded ? Ok(result.Data) : BadRequest(result.Errors);

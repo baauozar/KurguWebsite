@@ -17,11 +17,12 @@ namespace KurguWebsite.Application.Features.Services.Commands
     {
         private readonly IUnitOfWork _unitOfWork;
         private readonly IMapper _mapper;
-
-        public UpdateServiceFeatureCommandHandler(IUnitOfWork unitOfWork, IMapper mapper)
+        private readonly ICurrentUserService _currentUserService;
+        public UpdateServiceFeatureCommandHandler(IUnitOfWork unitOfWork, IMapper mapper, ICurrentUserService currentUserService)
         {
             _unitOfWork = unitOfWork;
             _mapper = mapper;
+            _currentUserService = currentUserService;
         }
 
         public async Task<Result<ServiceFeatureDto>> Handle(UpdateServiceFeatureCommand request, CancellationToken cancellationToken)
@@ -37,6 +38,10 @@ namespace KurguWebsite.Application.Features.Services.Commands
                 request.UpdateServiceFeatureDto.Title,
                 request.UpdateServiceFeatureDto.Description,
                 request.UpdateServiceFeatureDto.IconClass);
+
+            // Track who modified
+            serviceFeature.LastModifiedBy = _currentUserService.UserId ?? "System";
+            serviceFeature.LastModifiedDate = DateTime.UtcNow;
 
             await _unitOfWork.ServiceFeatures.UpdateAsync(serviceFeature);
             await _unitOfWork.CommitAsync();

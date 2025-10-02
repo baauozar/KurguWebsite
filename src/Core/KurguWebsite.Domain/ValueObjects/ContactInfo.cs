@@ -18,20 +18,21 @@ namespace KurguWebsite.Domain.ValueObjects
         private ContactInfo() { }
 
         public static ContactInfo Create(
-            string supportPhone,
-            string salesPhone,
-            string email)
+               string supportPhone,
+               string salesPhone,
+               string email,
+               string? supportEmail = null,
+               string? salesEmail = null)
         {
             return new ContactInfo
             {
                 SupportPhone = supportPhone,
                 SalesPhone = salesPhone,
                 Email = email,
-                SupportEmail = $"support@{GetDomain(email)}",
-                SalesEmail = $"sales@{GetDomain(email)}"
+                SupportEmail = supportEmail ?? $"support@{GetDomain(email)}",
+                SalesEmail = salesEmail ?? $"sales@{GetDomain(email)}"
             };
         }
-
         private static string GetDomain(string email)
         {
             var parts = email.Split('@');

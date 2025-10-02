@@ -13,10 +13,12 @@ public class DeleteServiceFeatureCommand : IRequest<ControlResult>
 public class DeleteServiceFeatureCommandHandler : IRequestHandler<DeleteServiceFeatureCommand, ControlResult>
 {
     private readonly IUnitOfWork _unitOfWork;
+    private readonly ICurrentUserService _currentUserService;
 
-    public DeleteServiceFeatureCommandHandler(IUnitOfWork unitOfWork)
+    public DeleteServiceFeatureCommandHandler(IUnitOfWork unitOfWork, ICurrentUserService currentUserService)
     {
         _unitOfWork = unitOfWork;
+        _currentUserService = currentUserService;
     }
 
     public async Task<ControlResult> Handle(DeleteServiceFeatureCommand request, CancellationToken cancellationToken)
@@ -28,7 +30,10 @@ public class DeleteServiceFeatureCommandHandler : IRequestHandler<DeleteServiceF
             return ControlResult.Failure("Service Feature not found.");
         }
 
-        await _unitOfWork.ServiceFeatures.DeleteAsync(serviceFeature);
+        // Track who deleted (if using soft delete)
+        serviceFeature.SoftDelete(_currentUserService.UserId ?? "System");
+        await _unitOfWork.ServiceFeatures.UpdateAsync(serviceFeature);
+
         await _unitOfWork.CommitAsync();
 
         return ControlResult.Success();

@@ -32,8 +32,11 @@ namespace KurguWebsite.Application.Features.ProcessSteps.Commands
             var processStep = await _unitOfWork.ProcessSteps.GetByIdAsync(request.Id);
             if (processStep == null) return Result<ProcessStepDto>.Failure("Process Step not found.");
 
-            processStep.Update(request.Title, request.Description, request.IconClass);
-        
+            processStep.Update(request.Title??string.Empty, request.Description ?? string.Empty, request.IconClass);
+
+            // Track who modified
+            processStep.LastModifiedBy = _currentUserService.UserId ?? "System";
+            processStep.LastModifiedDate = DateTime.UtcNow;
 
             await _unitOfWork.ProcessSteps.UpdateAsync(processStep);
             await _unitOfWork.CommitAsync(cancellationToken);

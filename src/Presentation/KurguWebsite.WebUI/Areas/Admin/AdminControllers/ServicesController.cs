@@ -244,7 +244,7 @@ namespace KurguWebsite.WebUI.Areas.Admin.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Restore(Guid id)
         {
-            var command = new RestoreProcessStepsCommand { Id = id };
+            var command = new RestoreServiceCommand { Id = id };
             var result = await Mediator.Send(command);
 
             return HandleResult(result,

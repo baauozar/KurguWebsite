@@ -29,10 +29,12 @@ namespace KurguWebsite.Application.Features.CompanyInfo.Commands
             var companyInfo = await _unitOfWork.CompanyInfo.GetCompanyInfoAsync();
             if (companyInfo == null) return Result<CompanyInfoDto>.Failure("Company Info not found.");
 
-            companyInfo.UpdateBasicInfo(request.CompanyName, request.About, request.Mission, request.Vision, request.Slogan);
+            companyInfo.UpdateBasicInfo(request.CompanyName ?? string.Empty, request.About, request.Mission, request.Vision, request.Slogan);
             companyInfo.UpdateLogos(request.LogoPath, request.LogoLightPath);
 
-           
+            // Track who modified
+            companyInfo.LastModifiedBy = _currentUserService.UserId ?? "System";
+            companyInfo.LastModifiedDate = DateTime.UtcNow;
 
             await _unitOfWork.CompanyInfo.UpdateAsync(companyInfo);
             await _unitOfWork.CommitAsync(cancellationToken);

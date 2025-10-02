@@ -44,7 +44,6 @@ namespace KurguWebsite.Application.Features.Pages.Commands
             if (entity is null)
                 return Result<PageDto>.Failure("Page not found.");
 
-            // If title changed, regenerate a UNIQUE canonical slug from Title
             var titleChanged = !string.Equals(entity.Title, request.Title, StringComparison.Ordinal);
             if (titleChanged)
             {
@@ -59,7 +58,6 @@ namespace KurguWebsite.Application.Features.Pages.Commands
                 entity.UpdateSlug(candidate);
             }
 
-            // Update other fields (coalesce nullable PageType?)
             var pageType = request.PageType ?? entity.PageType;
             entity.Update(request.Title, pageType, request.Content);
             entity.UpdateHeroSection(
@@ -67,10 +65,13 @@ namespace KurguWebsite.Application.Features.Pages.Commands
                 request.HeroBackgroundImage, request.HeroButtonText, request.HeroButtonUrl);
             entity.UpdateSeo(request.MetaTitle, request.MetaDescription, request.MetaKeywords);
 
-            await _unitOfWork.Pages.UpdateAsync(entity);
-            await _unitOfWork.CommitAsync(); // use CommitAsync(cancellationToken) if your UoW supports it
+            // Track who modified
+            entity.LastModifiedBy = _currentUserService.UserId ?? "System";
+            entity.LastModifiedDate = DateTime.UtcNow;
 
-            // Use plural key to match your other code paths (Service/CaseStudy)
+            await _unitOfWork.Pages.UpdateAsync(entity);
+            await _unitOfWork.CommitAsync();
+
             await _mediator.Publish(new CacheInvalidationEvent(CacheKeys.Page, CacheKeys.HomePage), cancellationToken);
 
             return Result<PageDto>.Success(_mapper.Map<PageDto>(entity));

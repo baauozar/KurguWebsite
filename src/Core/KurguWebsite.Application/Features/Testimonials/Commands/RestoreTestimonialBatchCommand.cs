@@ -18,8 +18,13 @@ namespace KurguWebsite.Application.Features.Testimonials.Commands
         : IRequestHandler<RestoreTestimonialBatchCommand, Result<int>>
     {
         private readonly IUnitOfWork _uow;
+        private readonly ICurrentUserService _currentUserService; // ADD
 
-        public RestoreTestimonialBatchCommandHandler(IUnitOfWork uow) => _uow = uow;
+        public RestoreTestimonialBatchCommandHandler(IUnitOfWork uow, ICurrentUserService currentUserService)
+        {
+            _uow = uow;
+            _currentUserService = currentUserService;
+        }
 
         public async Task<Result<int>> Handle(RestoreTestimonialBatchCommand request, CancellationToken ct)
         {
@@ -31,6 +36,11 @@ namespace KurguWebsite.Application.Features.Testimonials.Commands
                 if (entity != null && entity.IsDeleted)
                 {
                     await _uow.Testimonials.RestoreAsync(entity);
+
+                    // FIX: Track who restored
+                    entity.LastModifiedBy = _currentUserService.UserId ?? "System";
+                    entity.LastModifiedDate = DateTime.UtcNow;
+
                     restored++;
                 }
             }

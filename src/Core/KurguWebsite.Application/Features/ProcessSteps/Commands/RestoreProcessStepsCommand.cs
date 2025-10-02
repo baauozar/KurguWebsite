@@ -13,13 +13,13 @@ using System.Threading.Tasks;
 
 namespace KurguWebsite.Application.Features.ProcessSteps.Commands
 {
-    public class RestoreContactMessagesCommand : IRequest<Result<ProcessStepDto>>
+    public class RestoreProcessStepsCommand : IRequest<Result<ProcessStepDto>>
     {
         public Guid Id { get; set; }
     }
 
     public class RestoreProcessStepsCommandHandler
-        : IRequestHandler<RestoreContactMessagesCommand, Result<ProcessStepDto>>
+        : IRequestHandler<RestoreProcessStepsCommand, Result<ProcessStepDto>>
     {
         private readonly IUnitOfWork _uow;
         private readonly IMapper _mapper;
@@ -30,16 +30,16 @@ namespace KurguWebsite.Application.Features.ProcessSteps.Commands
             _uow = uow; _mapper = mapper; _mediator = mediator;
         }
 
-        public async Task<Result<ProcessStepDto>> Handle(RestoreContactMessagesCommand request, CancellationToken ct)
+        public async Task<Result<ProcessStepDto>> Handle(RestoreProcessStepsCommand request, CancellationToken ct)
         {
             // Load INCLUDING soft-deleted row
-            var entity = await _uow.Services.GetByIdIncludingDeletedAsync(request.Id);
+            var entity = await _uow.ProcessSteps.GetByIdIncludingDeletedAsync(request.Id);
             if (entity is null) return Result<ProcessStepDto>.Failure("Process not found.");
 
             if (entity.IsDeleted)
             {
                 // Soft restore
-                await _uow.Services.RestoreAsync(entity);
+                await _uow.ProcessSteps.RestoreAsync(entity);
                 await _uow.CommitAsync(ct);
 
                 // Invalidate caches as you do elsewhere
