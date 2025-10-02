@@ -36,7 +36,12 @@ namespace KurguWebsite.Domain.Entities
                 DisplayOrder = displayOrder       // <— set it
             };
         }
-
+        public void SetDisplayOrder(int order)
+        {
+            if (order < 0)
+                throw new ArgumentException("Display order cannot be negative", nameof(order));
+            DisplayOrder = order;
+        }
         public void Update(string title, string description, string? iconClass)
         {
             Title = title;

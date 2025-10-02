@@ -21,14 +21,14 @@ namespace KurguWebsite.Domain.Entities
         public static ProcessStep Create(
             int stepNumber,
             string title,
-            string description)
+            string description, int? displayOrder = null)
         {
             return new ProcessStep
             {
                 StepNumber = stepNumber,
                 Title = title,
                 Description = description,
-                DisplayOrder = stepNumber,
+                DisplayOrder = displayOrder ?? stepNumber,  // Default to stepNumber
                 IsActive = true
             };
         }
@@ -38,6 +38,19 @@ namespace KurguWebsite.Domain.Entities
             Title = title;
             Description = description;
             IconClass = iconClass;
+        }
+        public void SetDisplayOrder(int order)
+        {
+            if (order < 0)
+                throw new ArgumentException("Display order cannot be negative", nameof(order));
+            DisplayOrder = order;
+        }
+
+        public void SetStepNumber(int stepNumber)
+        {
+            if (stepNumber < 1)
+                throw new ArgumentException("Step number must be positive", nameof(stepNumber));
+            StepNumber = stepNumber;
         }
     }
 }

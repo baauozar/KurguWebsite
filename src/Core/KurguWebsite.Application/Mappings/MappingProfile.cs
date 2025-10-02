@@ -48,11 +48,7 @@ namespace KurguWebsite.Application.Mappings
             CreateMap<UpdateCaseStudyDto, CaseStudy>();
 
             // Entity -> DTO
-            CreateMap<CaseStudyMetric, CaseStudyMetricDto>()
-                .ForMember(d => d.MetricName, o => o.MapFrom(s => s.MetricName))
-                .ForMember(d => d.MetricValue, o => o.MapFrom(s => s.MetricValue))
-                .ForMember(d => d.Icon, o => o.MapFrom(s => s.Icon))
-                .ForMember(d => d.CaseStudyId, o => o.MapFrom(s => s.CaseStudyId));
+            CreateMap<CaseStudyMetric, CaseStudyMetricDto>();
             // If you expose DisplayOrder in DTO, add: .ForMember(d => d.DisplayOrder, o => o.MapFrom(s => s.DisplayOrder));
 
             // Command -> Entity (be explicit; handler sets relations/order)
