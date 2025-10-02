@@ -94,7 +94,7 @@ namespace KurguWebsite.WebUI.Areas.Admin.Controllers
                 ("Details", null)
             );
 
-            var query = new GetServiceDetailBySlugQuery { Slug = id.ToString() };
+            var query = new GetServiceBySlugQuery { Slug = id.ToString() };
             var result = await Mediator.Send(query);
 
             if (!result.Succeeded || result.Data == null)

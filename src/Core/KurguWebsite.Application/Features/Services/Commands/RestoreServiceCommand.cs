@@ -1,53 +1,78 @@
-﻿using AutoMapper;
+﻿// src/Core/KurguWebsite.Application/Features/Services/Commands/RestoreServiceCommand.cs
+using AutoMapper;
 using KurguWebsite.Application.Common.Interfaces;
 using KurguWebsite.Application.Common.Models;
 using KurguWebsite.Application.DTOs.Service;
 using KurguWebsite.Domain.Events;
 using MediatR;
+using Microsoft.Extensions.Logging;
 
 namespace KurguWebsite.Application.Features.Services.Commands
 {
-    // FIX: Correct class name
     public class RestoreServiceCommand : IRequest<Result<ServiceDto>>
     {
         public Guid Id { get; set; }
     }
 
-    public class RestoreServiceCommandHandler
-        : IRequestHandler<RestoreServiceCommand, Result<ServiceDto>>
+    public class RestoreServiceCommandHandler : IRequestHandler<RestoreServiceCommand, Result<ServiceDto>>
     {
-        private readonly IUnitOfWork _uow;
+        private readonly IUnitOfWork _unitOfWork;
         private readonly IMapper _mapper;
         private readonly IMediator _mediator;
         private readonly ICurrentUserService _currentUserService;
+        private readonly ILogger<RestoreServiceCommandHandler> _logger;
 
-        public RestoreServiceCommandHandler(IUnitOfWork uow, IMapper mapper, IMediator mediator, ICurrentUserService currentUserService)
+        public RestoreServiceCommandHandler(
+            IUnitOfWork unitOfWork,
+            IMapper mapper,
+            IMediator mediator,
+            ICurrentUserService currentUserService,
+            ILogger<RestoreServiceCommandHandler> logger)
         {
-            _uow = uow;
+            _unitOfWork = unitOfWork;
             _mapper = mapper;
             _mediator = mediator;
             _currentUserService = currentUserService;
+            _logger = logger;
         }
 
         public async Task<Result<ServiceDto>> Handle(RestoreServiceCommand request, CancellationToken ct)
         {
-            var entity = await _uow.Services.GetByIdIncludingDeletedAsync(request.Id);
-            if (entity is null) return Result<ServiceDto>.Failure("Service not found.");
-
-            if (entity.IsDeleted)
+            using (await _unitOfWork.BeginTransactionAsync(ct))
             {
-                await _uow.Services.RestoreAsync(entity);
+                try
+                {
+                    var entity = await _unitOfWork.Services.GetByIdIncludingDeletedAsync(request.Id);
+                    if (entity is null)
+                    {
+                        return Result<ServiceDto>.Failure("Service not found.", ErrorCodes.EntityNotFound);
+                    }
 
-                // Track who restored
-                entity.LastModifiedBy = _currentUserService.UserId ?? "System";
-                entity.LastModifiedDate = DateTime.UtcNow;
+                    if (entity.IsDeleted)
+                    {
+                        await _unitOfWork.Services.RestoreAsync(entity);
+                        entity.LastModifiedBy = _currentUserService.UserId ?? "System";
+                        entity.LastModifiedDate = DateTime.UtcNow;
 
-                await _uow.CommitAsync(ct);
+                        await _unitOfWork.CommitAsync(ct);
+                        await _unitOfWork.CommitTransactionAsync(ct);
 
-                await _mediator.Publish(new CacheInvalidationEvent(CacheKeys.Services, CacheKeys.FeaturedServices), ct);
+                        _logger.LogInformation("Service restored: Id={ServiceId}", request.Id);
+
+                        await _mediator.Publish(
+                            new CacheInvalidationEvent(CacheKeys.Services, CacheKeys.FeaturedServices),
+                            ct);
+                    }
+
+                    return Result<ServiceDto>.Success(_mapper.Map<ServiceDto>(entity));
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Error restoring service: {ServiceId}", request.Id);
+                    await _unitOfWork.RollbackTransactionAsync(ct);
+                    return Result<ServiceDto>.Failure($"Failed to restore service: {ex.Message}");
+                }
             }
-
-            return Result<ServiceDto>.Success(_mapper.Map<ServiceDto>(entity));
         }
     }
 }

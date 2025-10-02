@@ -1,74 +1,102 @@
-﻿using AutoMapper;
+﻿// src/Core/KurguWebsite.Application/Features/CaseStudies/Commands/CreateCaseStudyCommand.cs
+using AutoMapper;
 using KurguWebsite.Application.Common.Interfaces;
 using KurguWebsite.Application.Common.Models;
 using KurguWebsite.Application.DTOs.CaseStudy;
-using KurguWebsite.Application.Interfaces.Repositories; // ICaseStudyUniquenessChecker
+using KurguWebsite.Application.Interfaces.Repositories;
 using KurguWebsite.Domain.Entities;
 using KurguWebsite.Domain.Events;
+using KurguWebsite.Domain.Services;
 using MediatR;
+using Microsoft.Extensions.Logging;
 
 namespace KurguWebsite.Application.Features.CaseStudies.Commands
 {
     public class CreateCaseStudyCommand : CreateCaseStudyDto, IRequest<Result<CaseStudyDto>> { }
 
-    public class CreateCaseStudyCommandHandler : IRequestHandler<CreateCaseStudyCommand, Result<CaseStudyDto>>
+    public class CreateCaseStudyCommandHandler
+        : IRequestHandler<CreateCaseStudyCommand, Result<CaseStudyDto>>
     {
         private readonly IUnitOfWork _unitOfWork;
         private readonly IMapper _mapper;
         private readonly ICurrentUserService _currentUserService;
         private readonly IMediator _mediator;
-        private readonly ISeoService _seo;
         private readonly ICaseStudyUniquenessChecker _unique;
+        private readonly ILogger<CreateCaseStudyCommandHandler> _logger;
 
         public CreateCaseStudyCommandHandler(
             IUnitOfWork unitOfWork,
             IMapper mapper,
             ICurrentUserService currentUserService,
             IMediator mediator,
-            ISeoService seo,
-            ICaseStudyUniquenessChecker unique)
+            ICaseStudyUniquenessChecker unique,
+            ILogger<CreateCaseStudyCommandHandler> logger)
         {
             _unitOfWork = unitOfWork;
             _mapper = mapper;
             _currentUserService = currentUserService;
             _mediator = mediator;
-            _seo = seo;
             _unique = unique;
+            _logger = logger;
         }
 
-        public async Task<Result<CaseStudyDto>> Handle(CreateCaseStudyCommand request, CancellationToken cancellationToken)
+        public async Task<Result<CaseStudyDto>> Handle(
+            CreateCaseStudyCommand request,
+            CancellationToken ct)
         {
-            var entity = CaseStudy.Create(
-                title: request.Title,
-                clientName: request.ClientName,
-                description: request.Description,
-                imagePath: request.ImagePath,
-                completedDate: request.CompletedDate
-            );
+            using (await _unitOfWork.BeginTransactionAsync(ct))
+            {
+                try
+                {
+                    var entity = CaseStudy.Create(
+                        title: request.Title,
+                        clientName: request.ClientName,
+                        description: request.Description,
+                        imagePath: request.ImagePath,
+                        completedDate: request.CompletedDate
+                    );
 
-            // Track who created
-            entity.CreatedBy = _currentUserService.UserId ?? "System";
-            entity.CreatedDate = DateTime.UtcNow;
+                    entity.CreatedBy = _currentUserService.UserId ?? "System";
+                    entity.CreatedDate = DateTime.UtcNow;
 
-            var canon = _seo.SanitizeSlug(_seo.GenerateSlug(request.Title));
-            if (string.IsNullOrWhiteSpace(canon)) canon = "case-study";
+                    // Ensure unique slug
+                    var baseSlug = entity.Slug;
+                    var candidate = baseSlug;
+                    var i = 2;
 
-            var candidate = canon;
-            var i = 2;
-            while (await _unique.SlugExistsAsync(candidate, null, cancellationToken))
-                candidate = $"{canon}-{i++}";
+                    while (await _unique.SlugExistsAsync(candidate, null, ct))
+                    {
+                        candidate = $"{baseSlug}-{i++}";
+                    }
 
-            entity.UpdateSlug(candidate);
+                    if (candidate != baseSlug)
+                    {
+                        entity.UpdateSlug(candidate);
+                    }
 
-            await _unitOfWork.CaseStudies.AddAsync(entity);
-            await _unitOfWork.CommitAsync();
+                    await _unitOfWork.CaseStudies.AddAsync(entity);
+                    await _unitOfWork.CommitAsync(ct);
+                    await _unitOfWork.CommitTransactionAsync(ct);
 
-            await _mediator.Publish(
-                new CacheInvalidationEvent(CacheKeys.CaseStudies, CacheKeys.FeaturedCaseStudies),
-                cancellationToken
-            );
+                    _logger.LogInformation(
+                        "Case study created: Id={CaseStudyId}, Title={Title}, Slug={Slug}",
+                        entity.Id, entity.Title, entity.Slug);
 
-            return Result<CaseStudyDto>.Success(_mapper.Map<CaseStudyDto>(entity));
+                    await _mediator.Publish(
+                        new CacheInvalidationEvent(
+                            CacheKeys.CaseStudies,
+                            CacheKeys.FeaturedCaseStudies),
+                        ct);
+
+                    return Result<CaseStudyDto>.Success(_mapper.Map<CaseStudyDto>(entity));
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Error creating case study: {Title}", request.Title);
+                    await _unitOfWork.RollbackTransactionAsync(ct);
+                    return Result<CaseStudyDto>.Failure($"Failed to create case study: {ex.Message}");
+                }
+            }
         }
     }
 }

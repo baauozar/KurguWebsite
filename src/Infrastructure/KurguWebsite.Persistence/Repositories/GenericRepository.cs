@@ -1,7 +1,9 @@
 ﻿
 using KurguWebsite.Application.Interfaces.Repositories;
 using KurguWebsite.Domain.Common;
+using KurguWebsite.Domain.Specifications;
 using KurguWebsite.Persistence.Context;
+using KurguWebsite.Persistence.Specifications;
 using Microsoft.EntityFrameworkCore;
 using System.Linq.Expressions;
 
@@ -148,5 +150,35 @@ namespace KurguWebsite.Persistence.Repositories
         public async Task<T?> GetByIdIncludingDeletedAsync(Guid id)
          => await _dbSet.IgnoreQueryFilters().FirstOrDefaultAsync(e => e.Id == id);
 
+    
+      public async Task<T?> GetBySpecAsync(ISpecification<T> spec, CancellationToken cancellationToken = default)
+        {
+            var query = ApplySpecification(spec);
+            return await query.FirstOrDefaultAsync(cancellationToken);
+        }
+
+        public async Task<IReadOnlyList<T>> ListAsync(ISpecification<T> spec, CancellationToken cancellationToken = default)
+        {
+            var query = ApplySpecification(spec);
+            return await query.ToListAsync(cancellationToken);
+        }
+
+        public async Task<int> CountAsync(ISpecification<T> spec, CancellationToken cancellationToken = default)
+        {
+            var query = ApplySpecification(spec);
+            return await query.CountAsync(cancellationToken);
+        }
+
+        public async Task<bool> AnyAsync(ISpecification<T> spec, CancellationToken cancellationToken = default)
+        {
+            var query = ApplySpecification(spec);
+            return await query.AnyAsync(cancellationToken);
+        }
+
+        // Helper method to apply specification
+        private IQueryable<T> ApplySpecification(ISpecification<T> spec)
+        {
+            return SpecificationEvaluator<T>.GetQuery(_dbSet.AsQueryable(), spec);
+        }
     }
 }

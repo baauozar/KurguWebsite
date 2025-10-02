@@ -64,7 +64,7 @@ namespace KurguWebsite.API.Controllers.V1
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         public async Task<IActionResult> GetDetailBySlug(string slug)
         {
-            var result = await _mediator.Send(new GetServiceDetailBySlugQuery { Slug = slug });
+            var result = await _mediator.Send(new GetServiceBySlugQuery { Slug = slug });
             return result.Succeeded ? Ok(result.Data) : NotFound(result.Errors);
         }
 

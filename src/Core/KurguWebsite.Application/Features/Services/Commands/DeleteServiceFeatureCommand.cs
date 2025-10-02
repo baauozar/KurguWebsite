@@ -2,40 +2,62 @@
 using KurguWebsite.Application.Common.Interfaces;
 using KurguWebsite.Application.Common.Models;
 using MediatR;
+using Microsoft.Extensions.Logging;
 
-namespace KurguWebsite.Application.Features.Services.Commands;
-
-public class DeleteServiceFeatureCommand : IRequest<ControlResult>
+namespace KurguWebsite.Application.Features.Services.Commands
 {
-    public Guid Id { get; set; }
-}
-
-public class DeleteServiceFeatureCommandHandler : IRequestHandler<DeleteServiceFeatureCommand, ControlResult>
-{
-    private readonly IUnitOfWork _unitOfWork;
-    private readonly ICurrentUserService _currentUserService;
-
-    public DeleteServiceFeatureCommandHandler(IUnitOfWork unitOfWork, ICurrentUserService currentUserService)
+    public class DeleteServiceFeatureCommand : IRequest<ControlResult>
     {
-        _unitOfWork = unitOfWork;
-        _currentUserService = currentUserService;
+        public Guid Id { get; set; }
     }
 
-    public async Task<ControlResult> Handle(DeleteServiceFeatureCommand request, CancellationToken cancellationToken)
+    public class DeleteServiceFeatureCommandHandler
+        : IRequestHandler<DeleteServiceFeatureCommand, ControlResult>
     {
-        var serviceFeature = await _unitOfWork.ServiceFeatures.GetByIdAsync(request.Id);
+        private readonly IUnitOfWork _unitOfWork;
+        private readonly ICurrentUserService _currentUserService;
+        private readonly ILogger<DeleteServiceFeatureCommandHandler> _logger;
 
-        if (serviceFeature == null)
+        public DeleteServiceFeatureCommandHandler(
+            IUnitOfWork unitOfWork,
+            ICurrentUserService currentUserService,
+            ILogger<DeleteServiceFeatureCommandHandler> logger)
         {
-            return ControlResult.Failure("Service Feature not found.");
+            _unitOfWork = unitOfWork;
+            _currentUserService = currentUserService;
+            _logger = logger;
         }
 
-        // Track who deleted (if using soft delete)
-        serviceFeature.SoftDelete(_currentUserService.UserId ?? "System");
-        await _unitOfWork.ServiceFeatures.UpdateAsync(serviceFeature);
+        public async Task<ControlResult> Handle(
+            DeleteServiceFeatureCommand request,
+            CancellationToken ct)
+        {
+            using (await _unitOfWork.BeginTransactionAsync(ct))
+            {
+                try
+                {
+                    var feature = await _unitOfWork.ServiceFeatures.GetByIdAsync(request.Id);
+                    if (feature == null)
+                    {
+                        return ControlResult.Failure("Service feature not found.");
+                    }
 
-        await _unitOfWork.CommitAsync();
+                    feature.SoftDelete(_currentUserService.UserId ?? "System");
+                    await _unitOfWork.ServiceFeatures.UpdateAsync(feature);
+                    await _unitOfWork.CommitAsync(ct);
+                    await _unitOfWork.CommitTransactionAsync(ct);
 
-        return ControlResult.Success();
+                    _logger.LogInformation("Service feature deleted: Id={FeatureId}", request.Id);
+
+                    return ControlResult.Success();
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Error deleting service feature: {FeatureId}", request.Id);
+                    await _unitOfWork.RollbackTransactionAsync(ct);
+                    throw;
+                }
+            }
+        }
     }
 }

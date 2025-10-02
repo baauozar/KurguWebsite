@@ -8,7 +8,7 @@ namespace KurguWebsite.Application.Common.Interfaces
 {
     public interface ISeoService
     {
-        string GenerateSlug(string title);
+      
         string GenerateMetaDescription(string content, int maxLength = 160);
         string GenerateMetaKeywords(string content);
         bool IsSlugValid(string slug);

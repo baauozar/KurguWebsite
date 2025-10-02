@@ -26,7 +26,7 @@ namespace KurguWebsite.API.Controllers.V1
         [ProducesResponseType(typeof(List<PartnerDto>), StatusCodes.Status200OK)]
         public async Task<IActionResult> GetActive()
         {
-            var result = await _mediator.Send(new GetActivePartnersQuery());
+            var result = await _mediator.Send(new GetAllPartnersQuery());
             return Ok(result.Data);
         }
 

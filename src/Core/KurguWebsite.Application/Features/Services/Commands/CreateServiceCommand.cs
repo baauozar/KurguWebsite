@@ -1,11 +1,14 @@
-﻿using AutoMapper;
+﻿// src/Core/KurguWebsite.Application/Features/Services/Commands/CreateServiceCommand.cs
+using AutoMapper;
 using KurguWebsite.Application.Common.Interfaces;
 using KurguWebsite.Application.Common.Models;
 using KurguWebsite.Application.DTOs.Service;
-using KurguWebsite.Application.Interfaces.Repositories; // IServiceUniquenessChecker
+using KurguWebsite.Application.Interfaces.Repositories;
 using KurguWebsite.Domain.Entities;
 using KurguWebsite.Domain.Events;
+using KurguWebsite.Domain.Services;
 using MediatR;
+using Microsoft.Extensions.Logging;
 
 namespace KurguWebsite.Application.Features.Services.Commands
 {
@@ -17,70 +20,103 @@ namespace KurguWebsite.Application.Features.Services.Commands
         private readonly IMapper _mapper;
         private readonly ICurrentUserService _currentUserService;
         private readonly IMediator _mediator;
-
-        // NEW deps for slug/uniqueness
-        private readonly ISeoService _seo;
         private readonly IServiceUniquenessChecker _unique;
+        private readonly ILogger<CreateServiceCommandHandler> _logger;
 
         public CreateServiceCommandHandler(
             IUnitOfWork unitOfWork,
             IMapper mapper,
             ICurrentUserService currentUserService,
             IMediator mediator,
-            ISeoService seo,
-            IServiceUniquenessChecker unique)
+            IServiceUniquenessChecker unique,
+            ILogger<CreateServiceCommandHandler> logger)
         {
             _unitOfWork = unitOfWork;
             _mapper = mapper;
             _currentUserService = currentUserService;
             _mediator = mediator;
-            _seo = seo;
             _unique = unique;
+            _logger = logger;
         }
 
         public async Task<Result<ServiceDto>> Handle(CreateServiceCommand req, CancellationToken ct)
         {
-            // Title idempotency
-            if (await _unique.TitleExistsAsync(req.Title, null, ct))
-                return Result<ServiceDto>.Failure("A service with this title already exists.");
-
-            var entity = Service.Create(
-                title: req.Title,
-                description: req.Description,
-                shortDescription: req.ShortDescription,
-                iconPath: req.IconPath,
-                category: req.Category
-            );
-
-            // Track who created
-            entity.CreatedBy = _currentUserService.UserId ?? "System";
-            entity.CreatedDate = DateTime.UtcNow;
-
-            var baseSlug = _seo.SanitizeSlug(_seo.GenerateSlug(req.Title));
-            if (string.IsNullOrWhiteSpace(baseSlug)) baseSlug = "service";
-
-            var candidate = baseSlug;
-            var i = 2;
-            while (await _unique.SlugExistsAsync(candidate, null, ct))
-                candidate = $"{baseSlug}-{i++}";
-
-            entity.UpdateSlug(candidate);
-
-            if (req.Features is { Count: > 0 })
+            using (await _unitOfWork.BeginTransactionAsync(ct))
             {
-                foreach (var f in req.Features)
+                try
                 {
-                    entity.AddFeature(f.Title, f.Description, f.IconClass);
+                    // Check title uniqueness
+                    if (await _unique.TitleExistsAsync(req.Title, null, ct))
+                    {
+                        return Result<ServiceDto>.Failure(
+                            "A service with this title already exists.",
+                            ErrorCodes.DuplicateEntity);
+                    }
+
+                    // Create entity (SlugGenerator is used internally)
+                    var entity = Service.Create(
+                        title: req.Title,
+                        description: req.Description,
+                        shortDescription: req.ShortDescription,
+                        iconPath: req.IconPath,
+                        category: req.Category
+                    );
+
+                    // Track creation
+                    entity.CreatedBy = _currentUserService.UserId ?? "System";
+                    entity.CreatedDate = DateTime.UtcNow;
+
+                    // Ensure unique slug
+                    var baseSlug = entity.Slug;
+                    var candidate = baseSlug;
+                    var i = 2;
+
+                    while (await _unique.SlugExistsAsync(candidate, null, ct))
+                    {
+                        candidate = $"{baseSlug}-{i++}";
+                    }
+
+                    if (candidate != baseSlug)
+                    {
+                        entity.UpdateSlug(candidate);
+                    }
+
+                    // Add features if provided
+                    if (req.Features is { Count: > 0 })
+                    {
+                        foreach (var f in req.Features)
+                        {
+                            entity.AddFeature(f.Title, f.Description, f.IconClass, f.DisplayOrder);
+                        }
+                    }
+
+                    await _unitOfWork.Services.AddAsync(entity);
+                    await _unitOfWork.CommitAsync(ct);
+                    await _unitOfWork.CommitTransactionAsync(ct);
+
+                    _logger.LogInformation(
+                        "Service created: Id={ServiceId}, Title={Title}, Slug={Slug}",
+                        entity.Id, entity.Title, entity.Slug);
+
+                    // Invalidate cache
+                    await _mediator.Publish(
+                        new CacheInvalidationEvent(
+                            CacheKeys.Services,
+                            CacheKeys.FeaturedServices,
+                            CacheKeys.HomePage),
+                        ct);
+
+                    return Result<ServiceDto>.Success(
+                        _mapper.Map<ServiceDto>(entity),
+                        "Service created successfully");
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Error creating service: {Title}", req.Title);
+                    await _unitOfWork.RollbackTransactionAsync(ct);
+                    return Result<ServiceDto>.Failure($"Failed to create service: {ex.Message}");
                 }
             }
-
-            await _unitOfWork.Services.AddAsync(entity);
-            await _unitOfWork.CommitAsync(ct);
-
-            await _mediator.Publish(new CacheInvalidationEvent(
-                CacheKeys.Services, CacheKeys.FeaturedServices, CacheKeys.HomePage), ct);
-
-            return Result<ServiceDto>.Success(_mapper.Map<ServiceDto>(entity));
         }
     }
 }

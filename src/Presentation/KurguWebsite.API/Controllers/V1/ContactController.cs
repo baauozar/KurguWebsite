@@ -29,7 +29,7 @@ namespace KurguWebsite.API.Controllers.V1
         [ProducesResponseType(typeof(ContactMessageDto), StatusCodes.Status201Created)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status429TooManyRequests)]
-        public async Task<IActionResult> SubmitContactForm(SubmitContactMessageCommand command)
+        public async Task<IActionResult> SubmitContactForm(CreateContactMessageCommand command)
         {
             var result = await _mediator.Send(command);
 

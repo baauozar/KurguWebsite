@@ -25,7 +25,7 @@ namespace KurguWebsite.WebUI.Areas.Admin.AdminControllers
         {
             GetBreadcrumbs(("Partners", null));
 
-            var query = new GetActivePartnersQuery();
+            var query = new GetAllPartnersQuery();
             var result = await Mediator.Send(query);
 
             if (!result.Succeeded || result.Data == null)
@@ -108,7 +108,7 @@ namespace KurguWebsite.WebUI.Areas.Admin.AdminControllers
                 ("Edit", null)
             );
 
-            var query = new GetActivePartnersQuery();
+            var query = new GetAllPartnersQuery();
             var result = await Mediator.Send(query);
 
             if (!result.Succeeded || result.Data == null)

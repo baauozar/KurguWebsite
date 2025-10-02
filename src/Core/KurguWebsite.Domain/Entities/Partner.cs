@@ -22,8 +22,10 @@ namespace KurguWebsite.Domain.Entities
         private Partner() { }
 
         public static Partner Create(
-            string name,
+                string name,
             string logoPath,
+            string? websiteUrl,
+            string? description,
             PartnerType type)
         {
             var partner = new Partner

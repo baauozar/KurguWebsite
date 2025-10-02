@@ -26,7 +26,7 @@ namespace KurguWebsite.API.Controllers.V1
         [ProducesResponseType(typeof(List<ProcessStepDto>), StatusCodes.Status200OK)]
         public async Task<IActionResult> GetActive()
         {
-            var result = await _mediator.Send(new GetActiveProcessStepsQuery());
+            var result = await _mediator.Send(new GetAllProcessStepsQuery());
             return Ok(result.Data);
         }
 

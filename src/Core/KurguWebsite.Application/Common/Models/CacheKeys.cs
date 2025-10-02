@@ -8,30 +8,38 @@ namespace KurguWebsite.Application.Common.Models
 {
     public static class CacheKeys
     {
-        private const string Prefix = "kurgu:";
-        public const string Services = Prefix +"services";
-        public const string FeaturedServices = Prefix + "featured_services";
-        public const string ActiveServices = Prefix + "active_services";
-        public const string ServiceBySlug = Prefix + "service_slug_{0}";
-        public const string ServiceById = Prefix + "service_id_{0}";
+        // Services
+        public const string Services = "services_all";
+        public const string FeaturedServices = "services_featured";
+        public const string ServiceById = "service_id_{0}";
+        public const string ServiceBySlug = "service_slug_{0}";
 
-        public const string CaseStudies = Prefix + "case_studies";
-        public const string FeaturedCaseStudies = Prefix + "featured_case_studies";
+        // Case Studies
+        public const string CaseStudies = "casestudies_all";
+        public const string FeaturedCaseStudies = "casestudies_featured";
+        public const string CaseStudyBySlug = "casestudy_slug_{0}";
 
-        public const string Testimonials = Prefix + "testimonials";
-        public const string ActiveTestimonials = Prefix + "active_testimonials";
+        // Testimonials
+        public const string Testimonials = "testimonials_all";
+        public const string ActiveTestimonials = "testimonials_active";
 
-        public const string Partners = Prefix + "partners";
-        public const string ActivePartners = Prefix + "active_partners";
+        // Partners
+        public const string Partners = "partners_all";
+        public const string ActivePartners = "partners_active";
 
-        public const string CompanyInfo = Prefix + "company_info";
+        // Pages
+        public const string Pages = "pages_all";
+        public const string PageBySlug = "page_slug_{0}";
 
-        public const string HomePage = Prefix + "home_page";
-        public const string AboutPage = Prefix + "about_page";
-        public const string ServicesPage = Prefix + "services_page";
-        public const string ContactPage = Prefix + "contact_page";
-        public const string Page = Prefix + "page";
+        // Process Steps
+        public const string ProcessSteps = "processsteps_all";
 
-        public const string ProcessSteps = Prefix + "process_steps";
+        // Company Info
+        public const string CompanyInfo = "companyinfo";
+
+        // Homepage
+        public const string HomePage = "homepage_data";
+        public const string AboutPage = "aboutpage_data";
+        public const string ContactPage = "contactpage_data";
     }
 }

@@ -1,54 +1,84 @@
-﻿using AutoMapper;
+﻿// src/Core/KurguWebsite.Application/Features/CaseStudies/Commands/CreateCaseStudyMetricCommand.cs
+using AutoMapper;
 using KurguWebsite.Application.Common.Interfaces;
 using KurguWebsite.Application.Common.Models;
 using KurguWebsite.Application.DTOs.CaseStudy;
 using KurguWebsite.Domain.Entities;
 using MediatR;
+using Microsoft.Extensions.Logging;
 
-namespace KurguWebsite.Application.Features.CaseStudies.Commands;
-
-public class CreateCaseStudyMetricCommand : CreateCaseStudyMetricDto, IRequest<Result<CaseStudyMetricDto>>
+namespace KurguWebsite.Application.Features.CaseStudies.Commands
 {
-    new public Guid CaseStudyId { get; set; }
-}
-
-public class CreateCaseStudyMetricCommandHandler : IRequestHandler<CreateCaseStudyMetricCommand, Result<CaseStudyMetricDto>>
-{
-    private readonly IUnitOfWork _unitOfWork;
-    private readonly IMapper _mapper;
-    private readonly ICurrentUserService _currentUserService;
-
-    public CreateCaseStudyMetricCommandHandler(IUnitOfWork unitOfWork, IMapper mapper, ICurrentUserService currentUserService)
+    public class CreateCaseStudyMetricCommand : CreateCaseStudyMetricDto,
+        IRequest<Result<CaseStudyMetricDto>>
     {
-        _unitOfWork = unitOfWork;
-        _mapper = mapper;
-        _currentUserService = currentUserService;
+        public new Guid CaseStudyId { get; set; }
     }
 
-    public async Task<Result<CaseStudyMetricDto>> Handle(CreateCaseStudyMetricCommand request, CancellationToken cancellationToken)
+    public class CreateCaseStudyMetricCommandHandler
+        : IRequestHandler<CreateCaseStudyMetricCommand, Result<CaseStudyMetricDto>>
     {
-        var caseStudy = await _unitOfWork.CaseStudies.GetByIdAsync(request.CaseStudyId);
-        if (caseStudy == null)
+        private readonly IUnitOfWork _unitOfWork;
+        private readonly IMapper _mapper;
+        private readonly ICurrentUserService _currentUserService;
+        private readonly ILogger<CreateCaseStudyMetricCommandHandler> _logger;
+
+        public CreateCaseStudyMetricCommandHandler(
+            IUnitOfWork unitOfWork,
+            IMapper mapper,
+            ICurrentUserService currentUserService,
+            ILogger<CreateCaseStudyMetricCommandHandler> logger)
         {
-            return Result<CaseStudyMetricDto>.Failure("Case Study not found.");
+            _unitOfWork = unitOfWork;
+            _mapper = mapper;
+            _currentUserService = currentUserService;
+            _logger = logger;
         }
 
-        // FIX: Pass displayOrder parameter
-        var caseStudyMetric = CaseStudyMetric.Create(
-            request.CaseStudyId,
-            request.MetricName,
-            request.MetricValue,
-            request.Icon,
-            displayOrder: 0
-        );
+        public async Task<Result<CaseStudyMetricDto>> Handle(
+            CreateCaseStudyMetricCommand request,
+            CancellationToken ct)
+        {
+            using (await _unitOfWork.BeginTransactionAsync(ct))
+            {
+                try
+                {
+                    var caseStudy = await _unitOfWork.CaseStudies.GetByIdAsync(request.CaseStudyId);
+                    if (caseStudy == null)
+                    {
+                        return Result<CaseStudyMetricDto>.Failure(
+                            "Case study not found.",
+                            ErrorCodes.EntityNotFound);
+                    }
 
-        // Track who created
-        caseStudyMetric.CreatedBy = _currentUserService.UserId ?? "System";
-        caseStudyMetric.CreatedDate = DateTime.UtcNow;
+                    var metric = CaseStudyMetric.Create(
+                        request.CaseStudyId,
+                        request.MetricName,
+                        request.MetricValue,
+                        request.Icon,
+                        displayOrder: 0
+                    );
 
-        await _unitOfWork.CaseStudyMetrics.AddAsync(caseStudyMetric);
-        await _unitOfWork.CommitAsync();
+                    metric.CreatedBy = _currentUserService.UserId ?? "System";
+                    metric.CreatedDate = DateTime.UtcNow;
 
-        return Result<CaseStudyMetricDto>.Success(_mapper.Map<CaseStudyMetricDto>(caseStudyMetric));
+                    await _unitOfWork.CaseStudyMetrics.AddAsync(metric);
+                    await _unitOfWork.CommitAsync(ct);
+                    await _unitOfWork.CommitTransactionAsync(ct);
+
+                    _logger.LogInformation(
+                        "Case study metric created: Id={MetricId}, CaseStudyId={CaseStudyId}",
+                        metric.Id, request.CaseStudyId);
+
+                    return Result<CaseStudyMetricDto>.Success(_mapper.Map<CaseStudyMetricDto>(metric));
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Error creating case study metric");
+                    await _unitOfWork.RollbackTransactionAsync(ct);
+                    return Result<CaseStudyMetricDto>.Failure($"Failed to create metric: {ex.Message}");
+                }
+            }
+        }
     }
 }

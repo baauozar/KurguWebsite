@@ -1,5 +1,6 @@
 ﻿using KurguWebsite.Domain.Common;
 using KurguWebsite.Domain.Events;
+using KurguWebsite.Domain.Services;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -53,7 +54,7 @@ namespace KurguWebsite.Domain.Entities
             var caseStudy = new CaseStudy
             {
                 Title = title,
-                Slug = GenerateSlug(title),
+                Slug = SlugGenerator.Generate(title),
                 ClientName = clientName,
                 Description = description,
                 ImagePath = imagePath,
@@ -127,18 +128,7 @@ namespace KurguWebsite.Domain.Entities
             DisplayOrder = order;
         }
 
-        // Generate slug from title
-        private static string GenerateSlug(string title)
-        {
-            return title.ToLower()
-                .Replace(" ", "-")
-                .Replace("&", "and")
-                .Replace(".", "")
-                .Replace(",", "")
-                .Replace("'", "")
-                .Replace("\"", "")
-                .Replace("/", "-")
-                .Replace("\\", "-");
-        }
+      
+
     }
 }

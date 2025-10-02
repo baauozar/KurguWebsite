@@ -1,49 +1,73 @@
-﻿
+﻿// src/Core/KurguWebsite.Application/Features/CaseStudies/Commands/DeleteCaseStudyCommand.cs
 using KurguWebsite.Application.Common.Interfaces;
 using KurguWebsite.Application.Common.Models;
 using KurguWebsite.Domain.Events;
 using MediatR;
-using System;
-using System.Threading;
-using System.Threading.Tasks;
+using Microsoft.Extensions.Logging;
 
 namespace KurguWebsite.Application.Features.CaseStudies.Commands
 {
-    // 1. Change the return type to your non-generic Result
     public class DeleteCaseStudyCommand : IRequest<ControlResult>
     {
         public Guid Id { get; set; }
     }
 
-    public class DeleteCaseStudyCommandHandler : IRequestHandler<DeleteCaseStudyCommand, ControlResult>
+    public class DeleteCaseStudyCommandHandler
+        : IRequestHandler<DeleteCaseStudyCommand, ControlResult>
     {
         private readonly IUnitOfWork _unitOfWork;
         private readonly ICurrentUserService _currentUserService;
         private readonly IMediator _mediator;
+        private readonly ILogger<DeleteCaseStudyCommandHandler> _logger;
 
-        public DeleteCaseStudyCommandHandler(IUnitOfWork unitOfWork, ICurrentUserService currentUserService, IMediator mediator)
+        public DeleteCaseStudyCommandHandler(
+            IUnitOfWork unitOfWork,
+            ICurrentUserService currentUserService,
+            IMediator mediator,
+            ILogger<DeleteCaseStudyCommandHandler> logger)
         {
             _unitOfWork = unitOfWork;
             _currentUserService = currentUserService;
             _mediator = mediator;
+            _logger = logger;
         }
 
-        // 2. Change the method's return type to Task<Result>
-        public async Task<ControlResult> Handle(DeleteCaseStudyCommand request, CancellationToken cancellationToken)
+        public async Task<ControlResult> Handle(
+            DeleteCaseStudyCommand request,
+            CancellationToken ct)
         {
-            var caseStudy = await _unitOfWork.CaseStudies.GetByIdAsync(request.Id);
+            using (await _unitOfWork.BeginTransactionAsync(ct))
+            {
+                try
+                {
+                    var caseStudy = await _unitOfWork.CaseStudies.GetByIdAsync(request.Id);
+                    if (caseStudy == null)
+                    {
+                        return ControlResult.Failure("Case study not found.");
+                    }
 
-            // 3. Use your Result.Failure method
-            if (caseStudy == null) return ControlResult.Failure("Case Study not found.");
+                    caseStudy.SoftDelete(_currentUserService.UserId ?? "System");
+                    await _unitOfWork.CaseStudies.UpdateAsync(caseStudy);
+                    await _unitOfWork.CommitAsync(ct);
+                    await _unitOfWork.CommitTransactionAsync(ct);
 
-            caseStudy.SoftDelete(_currentUserService.UserId ?? "System");
-            await _unitOfWork.CaseStudies.UpdateAsync(caseStudy);
-            await _unitOfWork.CommitAsync(cancellationToken);
+                    _logger.LogInformation("Case study deleted: Id={CaseStudyId}", request.Id);
 
-            await _mediator.Publish(new CacheInvalidationEvent(CacheKeys.CaseStudies, CacheKeys.FeaturedCaseStudies), cancellationToken);
+                    await _mediator.Publish(
+                        new CacheInvalidationEvent(
+                            CacheKeys.CaseStudies,
+                            CacheKeys.FeaturedCaseStudies),
+                        ct);
 
-            // 4. Use your Result.Success method
-            return ControlResult.Success();
+                    return ControlResult.Success();
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Error deleting case study: {CaseStudyId}", request.Id);
+                    await _unitOfWork.RollbackTransactionAsync(ct);
+                    throw;
+                }
+            }
         }
     }
 }

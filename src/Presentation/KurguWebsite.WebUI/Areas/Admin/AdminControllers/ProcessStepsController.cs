@@ -23,7 +23,7 @@ namespace KurguWebsite.WebUI.Areas.Admin.AdminControllers
         {
             GetBreadcrumbs(("Process Steps", null));
 
-            var query = new GetActiveProcessStepsQuery();
+            var query = new GetAllProcessStepsQuery();
             var result = await Mediator.Send(query);
 
             if (!result.Succeeded || result.Data == null)

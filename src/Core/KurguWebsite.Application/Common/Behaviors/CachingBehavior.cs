@@ -2,6 +2,7 @@
 using MediatR;
 using Microsoft.Extensions.Logging;
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -20,12 +21,7 @@ namespace KurguWebsite.Application.Common.Behaviors
     {
         private readonly ICacheService _cache;
         private readonly ILogger<CachingBehavior<TRequest, TResponse>> _logger;
-
-        public CachingBehavior(ICacheService cache, ILogger<CachingBehavior<TRequest, TResponse>> logger)
-        {
-            _cache = cache;
-            _logger = logger;
-        }
+        private static readonly ConcurrentDictionary<string, SemaphoreSlim> _locks = new();
 
         public async Task<TResponse> Handle(TRequest request, RequestHandlerDelegate<TResponse> next, CancellationToken cancellationToken)
         {
@@ -37,13 +33,36 @@ namespace KurguWebsite.Application.Common.Behaviors
                 return cachedResponse;
             }
 
-            var response = await next();
+            // Get or create a lock for this cache key
+            var semaphore = _locks.GetOrAdd(request.CacheKey, _ => new SemaphoreSlim(1, 1));
 
-            await _cache.SetAsync(request.CacheKey, response, request.CacheTime);
+            await semaphore.WaitAsync(cancellationToken);
+            try
+            {
+                // Double-check after acquiring lock
+                cachedResponse = await _cache.GetAsync<TResponse>(request.CacheKey);
+                if (cachedResponse != null)
+                {
+                    _logger.LogInformation($"Fetched from cache after lock: {request.CacheKey}");
+                    return cachedResponse;
+                }
 
-            _logger.LogInformation($"Added to cache: {request.CacheKey}");
+                var response = await next();
+                await _cache.SetAsync(request.CacheKey, response, request.CacheTime);
 
-            return response;
+                _logger.LogInformation($"Added to cache: {request.CacheKey}");
+                return response;
+            }
+            finally
+            {
+                semaphore.Release();
+
+                // Cleanup: Remove lock if no one is waiting
+                if (semaphore.CurrentCount == 1)
+                {
+                    _locks.TryRemove(request.CacheKey, out _);
+                }
+            }
         }
     }
 }

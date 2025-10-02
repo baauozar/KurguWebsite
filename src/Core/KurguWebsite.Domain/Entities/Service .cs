@@ -1,6 +1,8 @@
 ﻿using KurguWebsite.Domain.Common;
 using KurguWebsite.Domain.Enums;
 using KurguWebsite.Domain.Events;
+using KurguWebsite.Domain.Exceptions;
+using KurguWebsite.Domain.Services;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -38,19 +40,38 @@ namespace KurguWebsite.Domain.Entities
         private Service() { }
 
         public static Service Create(
-            string title,
-            string description,
-            string shortDescription,
-            string iconPath,
-            ServiceCategory category)
+         string title,
+         string description,
+         string shortDescription,
+         string iconPath,
+         ServiceCategory category)
         {
+            // Validate all required fields
             if (string.IsNullOrWhiteSpace(title))
-                throw new ArgumentException("Service title is required", nameof(title));
+                throw new DomainException("Service title is required");
+            if (title.Length > 200)
+                throw new DomainException("Service title cannot exceed 200 characters");
+
+            if (string.IsNullOrWhiteSpace(description))
+                throw new DomainException("Description is required");
+            if (description.Length > 1000)
+                throw new DomainException("Description cannot exceed 1000 characters");
+
+            if (string.IsNullOrWhiteSpace(shortDescription))
+                throw new DomainException("Short description is required");
+            if (shortDescription.Length > 300)
+                throw new DomainException("Short description cannot exceed 300 characters");
+
+            if (string.IsNullOrWhiteSpace(iconPath))
+                throw new DomainException("Icon path is required");
+
+            if (!Enum.IsDefined(typeof(ServiceCategory), category))
+                throw new DomainException("Invalid service category");
 
             var service = new Service
             {
                 Title = title,
-                Slug = GenerateSlug(title),
+                Slug = SlugGenerator.Generate(title), // Use shared generator
                 Description = description,
                 ShortDescription = shortDescription,
                 IconPath = iconPath,
@@ -58,6 +79,7 @@ namespace KurguWebsite.Domain.Entities
                 IsActive = true,
                 DisplayOrder = 0
             };
+
             service.AddDomainEvent(new ServiceCreatedEvent(service.Id));
             return service;
         }

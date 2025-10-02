@@ -74,7 +74,7 @@ namespace KurguWebsite.WebUI.Areas.Admin.AdminControllers
                 }
 
                 // Get partners stats
-                var partnersQuery = new GetActivePartnersQuery();
+                var partnersQuery = new GetAllPartnersQuery();
                 var partnersResult = await Mediator.Send(partnersQuery);
                 if (partnersResult.Succeeded && partnersResult.Data != null)
                 {

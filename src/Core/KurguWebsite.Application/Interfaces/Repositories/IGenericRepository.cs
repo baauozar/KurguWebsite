@@ -1,4 +1,5 @@
 ﻿using KurguWebsite.Domain.Common;
+using KurguWebsite.Domain.Specifications;
 using System.Linq.Expressions;
 
 namespace KurguWebsite.Application.Interfaces.Repositories
@@ -28,5 +29,11 @@ namespace KurguWebsite.Application.Interfaces.Repositories
         Task RestoreByIdAsync(Guid id);
         Task<int> CountAsync(Expression<Func<T, bool>>? predicate = null);
         Task<bool> ExistsAsync(Expression<Func<T, bool>> predicate);
+        Task<T?> GetBySpecAsync(ISpecification<T> spec, CancellationToken cancellationToken = default);
+        Task<IReadOnlyList<T>> ListAsync(ISpecification<T> spec, CancellationToken cancellationToken = default);
+        Task<int> CountAsync(ISpecification<T> spec, CancellationToken cancellationToken = default);
+        Task<bool> AnyAsync(ISpecification<T> spec, CancellationToken cancellationToken = default);
+
+
     }
 }

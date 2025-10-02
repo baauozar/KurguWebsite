@@ -1,9 +1,10 @@
 ﻿using FluentValidation;
 using KurguWebsite.Application.DTOs.Testimonial;
+using KurguWebsite.Application.Features.Testimonials.Commands;
 
 namespace KurguWebsite.Application.Validators.Testimonial
 {
-    public class CreateTestimonialDtoValidator : AbstractValidator<CreateTestimonialDto>
+    public class CreateTestimonialDtoValidator : AbstractValidator<CreateTestimonialCommand>
     {
         public CreateTestimonialDtoValidator()
         {

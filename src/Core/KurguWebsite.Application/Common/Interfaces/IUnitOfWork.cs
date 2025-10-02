@@ -26,5 +26,10 @@ namespace KurguWebsite.Application.Common.Interfaces
         Task<int> CommitAsync();
         Task<int> CommitAsync(CancellationToken cancellationToken);
         Task RollbackAsync();
+        Task<IDisposable> BeginTransactionAsync(CancellationToken cancellationToken = default);
+        Task CommitTransactionAsync(CancellationToken cancellationToken = default);
+        Task RollbackTransactionAsync(CancellationToken cancellationToken = default);
+        bool HasActiveTransaction { get; }
+
     }
 }

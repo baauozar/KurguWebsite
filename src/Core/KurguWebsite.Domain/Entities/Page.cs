@@ -1,6 +1,7 @@
 ﻿using KurguWebsite.Domain.Common;
 using KurguWebsite.Domain.Enums;
 using KurguWebsite.Domain.Events;
+using KurguWebsite.Domain.Services;
 
 namespace KurguWebsite.Domain.Entities
 {
@@ -35,7 +36,7 @@ namespace KurguWebsite.Domain.Entities
             return new Page
             {
                 Title = title,
-                Slug = GenerateSlug(title), // base slug; app layer will replace with unique one
+                Slug = SlugGenerator.Generate(title), // base slug; app layer will replace with unique one
                 PageType = pageType,
                 IsActive = true
             };
