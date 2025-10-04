@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace KurguWebsite.Domain.Entities
 {
-    public class ProcessStep : AuditableEntity
+    public class ProcessStep : AuditableEntity, IActivatable
     {
         public int StepNumber { get; private set; }
         public string Title { get; private set; } = string.Empty;
@@ -55,5 +55,7 @@ namespace KurguWebsite.Domain.Entities
                 throw new ArgumentException("Step number must be positive", nameof(stepNumber));
             StepNumber = stepNumber;
         }
+        public void Activate() => IsActive = true;
+        public void Deactivate() => IsActive = false;
     }
 }

@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 
 namespace KurguWebsite.Domain.Entities
 {
-    public class Partner : AuditableEntity
+    public class Partner : AuditableEntity, IActivatable
     {
         public string Name { get; private set; } = string.Empty;
         public string LogoPath { get; private set; } = string.Empty;
@@ -18,6 +18,7 @@ namespace KurguWebsite.Domain.Entities
         public PartnerType Type { get; private set; }
         public int DisplayOrder { get; private set; }
         public bool IsActive { get; private set; }
+
 
         private Partner() { }
 

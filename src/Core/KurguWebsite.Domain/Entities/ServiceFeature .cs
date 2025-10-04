@@ -17,7 +17,7 @@ namespace KurguWebsite.Domain.Entities
 
         // Navigation
         public virtual Service Service { get;  set; } = null!;
-
+        public bool IsActive { get; private set; } = true;
         private ServiceFeature() { }
 
         public static ServiceFeature Create(
@@ -48,5 +48,7 @@ namespace KurguWebsite.Domain.Entities
             Description = description;
             IconClass = iconClass;
         }
+        public void Activate() => IsActive = true;
+        public void Deactivate() => IsActive = false;
     }
 }

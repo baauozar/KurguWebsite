@@ -11,7 +11,7 @@ using System.Threading.Tasks;
 
 namespace KurguWebsite.Domain.Entities
 {
-    public class Service : AuditableEntity, IAggregateRoot, ISeoEntity
+    public class Service : AuditableEntity, IAggregateRoot, ISeoEntity, IActivatable
     {
         public string Title { get; private set; } = string.Empty;
         public string Slug { get; private set; } = string.Empty;

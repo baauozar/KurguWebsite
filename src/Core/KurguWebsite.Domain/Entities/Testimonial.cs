@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 namespace KurguWebsite.Domain.Entities
 {
 
-    public class Testimonial : AuditableEntity
+    public class Testimonial : AuditableEntity, IActivatable
     {
         public string ClientName { get; private set; } = string.Empty;
         public string ClientTitle { get; private set; } = string.Empty;
@@ -18,7 +18,7 @@ namespace KurguWebsite.Domain.Entities
         public string? ClientImagePath { get; private set; }
         public int Rating { get; private set; }
         public DateTime TestimonialDate { get; private set; }
-        public bool IsActive { get; private set; }
+        public bool IsActive { get; private set; } = true;
         public bool IsFeatured { get; private set; }
         public int DisplayOrder { get; private set; }
 

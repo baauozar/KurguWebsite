@@ -7,13 +7,17 @@ using System.Threading.Tasks;
 
 namespace KurguWebsite.Domain.Entities
 {
-    public  class CaseStudyMetric : AuditableEntity
+    public  class CaseStudyMetric : AuditableEntity, IActivatable
     {
         public Guid CaseStudyId { get; set; }
         public string? MetricName { get; set; }
         public string? MetricValue { get; set; }
         public string? Icon { get; set; }
         public int DisplayOrder { get; private set; }
+        public bool IsActive { get; private set; } = true;
+
+        public void Activate() => IsActive = true;
+        public void Deactivate() => IsActive = false;
         public virtual CaseStudy? CaseStudy { get; set; }
         private CaseStudyMetric() { }
 

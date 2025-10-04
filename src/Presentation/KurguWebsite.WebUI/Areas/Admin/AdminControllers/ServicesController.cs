@@ -86,7 +86,7 @@ namespace KurguWebsite.WebUI.Areas.Admin.Controllers
         }
 
         // GET: Admin/Services/Details/5
-        [HttpGet]
+  /*      [HttpGet]
         public async Task<IActionResult> Details(Guid id)
         {
             GetBreadcrumbs(
@@ -105,7 +105,7 @@ namespace KurguWebsite.WebUI.Areas.Admin.Controllers
 
             var viewModel = MapToDetailsViewModel(result.Data);
             return View(viewModel);
-        }
+        }*/
 
         // GET: Admin/Services/Create
         [HttpGet]

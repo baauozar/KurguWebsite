@@ -12,7 +12,9 @@ namespace KurguWebsite.Domain.Common
         {
             IsDeleted = true;
             DeletedDate = DateTime.UtcNow;
-            DeletedBy = userId;
+            DeletedBy = userId; if 
+                (this is IActivatable a)
+                a.Deactivate();
 
         }
 
@@ -21,6 +23,8 @@ namespace KurguWebsite.Domain.Common
             IsDeleted = false;
             DeletedDate = null;
             DeletedBy = null;
+            if (this is IActivatable a)
+                a.Activate();
         }
     }
 }

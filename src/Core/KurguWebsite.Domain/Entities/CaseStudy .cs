@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 
 namespace KurguWebsite.Domain.Entities
 {
-    public class CaseStudy : AuditableEntity  // Changed from BaseEntity to AuditableEntity
+    public class CaseStudy : AuditableEntity ,IActivatable // Changed from BaseEntity to AuditableEntity
     {
         public string Title { get; private set; } = string.Empty;
         public string Slug { get; private set; } = string.Empty;
@@ -22,7 +22,8 @@ namespace KurguWebsite.Domain.Entities
         public string ImagePath { get; private set; } = string.Empty;
         public string? ThumbnailPath { get; private set; }
         public DateTime CompletedDate { get; private set; }
-        public bool IsActive { get; private set; }
+        public bool IsActive { get; private set; } = true;
+
         public bool IsFeatured { get; private set; }
         public int DisplayOrder { get; private set; }
 

@@ -1,10 +1,13 @@
 ﻿// Areas/Admin/Controllers/AuditLogsController.cs
+using KurguWebsite.Application.Common.Models;
 using KurguWebsite.Application.Common.Interfaces;
 using KurguWebsite.Application.Features.AuditLogs.Queries;
 using KurguWebsite.WebUI.Areas.Admin.AdminControllers;
 using KurguWebsite.WebUI.Areas.Admin.ViewModel.AuditLogs;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
+using System;
+using System.Linq;
 
 namespace KurguWebsite.WebUI.Areas.Admin.Controllers
 {
@@ -14,11 +17,8 @@ namespace KurguWebsite.WebUI.Areas.Admin.Controllers
            IMediator mediator,
            ILogger<AuditLogsController> logger,
            IPermissionService permissionService)
-           : base(mediator, logger, permissionService)
-        {
-        }
+           : base(mediator, logger, permissionService) { }
 
-        // GET: Admin/AuditLogs
         [HttpGet]
         public async Task<IActionResult> Index(
             int pageNumber = 1,
@@ -29,39 +29,37 @@ namespace KurguWebsite.WebUI.Areas.Admin.Controllers
             string? userId = null,
             DateTime? fromDate = null,
             DateTime? toDate = null,
-            string? sortBy = null,
-            string? sortOrder = null)
+            string? sortBy = null,     // "Timestamp","UserName","EntityType","Action","EntityId"
+            string? sortOrder = "desc" // "asc"/"desc"
+        )
         {
             GetBreadcrumbs(("Audit Logs", null));
 
             var query = new SearchAuditLogsQuery
             {
-                Params = new Application.Common.Models.QueryParameters
-                {
-                    PageNumber = pageNumber,
-                    PageSize = pageSize,
-                    SearchTerm = search,
-                    SortColumn = sortBy,
-                    SortOrder = sortOrder
-                },
+                PageNumber = pageNumber,
+                PageSize = pageSize,
                 UserId = userId,
                 EntityType = entityType,
                 Action = action,
                 FromDate = fromDate,
-                ToDate = toDate
+                ToDate = toDate,
+                SearchTerm = search,
+                SortColumn = sortBy,
+                SortOrder = sortOrder
             };
 
             var result = await Mediator.Send(query);
 
-            if (!result.Succeeded || result.Data == null)
+            if (!result.Succeeded || result.Data is null)
             {
                 SetErrorMessage("Failed to load audit logs");
                 return View(new AuditLogIndexViewModel());
             }
 
-            var viewModel = MapToPagedViewModel(
-                result.Data,
-                dto => new AuditLogListItemViewModel
+            var vm = new AuditLogIndexViewModel
+            {
+                Items = result.Data.Items.Select(dto => new AuditLogListItemViewModel
                 {
                     Id = dto.Id,
                     UserId = dto.UserId,
@@ -71,24 +69,18 @@ namespace KurguWebsite.WebUI.Areas.Admin.Controllers
                     EntityId = dto.EntityId,
                     IpAddress = dto.IpAddress,
                     Timestamp = dto.Timestamp
-                },
-                search,
-                sortBy,
-                sortOrder == "desc"
-            );
+                }).ToList(),
 
-            var indexViewModel = new AuditLogIndexViewModel
-            {
-                Items = viewModel.Items,
-                PageNumber = viewModel.PageNumber,
-                PageSize = viewModel.PageSize,
-                TotalCount = viewModel.TotalCount,
-                TotalPages = viewModel.TotalPages,
-                HasPreviousPage = viewModel.HasPreviousPage,
-                HasNextPage = viewModel.HasNextPage,
-                SearchTerm = viewModel.SearchTerm,
-                SortBy = viewModel.SortBy,
-                SortDescending = viewModel.SortDescending,
+                PageNumber = result.Data.PageNumber,
+                PageSize = pageSize,
+                TotalCount = result.Data.TotalCount,
+                TotalPages = result.Data.TotalPages,
+                HasPreviousPage = result.Data.HasPreviousPage,
+                HasNextPage = result.Data.HasNextPage,
+
+                SearchTerm = search,
+                SortBy = sortBy,
+                SortDescending = string.Equals(sortOrder, "desc", StringComparison.OrdinalIgnoreCase),
                 EntityTypes = GetEntityTypes(),
                 Actions = GetActions(),
                 SelectedEntityType = entityType,
@@ -98,28 +90,22 @@ namespace KurguWebsite.WebUI.Areas.Admin.Controllers
                 ToDate = toDate
             };
 
-            return View(indexViewModel);
+            return View(vm);
         }
 
-       
         [HttpGet]
         public async Task<IActionResult> Details(Guid id)
         {
-            GetBreadcrumbs(
-                ("Audit Logs", Url.Action("Index")),
-                ("Details", null)
-            );
+            GetBreadcrumbs(("Audit Logs", Url.Action("Index")), ("Details", null));
 
-            var query = new GetAuditLogByIdQuery { Id = id };
-            var result = await Mediator.Send(query);
-
-            if (!result.Succeeded || result.Data == null)
+            var result = await Mediator.Send(new GetAuditLogByIdQuery { Id = id });
+            if (!result.Succeeded || result.Data is null)
             {
                 SetErrorMessage("Audit log not found");
                 return RedirectToAction(nameof(Index));
             }
 
-            var viewModel = new AuditLogDetailsViewModel
+            var vm = new AuditLogDetailsViewModel
             {
                 Id = result.Data.Id,
                 UserId = result.Data.UserId,
@@ -135,36 +121,33 @@ namespace KurguWebsite.WebUI.Areas.Admin.Controllers
                 NewValuesDict = ParseJsonToDictionary(result.Data.NewValues)
             };
 
-            return View(viewModel);
+            return View(vm);
         }
 
-        // GET: Admin/AuditLogs/User/{userId}
+        // /Admin/AuditLogs/User?userId=...
         [HttpGet]
         public async Task<IActionResult> UserLogs(string userId, int pageNumber = 1, int pageSize = 20)
         {
-            GetBreadcrumbs(
-                ("Audit Logs", Url.Action("Index")),
-                ("User Logs", null)
-            );
+            GetBreadcrumbs(("Audit Logs", Url.Action("Index")), ("User Logs", null));
 
-            var query = new GetAuditLogsByUserQuery
+            var result = await Mediator.Send(new SearchAuditLogsQuery
             {
-                UserId = userId,
                 PageNumber = pageNumber,
-                PageSize = pageSize
-            };
+                PageSize = pageSize,
+                UserId = userId,
+                SortColumn = "Timestamp",
+                SortOrder = "desc"
+            });
 
-            var result = await Mediator.Send(query);
-
-            if (!result.Succeeded || result.Data == null)
+            if (!result.Succeeded || result.Data is null)
             {
                 SetErrorMessage("Failed to load user logs");
                 return RedirectToAction(nameof(Index));
             }
 
-            var viewModel = new AuditLogIndexViewModel
+            var vm = new AuditLogIndexViewModel
             {
-                Items = result.Data.Select(dto => new AuditLogListItemViewModel
+                Items = result.Data.Items.Select(dto => new AuditLogListItemViewModel
                 {
                     Id = dto.Id,
                     UserId = dto.UserId,
@@ -175,15 +158,20 @@ namespace KurguWebsite.WebUI.Areas.Admin.Controllers
                     IpAddress = dto.IpAddress,
                     Timestamp = dto.Timestamp
                 }).ToList(),
+
+                PageNumber = result.Data.PageNumber,
+                PageSize = pageSize,
+                TotalCount = result.Data.TotalCount,
+                TotalPages = result.Data.TotalPages,
+                HasPreviousPage = result.Data.HasPreviousPage,
+                HasNextPage = result.Data.HasNextPage,
                 SelectedUserId = userId
             };
 
-            ViewData["PageTitle"] = $"Audit Logs - {result.Data.FirstOrDefault()?.UserName ?? userId}";
-
-            return View("Index", viewModel);
+            ViewData["PageTitle"] = $"Audit Logs - {result.Data.Items.FirstOrDefault()?.UserName ?? userId}";
+            return View("Index", vm);
         }
 
-        // GET: Admin/AuditLogs/Export
         [HttpGet]
         public async Task<IActionResult> Export(
             string? entityType = null,
@@ -192,29 +180,25 @@ namespace KurguWebsite.WebUI.Areas.Admin.Controllers
             DateTime? fromDate = null,
             DateTime? toDate = null)
         {
-            var query = new SearchAuditLogsQuery
+            var result = await Mediator.Send(new SearchAuditLogsQuery
             {
-                Params = new Application.Common.Models.QueryParameters
-                {
-                    PageNumber = 1,
-                    PageSize = 10000 // Large number for export
-                },
+                PageNumber = 1,
+                PageSize = 10000, // simple: one big page; or loop pages for huge exports
                 UserId = userId,
                 EntityType = entityType,
                 Action = action,
                 FromDate = fromDate,
-                ToDate = toDate
-            };
+                ToDate = toDate,
+                SortColumn = "Timestamp",
+                SortOrder = "desc"
+            });
 
-            var result = await Mediator.Send(query);
-
-            if (!result.Succeeded || result.Data == null)
+            if (!result.Succeeded || result.Data is null)
             {
                 SetErrorMessage("Failed to export audit logs");
                 return RedirectToAction(nameof(Index));
             }
 
-            // Create CSV
             var csv = new System.Text.StringBuilder();
             csv.AppendLine("Timestamp,User,Action,EntityType,EntityId,IpAddress");
 
@@ -227,51 +211,24 @@ namespace KurguWebsite.WebUI.Areas.Admin.Controllers
             return File(bytes, "text/csv", $"audit-logs-{DateTime.UtcNow:yyyyMMddHHmmss}.csv");
         }
 
-        #region Helper Methods
+        #region Helpers
 
-        private List<string> GetEntityTypes()
+        private static List<string> GetEntityTypes() => new()
         {
-            return new List<string>
-            {
-                "Service",
-                "CaseStudy",
-                "Testimonial",
-                "Partner",
-                "Page",
-                "ProcessStep",
-                "CompanyInfo",
-                "ContactMessage",
-                "User"
-            };
-        }
+            "Service","CaseStudy","Testimonial","Partner","Page",
+            "ProcessStep","CompanyInfo","ContactMessage","User"
+        };
 
-        private List<string> GetActions()
+        private static List<string> GetActions() => new()
         {
-            return new List<string>
-            {
-                "Create",
-                "Update",
-                "Delete",
-                "Restore",
-                "Login",
-                "Logout",
-                "View"
-            };
-        }
+            "Create","Update","Delete","Restore","Login","Logout","View"
+        };
 
-        private Dictionary<string, object>? ParseJsonToDictionary(string json)
+        private static Dictionary<string, object>? ParseJsonToDictionary(string json)
         {
-            if (string.IsNullOrWhiteSpace(json))
-                return null;
-
-            try
-            {
-                return System.Text.Json.JsonSerializer.Deserialize<Dictionary<string, object>>(json);
-            }
-            catch
-            {
-                return null;
-            }
+            if (string.IsNullOrWhiteSpace(json)) return null;
+            try { return System.Text.Json.JsonSerializer.Deserialize<Dictionary<string, object>>(json); }
+            catch { return null; }
         }
 
         #endregion

@@ -15,6 +15,11 @@ namespace KurguWebsite.Application.Features.AuditLogs.Queries
         public string? Action { get; set; }
         public DateTime? FromDate { get; set; }
         public DateTime? ToDate { get; set; }
+
+        public string? SearchTerm { get; set; }
+        public string? SortColumn { get; set; }
+        public string? SortOrder { get; set; } = "desc";
+
         public int PageNumber { get; set; } = 1;
         public int PageSize { get; set; } = 20;
     }
@@ -35,37 +40,36 @@ namespace KurguWebsite.Application.Features.AuditLogs.Queries
             SearchAuditLogsQuery request,
             CancellationToken cancellationToken)
         {
+            // Spec with sorting + paging
             var spec = new AuditLogSearchSpecification(
                 userId: request.UserId,
                 entityType: request.EntityType,
                 action: request.Action,
                 fromDate: request.FromDate,
                 toDate: request.ToDate,
+                searchTerm: request.SearchTerm,
+                sortColumn: request.SortColumn,
+                sortOrder: request.SortOrder,
                 pageNumber: request.PageNumber,
                 pageSize: request.PageSize);
 
-            var logs = _uow.AuditLogs.Entities.Where(spec.Criteria).Skip((request.PageNumber - 1) * request.PageSize).Take(request.PageSize).ToList();
-
-            var countSpec = new AuditLogSearchSpecification(
+            // Count spec (no paging)
+            var countSpec = new AuditLogSearchCountSpecification(
                 userId: request.UserId,
                 entityType: request.EntityType,
                 action: request.Action,
                 fromDate: request.FromDate,
                 toDate: request.ToDate,
-                pageNumber: 1,
-                pageSize: int.MaxValue);
-            var totalCount = _uow.AuditLogs.Entities
-             .Where(countSpec.Criteria)
-             .Count();
-            var mappedLogs = _mapper.Map<List<AuditLogDto>>(logs);
+                searchTerm: request.SearchTerm);
 
-            var paginatedList = new PaginatedList<AuditLogDto>(
-                mappedLogs,
-                totalCount,
-                request.PageNumber,
-                request.PageSize);
+            // ✅ Use spec-aware repository methods
+            var logs = _uow.AuditLogs.Entities.Where(spec.Criteria).ToList();
+            var total = _uow.AuditLogs.Entities.Where(countSpec.Criteria).Count();
 
-            return Result<PaginatedList<AuditLogDto>>.Success(paginatedList);
+            var dtos = _mapper.Map<List<AuditLogDto>>(logs);
+            var page = new PaginatedList<AuditLogDto>(dtos, total, request.PageNumber, request.PageSize);
+
+            return Result<PaginatedList<AuditLogDto>>.Success(page);
         }
     }
 }

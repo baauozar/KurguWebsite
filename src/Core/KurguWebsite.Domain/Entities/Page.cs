@@ -5,7 +5,7 @@ using KurguWebsite.Domain.Services;
 
 namespace KurguWebsite.Domain.Entities
 {
-    public class Page : AuditableEntity, ISeoEntity
+    public class Page : AuditableEntity, ISeoEntity, IActivatable
     {
         public string Title { get; private set; } = string.Empty;
         public string Slug { get; private set; } = string.Empty;
@@ -81,7 +81,9 @@ namespace KurguWebsite.Domain.Entities
             IsActive = isActive;
             AddDomainEvent(new PageUpdatedEvent(this.Id));
         }
-
+        
+        public void Activate() => IsActive = true;
+        public void Deactivate() => IsActive = false;
         public void UpdateSlug(string slug)
         {
             if (string.IsNullOrWhiteSpace(slug))
