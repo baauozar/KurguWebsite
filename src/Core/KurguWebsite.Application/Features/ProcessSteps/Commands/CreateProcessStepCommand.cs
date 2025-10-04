@@ -45,11 +45,13 @@ namespace KurguWebsite.Application.Features.ProcessSteps.Commands
             {
                 try
                 {
+                    // FIXED: Now includes IconClass parameter
                     var processStep = ProcessStep.Create(
-                        request.StepNumber,
-                        request.Title,
-                        request.Description,
-                        request.DisplayOrder
+                        stepNumber: request.StepNumber,
+                        title: request.Title,
+                        description: request.Description,
+                        iconClass: request.IconClass,
+                        displayOrder: request.DisplayOrder
                     );
 
                     processStep.CreatedBy = _currentUserService.UserId ?? "System";

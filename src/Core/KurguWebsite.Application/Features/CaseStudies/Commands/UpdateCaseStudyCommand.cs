@@ -74,14 +74,33 @@ namespace KurguWebsite.Application.Features.CaseStudies.Commands
                         entity.UpdateSlug(candidate);
                     }
 
+                    // FIXED: Now includes all updateable properties
                     entity.Update(
                         title: req.Title,
                         clientName: req.ClientName,
                         description: req.Description,
                         challenge: req.Challenge,
                         solution: req.Solution,
-                        result: req.Result
+                        result: req.Result,
+                        industry: req.Industry,
+                        imagePath: req.ImagePath,
+                        completedDate: req.CompletedDate
                     );
+
+                    // Update ServiceId if provided
+                    if (req.ServiceId.HasValue)
+                    {
+                        entity.SetService(req.ServiceId.Value);
+                    }
+
+                    // Update featured status
+                    entity.SetFeatured(req.IsFeatured);
+
+                    // Update active status
+                    if (req.IsActive)
+                        entity.Activate();
+                    else
+                        entity.Deactivate();
 
                     entity.LastModifiedBy = _currentUserService.UserId ?? "System";
                     entity.LastModifiedDate = DateTime.UtcNow;

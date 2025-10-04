@@ -1,9 +1,10 @@
 ﻿using FluentValidation;
 using KurguWebsite.Application.DTOs.Partner;
+using KurguWebsite.Application.Features.Partners.Commands;
 
 namespace KurguWebsite.Application.Validators.Partner
 {
-    public class CreatePartnerDtoValidator : AbstractValidator<CreatePartnerDto>
+    public class CreatePartnerDtoValidator : AbstractValidator<CreatePartnerCommand>
     {
         public CreatePartnerDtoValidator()
         {

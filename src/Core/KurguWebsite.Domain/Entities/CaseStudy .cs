@@ -46,7 +46,7 @@ namespace KurguWebsite.Domain.Entities
             string clientName,
             string description,
             string imagePath,
-            DateTime completedDate)
+            DateTime completedDate, string? industry = null)
         {
             if (string.IsNullOrWhiteSpace(title))
                 throw new ArgumentException("Title is required", nameof(title));
@@ -60,6 +60,7 @@ namespace KurguWebsite.Domain.Entities
                 ImagePath = imagePath,
                 ThumbnailPath = imagePath,
                 CompletedDate = completedDate,
+                Industry = industry,
                 IsActive = true,
                 DisplayOrder = 0
             };
@@ -69,20 +70,26 @@ namespace KurguWebsite.Domain.Entities
 
         // Update method
         public void Update(
-            string title,
-            string clientName,
-            string description,
-            string? challenge,
-            string? solution,
-            string? result)
+             string title,
+    string clientName,
+    string description,
+    string? challenge,
+    string? solution,
+    string? result,
+    string? industry,
+    string imagePath,
+    DateTime completedDate)
         {
             Title = title;
-   
             ClientName = clientName;
             Description = description;
             Challenge = challenge;
             Solution = solution;
             Result = result;
+            Industry = industry;
+            ImagePath = imagePath;
+            ThumbnailPath = imagePath; // Auto-update thumbnail
+            CompletedDate = completedDate;
             AddDomainEvent(new CaseStudyUpdatedEvent(this.Id));
         }
 
@@ -127,8 +134,12 @@ namespace KurguWebsite.Domain.Entities
         {
             DisplayOrder = order;
         }
+        public void UpdateImages(string imagePath, string? thumbnailPath = null)
+        {
+            ImagePath = imagePath;
+            ThumbnailPath = thumbnailPath ?? imagePath;
+        }
 
-      
 
     }
 }

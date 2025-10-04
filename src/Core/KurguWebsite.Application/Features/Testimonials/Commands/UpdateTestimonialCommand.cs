@@ -54,13 +54,36 @@ namespace KurguWebsite.Application.Features.Testimonials.Commands
                             ErrorCodes.EntityNotFound);
                     }
 
+                    // FIXED: Now includes ClientImagePath parameter
                     testimonial.Update(
-                        req.ClientName ?? testimonial.ClientName,
-                        req.ClientTitle ?? testimonial.ClientTitle,
-                        req.CompanyName ?? testimonial.CompanyName,
-                        req.Content ?? testimonial.Content,
-                        req.Rating ?? testimonial.Rating
+                        clientName: req.ClientName ?? testimonial.ClientName,
+                        clientTitle: req.ClientTitle ?? testimonial.ClientTitle,
+                        companyName: req.CompanyName ?? testimonial.CompanyName,
+                        content: req.Content ?? testimonial.Content,
+                        rating: req.Rating ?? testimonial.Rating,
+                        clientImagePath: req.ClientImagePath
                     );
+
+                    // Update featured status if provided
+                    if (req.IsFeatured.HasValue)
+                    {
+                        testimonial.SetFeatured(req.IsFeatured.Value);
+                    }
+
+                    // Update display order if provided
+                    if (req.DisplayOrder.HasValue)
+                    {
+                        testimonial.SetDisplayOrder(req.DisplayOrder.Value);
+                    }
+
+                    // Update active status if provided
+                    if (req.IsActive.HasValue)
+                    {
+                        if (req.IsActive.Value)
+                            testimonial.Activate();
+                        else
+                            testimonial.Deactivate();
+                    }
 
                     testimonial.LastModifiedBy = _currentUserService.UserId ?? "System";
                     testimonial.LastModifiedDate = DateTime.UtcNow;

@@ -30,6 +30,7 @@ namespace KurguWebsite.Domain.Entities
             string clientTitle,
             string companyName,
             string content,
+            string clientImagePath,
             int rating = 5)
         {
             if (rating < 1 || rating > 5)
@@ -43,6 +44,7 @@ namespace KurguWebsite.Domain.Entities
                 Content = content,
                 Rating = rating,
                 TestimonialDate = DateTime.UtcNow,
+                ClientImagePath = clientImagePath,
                 IsActive = true
             };
             testimonial.AddDomainEvent(new TestimonialCreatedEvent(testimonial.Id));
@@ -50,17 +52,19 @@ namespace KurguWebsite.Domain.Entities
         }
 
         public void Update(
-            string clientName,
-            string clientTitle,
-            string companyName,
-            string content,
-            int rating)
+      string clientName,
+      string clientTitle,
+      string companyName,
+      string content,
+      int rating,
+      string? clientImagePath = null)
         {
             ClientName = clientName;
             ClientTitle = clientTitle;
             CompanyName = companyName;
             Content = content;
             Rating = rating;
+            ClientImagePath = clientImagePath;
             AddDomainEvent(new TestimonialUpdatedEvent(this.Id));
         }
 

@@ -40,13 +40,14 @@ namespace KurguWebsite.Domain.Entities
         private Service() { }
 
         public static Service Create(
-         string title,
-         string description,
-         string shortDescription,
-         string iconPath,
-         ServiceCategory category)
+    string title,
+    string description,
+    string shortDescription,
+    string iconPath,
+    ServiceCategory category,
+    string? iconClass = null,
+    string? fullDescription = null)
         {
-            // Validate all required fields
             if (string.IsNullOrWhiteSpace(title))
                 throw new DomainException("Service title is required");
             if (title.Length > 200)
@@ -71,10 +72,12 @@ namespace KurguWebsite.Domain.Entities
             var service = new Service
             {
                 Title = title,
-                Slug = SlugGenerator.Generate(title), // Use shared generator
+                Slug = SlugGenerator.Generate(title),
                 Description = description,
                 ShortDescription = shortDescription,
+                FullDescription = fullDescription,
                 IconPath = iconPath,
+                IconClass = iconClass,
                 Category = category,
                 IsActive = true,
                 DisplayOrder = 0
@@ -84,20 +87,22 @@ namespace KurguWebsite.Domain.Entities
             return service;
         }
 
+        // Updated Update method with IconClass
         public void Update(
             string title,
             string description,
             string shortDescription,
             string? fullDescription,
             string iconPath,
+            string? iconClass,
             ServiceCategory category)
         {
             Title = title;
-       
             Description = description;
             ShortDescription = shortDescription;
             FullDescription = fullDescription;
             IconPath = iconPath;
+            IconClass = iconClass;
             Category = category;
             AddDomainEvent(new ServiceUpdatedEvent(this.Id));
         }

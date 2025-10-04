@@ -80,15 +80,31 @@ namespace KurguWebsite.Application.Features.Services.Commands
                         entity.UpdateSlug(candidate);
                     }
 
-                    // Update entity
+                    // FIXED: Now includes IconClass parameter
                     entity.Update(
                         title: req.Title,
                         description: req.Description,
                         shortDescription: req.ShortDescription,
                         fullDescription: req.FullDescription,
                         iconPath: req.IconPath,
+                        iconClass: req.IconClass,
                         category: req.Category
                     );
+
+                    // Update SEO
+                    entity.UpdateSeo(req.MetaTitle, req.MetaDescription, req.MetaKeywords);
+
+                    // Update featured status
+                    entity.SetFeatured(req.IsFeatured);
+
+                    // Update display order
+                    entity.SetDisplayOrder(req.DisplayOrder);
+
+                    // Update active status
+                    if (req.IsActive)
+                        entity.Activate();
+                    else
+                        entity.Deactivate();
 
                     entity.LastModifiedBy = _currentUserService.UserId ?? "System";
                     entity.LastModifiedDate = DateTime.UtcNow;

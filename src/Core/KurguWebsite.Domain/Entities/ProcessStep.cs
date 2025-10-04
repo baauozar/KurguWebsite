@@ -19,16 +19,19 @@ namespace KurguWebsite.Domain.Entities
         private ProcessStep() { }
 
         public static ProcessStep Create(
-            int stepNumber,
-            string title,
-            string description, int? displayOrder = null)
+       int stepNumber,
+       string title,
+       string description,
+       string? iconClass = null,
+       int? displayOrder = null)
         {
             return new ProcessStep
             {
                 StepNumber = stepNumber,
                 Title = title,
                 Description = description,
-                DisplayOrder = displayOrder ?? stepNumber,  // Default to stepNumber
+                IconClass = iconClass,
+                DisplayOrder = displayOrder ?? stepNumber,
                 IsActive = true
             };
         }

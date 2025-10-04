@@ -48,16 +48,39 @@ namespace KurguWebsite.Application.Features.CaseStudies.Commands
             {
                 try
                 {
+                    // FIXED: Now includes Industry parameter
                     var entity = CaseStudy.Create(
                         title: request.Title,
                         clientName: request.ClientName,
                         description: request.Description,
                         imagePath: request.ImagePath,
-                        completedDate: request.CompletedDate
+                        completedDate: request.CompletedDate,
+                        industry: request.Industry
                     );
 
                     entity.CreatedBy = _currentUserService.UserId ?? "System";
                     entity.CreatedDate = DateTime.UtcNow;
+
+                    // Set ServiceId if provided
+                    if (request.ServiceId.HasValue)
+                    {
+                        entity.SetService(request.ServiceId.Value);
+                    }
+
+                    // Set IsFeatured if provided
+                    if (request.IsFeatured)
+                    {
+                        entity.SetFeatured(true);
+                    }
+
+                    // Add technologies if provided
+                    if (request.Technologies is { Count: > 0 })
+                    {
+                        foreach (var tech in request.Technologies)
+                        {
+                            entity.AddTechnology(tech);
+                        }
+                    }
 
                     // Ensure unique slug
                     var baseSlug = entity.Slug;

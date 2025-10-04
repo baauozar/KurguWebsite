@@ -53,18 +53,40 @@ namespace KurguWebsite.Application.Features.Services.Commands
                             ErrorCodes.DuplicateEntity);
                     }
 
-                    // Create entity (SlugGenerator is used internally)
+                    // FIXED: Now includes IconClass and FullDescription parameters
                     var entity = Service.Create(
                         title: req.Title,
                         description: req.Description,
                         shortDescription: req.ShortDescription,
                         iconPath: req.IconPath,
-                        category: req.Category
+                        category: req.Category,
+                        iconClass: req.IconClass,
+                        fullDescription: req.FullDescription
                     );
 
                     // Track creation
                     entity.CreatedBy = _currentUserService.UserId ?? "System";
                     entity.CreatedDate = DateTime.UtcNow;
+
+                    // Set featured if requested
+                    if (req.IsFeatured)
+                    {
+                        entity.SetFeatured(true);
+                    }
+
+                    // Set display order if provided
+                    if (req.DisplayOrder > 0)
+                    {
+                        entity.SetDisplayOrder(req.DisplayOrder);
+                    }
+
+                    // Set SEO if provided
+                    if (!string.IsNullOrEmpty(req.MetaTitle) ||
+                        !string.IsNullOrEmpty(req.MetaDescription) ||
+                        !string.IsNullOrEmpty(req.MetaKeywords))
+                    {
+                        entity.UpdateSeo(req.MetaTitle, req.MetaDescription, req.MetaKeywords);
+                    }
 
                     // Ensure unique slug
                     var baseSlug = entity.Slug;

@@ -1,9 +1,10 @@
 ﻿using FluentValidation;
 using KurguWebsite.Application.DTOs.CaseStudy;
+using KurguWebsite.Application.Features.CaseStudies.Commands;
 
 namespace KurguWebsite.Application.Validators.CaseStudy
 {
-    public class CreateCaseStudyMetricDtoValidator : AbstractValidator<CreateCaseStudyMetricDto>
+    public class CreateCaseStudyMetricDtoValidator : AbstractValidator<CreateCaseStudyMetricCommand>
     {
         public CreateCaseStudyMetricDtoValidator()
         {

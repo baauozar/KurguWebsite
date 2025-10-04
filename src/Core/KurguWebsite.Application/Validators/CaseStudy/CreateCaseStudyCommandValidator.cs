@@ -1,11 +1,12 @@
 ﻿using FluentValidation;
 using KurguWebsite.Application.DTOs.CaseStudy;
+using KurguWebsite.Application.Features.CaseStudies.Commands;
 
 namespace KurguWebsite.Application.Validators.CaseStudy
 {
-    public class CreateCaseStudyDtoValidator : AbstractValidator<CreateCaseStudyDto>
+    public class CreateCaseStudyCommandValidator : AbstractValidator<CreateCaseStudyCommand>
     {
-        public CreateCaseStudyDtoValidator()
+        public CreateCaseStudyCommandValidator()
         {
             RuleFor(x => x.Title)
                 .NotEmpty().WithMessage("Title is required")
