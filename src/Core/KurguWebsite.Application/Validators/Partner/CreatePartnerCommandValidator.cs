@@ -4,9 +4,9 @@ using KurguWebsite.Application.Features.Partners.Commands;
 
 namespace KurguWebsite.Application.Validators.Partner
 {
-    public class CreatePartnerDtoValidator : AbstractValidator<CreatePartnerCommand>
+    public class CreatePartnerCommandValidator : AbstractValidator<CreatePartnerCommand>
     {
-        public CreatePartnerDtoValidator()
+        public CreatePartnerCommandValidator()
         {
             RuleFor(x => x.Name)
                 .NotEmpty().WithMessage("Partner name is required")

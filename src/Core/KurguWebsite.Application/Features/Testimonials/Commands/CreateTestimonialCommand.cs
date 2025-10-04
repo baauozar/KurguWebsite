@@ -50,6 +50,7 @@ namespace KurguWebsite.Application.Features.Testimonials.Commands
                         request.ClientTitle,
                         request.CompanyName,
                         request.Content,
+                        request.ClientImagePath??string.Empty,
                         request.Rating
                     );
 
