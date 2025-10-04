@@ -1,4 +1,4 @@
-﻿using KurguWebsite.Domain.Common;
+﻿/*using KurguWebsite.Domain.Common;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -14,3 +14,4 @@ namespace KurguWebsite.Domain.Entities
         public DateTime SetDate { get; set; }
     }
 }
+*/

@@ -1,23 +1,22 @@
 ﻿// src/Core/KurguWebsite.Application/Features/AuditLogs/Queries/SearchAuditLogsQuery.cs
 using AutoMapper;
-using AutoMapper.QueryableExtensions;
 using KurguWebsite.Application.Common.Interfaces;
 using KurguWebsite.Application.Common.Models;
 using KurguWebsite.Application.DTOs.Audit;
+using KurguWebsite.Domain.Specifications;
 using MediatR;
-using System.Linq;
-using System.Linq.Dynamic.Core;
 
 namespace KurguWebsite.Application.Features.AuditLogs.Queries
 {
     public class SearchAuditLogsQuery : IRequest<Result<PaginatedList<AuditLogDto>>>
     {
-        public QueryParameters Params { get; set; } = new();
         public string? UserId { get; set; }
         public string? EntityType { get; set; }
         public string? Action { get; set; }
         public DateTime? FromDate { get; set; }
         public DateTime? ToDate { get; set; }
+        public int PageNumber { get; set; } = 1;
+        public int PageSize { get; set; } = 20;
     }
 
     public class SearchAuditLogsQueryHandler
@@ -36,64 +35,35 @@ namespace KurguWebsite.Application.Features.AuditLogs.Queries
             SearchAuditLogsQuery request,
             CancellationToken cancellationToken)
         {
-            var query = _uow.AuditLogs.Entities.AsQueryable();
+            var spec = new AuditLogSearchSpecification(
+                userId: request.UserId,
+                entityType: request.EntityType,
+                action: request.Action,
+                fromDate: request.FromDate,
+                toDate: request.ToDate,
+                pageNumber: request.PageNumber,
+                pageSize: request.PageSize);
 
-            // Apply filters
-            if (!string.IsNullOrWhiteSpace(request.UserId))
-            {
-                query = query.Where(a => a.UserId == request.UserId);
-            }
+            var logs = _uow.AuditLogs.Entities.Where(spec.Criteria).Skip((request.PageNumber - 1) * request.PageSize).Take(request.PageSize).ToList();
 
-            if (!string.IsNullOrWhiteSpace(request.EntityType))
-            {
-                query = query.Where(a => a.EntityType == request.EntityType);
-            }
+            var countSpec = new AuditLogSearchSpecification(
+                userId: request.UserId,
+                entityType: request.EntityType,
+                action: request.Action,
+                fromDate: request.FromDate,
+                toDate: request.ToDate,
+                pageNumber: 1,
+                pageSize: int.MaxValue);
+            var totalCount = _uow.AuditLogs.Entities
+             .Where(countSpec.Criteria)
+             .Count();
+            var mappedLogs = _mapper.Map<List<AuditLogDto>>(logs);
 
-            if (!string.IsNullOrWhiteSpace(request.Action))
-            {
-                query = query.Where(a => a.Action.Contains(request.Action));
-            }
-
-            if (request.FromDate.HasValue)
-            {
-                query = query.Where(a => a.Timestamp >= request.FromDate.Value);
-            }
-
-            if (request.ToDate.HasValue)
-            {
-                query = query.Where(a => a.Timestamp <= request.ToDate.Value);
-            }
-
-            // Search filter
-            if (!string.IsNullOrWhiteSpace(request.Params.SearchTerm))
-            {
-                var term = request.Params.SearchTerm.Trim().ToLower();
-                query = query.Where(a =>
-                    a.UserName.ToLower().Contains(term) ||
-                    a.Action.ToLower().Contains(term) ||
-                    a.EntityType.ToLower().Contains(term) ||
-                    a.EntityId.Contains(term)
-                );
-            }
-
-            // Sorting
-            if (!string.IsNullOrWhiteSpace(request.Params.SortColumn))
-            {
-                var sortOrder = request.Params.SortOrder?.ToLower() == "desc"
-                    ? "descending"
-                    : "ascending";
-                query = query.OrderBy($"{request.Params.SortColumn} {sortOrder}");
-            }
-            else
-            {
-                query = query.OrderByDescending(a => a.Timestamp);
-            }
-
-            var paginatedList = await PaginatedList<AuditLogDto>.CreateAsync(
-                query.ProjectTo<AuditLogDto>(_mapper.ConfigurationProvider),
-                request.Params.PageNumber,
-                request.Params.PageSize
-            );
+            var paginatedList = new PaginatedList<AuditLogDto>(
+                mappedLogs,
+                totalCount,
+                request.PageNumber,
+                request.PageSize);
 
             return Result<PaginatedList<AuditLogDto>>.Success(paginatedList);
         }

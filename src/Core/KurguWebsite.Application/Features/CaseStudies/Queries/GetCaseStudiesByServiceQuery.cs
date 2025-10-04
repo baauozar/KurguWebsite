@@ -5,10 +5,6 @@ using KurguWebsite.Application.Common.Models;
 using KurguWebsite.Application.DTOs.CaseStudy;
 using KurguWebsite.Domain.Specifications;
 using MediatR;
-using System;
-using System.Collections.Generic;
-using System.Threading;
-using System.Threading.Tasks;
 
 namespace KurguWebsite.Application.Features.CaseStudies.Queries
 {
@@ -33,7 +29,6 @@ namespace KurguWebsite.Application.Features.CaseStudies.Queries
             GetCaseStudiesByServiceQuery request,
             CancellationToken cancellationToken)
         {
-            // Use specification
             var spec = new CaseStudiesByServiceSpecification(request.ServiceId);
             var caseStudies = await _unitOfWork.CaseStudies.ListAsync(spec, cancellationToken);
 

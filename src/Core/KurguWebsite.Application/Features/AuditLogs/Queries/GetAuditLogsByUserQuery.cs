@@ -1,7 +1,9 @@
-﻿using AutoMapper;
+﻿// src/Core/KurguWebsite.Application/Features/AuditLogs/Queries/GetAuditLogsByUserQuery.cs
+using AutoMapper;
 using KurguWebsite.Application.Common.Interfaces;
 using KurguWebsite.Application.Common.Models;
 using KurguWebsite.Application.DTOs.Audit;
+using KurguWebsite.Domain.Specifications;
 using MediatR;
 
 namespace KurguWebsite.Application.Features.AuditLogs.Queries
@@ -9,8 +11,6 @@ namespace KurguWebsite.Application.Features.AuditLogs.Queries
     public class GetAuditLogsByUserQuery : IRequest<Result<List<AuditLogDto>>>
     {
         public string UserId { get; set; } = string.Empty;
-        public int PageNumber { get; set; } = 1;
-        public int PageSize { get; set; } = 20;
     }
 
     public class GetAuditLogsByUserQueryHandler
@@ -31,6 +31,7 @@ namespace KurguWebsite.Application.Features.AuditLogs.Queries
         {
             var logs = await _uow.AuditLogs.GetLogsByUserIdAsync(request.UserId);
             var dtos = _mapper.Map<List<AuditLogDto>>(logs);
+
             return Result<List<AuditLogDto>>.Success(dtos);
         }
     }

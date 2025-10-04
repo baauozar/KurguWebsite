@@ -1,8 +1,10 @@
-﻿using AutoMapper;
+﻿// src/Core/KurguWebsite.Application/Features/Pages/Queries/GetPageByTypeQuery.cs
+using AutoMapper;
 using KurguWebsite.Application.Common.Interfaces;
 using KurguWebsite.Application.Common.Models;
 using KurguWebsite.Application.DTOs.Page;
 using KurguWebsite.Domain.Enums;
+using KurguWebsite.Domain.Specifications;
 using MediatR;
 
 namespace KurguWebsite.Application.Features.Pages.Queries
@@ -25,8 +27,11 @@ namespace KurguWebsite.Application.Features.Pages.Queries
 
         public async Task<Result<PageDto>> Handle(GetPageByTypeQuery request, CancellationToken cancellationToken)
         {
-            var page = await _unitOfWork.Pages.GetByPageTypeAsync(request.PageType);
-            if (page == null) return Result<PageDto>.Failure($"Page of type '{request.PageType}' not found.");
+            var spec = new PageByTypeSpecification(request.PageType);
+            var page = await _unitOfWork.Pages.GetBySpecAsync(spec, cancellationToken);
+
+            if (page == null)
+                return Result<PageDto>.Failure($"Page of type '{request.PageType}' not found.");
 
             return Result<PageDto>.Success(_mapper.Map<PageDto>(page));
         }

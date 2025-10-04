@@ -5,34 +5,38 @@ using KurguWebsite.Application.Common.Models;
 using KurguWebsite.Application.DTOs.CaseStudy;
 using MediatR;
 
-namespace KurguWebsite.Application.Features.CaseStudies.Queries;
-
-public class GetCaseStudyMetricByIdQuery : IRequest<Result<CaseStudyMetricDto>>
+namespace KurguWebsite.Application.Features.CaseStudies.Queries
 {
-    public Guid Id { get; set; }
-}
-
-public class GetCaseStudyMetricByIdQueryHandler : IRequestHandler<GetCaseStudyMetricByIdQuery, Result<CaseStudyMetricDto>>
-{
-    private readonly IUnitOfWork _unitOfWork;
-    private readonly IMapper _mapper;
-
-    public GetCaseStudyMetricByIdQueryHandler(IUnitOfWork unitOfWork, IMapper mapper)
+    public class GetCaseStudyMetricByIdQuery : IRequest<Result<CaseStudyMetricDto>>
     {
-        _unitOfWork = unitOfWork;
-        _mapper = mapper;
+        public Guid Id { get; set; }
     }
 
-    public async Task<Result<CaseStudyMetricDto>> Handle(GetCaseStudyMetricByIdQuery request, CancellationToken cancellationToken)
+    public class GetCaseStudyMetricByIdQueryHandler
+        : IRequestHandler<GetCaseStudyMetricByIdQuery, Result<CaseStudyMetricDto>>
     {
-        var caseStudyMetric = await _unitOfWork.CaseStudyMetrics.GetByIdAsync(request.Id);
+        private readonly IUnitOfWork _unitOfWork;
+        private readonly IMapper _mapper;
 
-        if (caseStudyMetric == null)
+        public GetCaseStudyMetricByIdQueryHandler(IUnitOfWork unitOfWork, IMapper mapper)
         {
-            return Result<CaseStudyMetricDto>.Failure("Case Study Metric not found.");
+            _unitOfWork = unitOfWork;
+            _mapper = mapper;
         }
 
-        var caseStudyMetricDto = _mapper.Map<CaseStudyMetricDto>(caseStudyMetric);
-        return Result<CaseStudyMetricDto>.Success(caseStudyMetricDto);
+        public async Task<Result<CaseStudyMetricDto>> Handle(
+            GetCaseStudyMetricByIdQuery request,
+            CancellationToken cancellationToken)
+        {
+            var metric = await _unitOfWork.CaseStudyMetrics.GetByIdAsync(request.Id);
+
+            if (metric == null)
+            {
+                return Result<CaseStudyMetricDto>.Failure("Case Study Metric not found.");
+            }
+
+            var dto = _mapper.Map<CaseStudyMetricDto>(metric);
+            return Result<CaseStudyMetricDto>.Success(dto);
+        }
     }
 }

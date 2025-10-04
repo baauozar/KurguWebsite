@@ -1,4 +1,4 @@
-﻿// src/Core/KurguWebsite.Application/Features/CaseStudies/Queries/GetCaseStudyMetricsByCaseStudyIdQuery.cs
+﻿// src/Core/KurguWebsite.Application/Features/CaseStudies/Queries/GetAllActiveMetricsQuery.cs
 using AutoMapper;
 using KurguWebsite.Application.Common.Interfaces;
 using KurguWebsite.Application.Common.Models;
@@ -8,30 +8,25 @@ using MediatR;
 
 namespace KurguWebsite.Application.Features.CaseStudies.Queries
 {
-    public class GetCaseStudyMetricsByCaseStudyIdQuery : IRequest<Result<List<CaseStudyMetricDto>>>
-    {
-        public Guid CaseStudyId { get; set; }
-    }
+    public class GetAllActiveMetricsQuery : IRequest<Result<List<CaseStudyMetricDto>>> { }
 
-    public class GetCaseStudyMetricsByCaseStudyIdQueryHandler
-        : IRequestHandler<GetCaseStudyMetricsByCaseStudyIdQuery, Result<List<CaseStudyMetricDto>>>
+    public class GetAllActiveMetricsQueryHandler
+        : IRequestHandler<GetAllActiveMetricsQuery, Result<List<CaseStudyMetricDto>>>
     {
         private readonly IUnitOfWork _unitOfWork;
         private readonly IMapper _mapper;
 
-        public GetCaseStudyMetricsByCaseStudyIdQueryHandler(
-            IUnitOfWork unitOfWork,
-            IMapper mapper)
+        public GetAllActiveMetricsQueryHandler(IUnitOfWork unitOfWork, IMapper mapper)
         {
             _unitOfWork = unitOfWork;
             _mapper = mapper;
         }
 
         public async Task<Result<List<CaseStudyMetricDto>>> Handle(
-            GetCaseStudyMetricsByCaseStudyIdQuery request,
+            GetAllActiveMetricsQuery request,
             CancellationToken ct)
         {
-            var spec = new MetricsByCaseStudySpecification(request.CaseStudyId);
+            var spec = new ActiveMetricsSpecification();
             var metrics = await _unitOfWork.CaseStudyMetrics.ListAsync(spec, ct);
             var dtos = _mapper.Map<List<CaseStudyMetricDto>>(metrics);
 

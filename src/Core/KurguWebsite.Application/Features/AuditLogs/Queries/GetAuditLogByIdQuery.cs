@@ -4,8 +4,6 @@ using KurguWebsite.Application.Common.Interfaces;
 using KurguWebsite.Application.Common.Models;
 using KurguWebsite.Application.DTOs.Audit;
 using MediatR;
-using System.Threading;
-using System.Threading.Tasks;
 
 namespace KurguWebsite.Application.Features.AuditLogs.Queries
 {

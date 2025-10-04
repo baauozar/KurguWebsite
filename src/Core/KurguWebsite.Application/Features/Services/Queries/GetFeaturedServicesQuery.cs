@@ -31,7 +31,9 @@ namespace KurguWebsite.Application.Features.Services.Queries
             GetFeaturedServicesQuery request,
             CancellationToken ct)
         {
-            var cachedServices = await _cacheService.GetAsync<List<ServiceDto>>(CacheKeys.FeaturedServices);
+            var cachedServices = await _cacheService.GetAsync<List<ServiceDto>>(
+                CacheKeys.FeaturedServices);
+
             if (cachedServices != null)
             {
                 return Result<List<ServiceDto>>.Success(cachedServices);

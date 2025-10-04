@@ -3,6 +3,7 @@ using AutoMapper;
 using KurguWebsite.Application.Common.Interfaces;
 using KurguWebsite.Application.Common.Models;
 using KurguWebsite.Application.DTOs.Page;
+using KurguWebsite.Domain.Specifications;
 using MediatR;
 
 namespace KurguWebsite.Application.Features.Pages.Queries
@@ -41,7 +42,9 @@ namespace KurguWebsite.Application.Features.Pages.Queries
                 return Result<PageDto>.Success(cachedPage);
             }
 
-            var page = await _unitOfWork.Pages.GetBySlugAsync(request.Slug);
+            var spec = new PageBySlugSpecification(request.Slug);
+            var page = await _unitOfWork.Pages.GetBySpecAsync(spec, ct);
+
             if (page == null)
             {
                 return Result<PageDto>.Failure(

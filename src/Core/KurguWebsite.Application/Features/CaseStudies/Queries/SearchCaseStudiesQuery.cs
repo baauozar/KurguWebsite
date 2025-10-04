@@ -1,22 +1,23 @@
-﻿using AutoMapper;
-using AutoMapper.QueryableExtensions;
+﻿// src/Core/KurguWebsite.Application/Features/CaseStudies/Queries/SearchCaseStudiesQuery.cs
+using AutoMapper;
 using KurguWebsite.Application.Common.Interfaces;
 using KurguWebsite.Application.Common.Models;
 using KurguWebsite.Application.DTOs.CaseStudy;
+using KurguWebsite.Domain.Specifications;
 using MediatR;
-using System.Linq;
-using System.Linq.Dynamic.Core; // Add NuGet package: System.Linq.Dynamic.Core
-using System.Threading;
-using System.Threading.Tasks;
 
 namespace KurguWebsite.Application.Features.CaseStudies.Queries
 {
     public class SearchCaseStudiesQuery : IRequest<Result<PaginatedList<CaseStudyDto>>>
     {
-         public QueryParameters Params { get; set; }=new QueryParameters();
+        public string? SearchTerm { get; set; }
+        public string? Industry { get; set; }
+        public int PageNumber { get; set; } = 1;
+        public int PageSize { get; set; } = 10;
     }
 
-    public class SearchCaseStudiesQueryHandler : IRequestHandler<SearchCaseStudiesQuery, Result<PaginatedList<CaseStudyDto>>>
+    public class SearchCaseStudiesQueryHandler
+        : IRequestHandler<SearchCaseStudiesQuery, Result<PaginatedList<CaseStudyDto>>>
     {
         private readonly IUnitOfWork _unitOfWork;
         private readonly IMapper _mapper;
@@ -27,40 +28,32 @@ namespace KurguWebsite.Application.Features.CaseStudies.Queries
             _mapper = mapper;
         }
 
-        public async Task<Result<PaginatedList<CaseStudyDto>>> Handle(SearchCaseStudiesQuery request, CancellationToken cancellationToken)
+        public async Task<Result<PaginatedList<CaseStudyDto>>> Handle(
+            SearchCaseStudiesQuery request,
+            CancellationToken cancellationToken)
         {
-            var caseStudiesQuery = (await _unitOfWork.CaseStudies.GetAsync(
-                predicate: null,
-                orderBy: null,
-                includeString: null,
-                disableTracking: true)).AsQueryable();
+            var spec = new CaseStudySearchSpecification(
+                searchTerm: request.SearchTerm,
+                industry: request.Industry,
+                pageNumber: request.PageNumber,
+                pageSize: request.PageSize);
 
-            // Search Filter
-            if (!string.IsNullOrWhiteSpace(request.Params.SearchTerm))
-            {
-                var term = request.Params.SearchTerm.Trim().ToLower();
-                caseStudiesQuery = caseStudiesQuery.Where(cs =>
-                    cs.Title.ToLower().Contains(term) ||
-                    cs.ClientName.ToLower().Contains(term) ||
-                    cs.Description.ToLower().Contains(term)
-                );
-            }
+            var caseStudies = await _unitOfWork.CaseStudies.ListAsync(spec, cancellationToken);
 
-            // Sorting
-            if (!string.IsNullOrWhiteSpace(request.Params.SortColumn))
-            {
-                var sortOrder = request.Params.SortOrder?.ToLower() == "desc" ? "descending" : "ascending";
-                caseStudiesQuery = caseStudiesQuery.OrderBy($"{request.Params.SortColumn} {sortOrder}");
-            }
-            else
-            {
-                caseStudiesQuery = caseStudiesQuery.OrderBy(cs => cs.DisplayOrder).ThenByDescending(cs => cs.CompletedDate);
-            }
+            var countSpec = new CaseStudySearchSpecification(
+                searchTerm: request.SearchTerm,
+                industry: request.Industry,
+                pageNumber: 1,
+                pageSize: int.MaxValue);
+            var totalCount = await _unitOfWork.CaseStudies.CountAsync(countSpec, cancellationToken);
 
-            var paginatedList = await PaginatedList<CaseStudyDto>.CreateAsync(
-                caseStudiesQuery.ProjectTo<CaseStudyDto>(_mapper.ConfigurationProvider),
-                request.Params.PageNumber,
-                request.Params.PageSize);
+            var mappedStudies = _mapper.Map<List<CaseStudyDto>>(caseStudies);
+
+            var paginatedList = new PaginatedList<CaseStudyDto>(
+                mappedStudies,
+                totalCount,
+                request.PageNumber,
+                request.PageSize);
 
             return Result<PaginatedList<CaseStudyDto>>.Success(paginatedList);
         }

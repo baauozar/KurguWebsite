@@ -5,10 +5,6 @@ using KurguWebsite.Application.Common.Models;
 using KurguWebsite.Application.DTOs.Service;
 using KurguWebsite.Domain.Specifications;
 using MediatR;
-using System;
-using System.Collections.Generic;
-using System.Threading;
-using System.Threading.Tasks;
 
 namespace KurguWebsite.Application.Features.Services.Queries
 {
@@ -34,30 +30,25 @@ namespace KurguWebsite.Application.Features.Services.Queries
 
         public async Task<Result<PaginatedList<ServiceDto>>> Handle(
             SearchServicesQuery request,
-            CancellationToken cancellationToken)
+            CancellationToken ct)
         {
-            // Use specification for search
             var spec = new ServiceSearchSpecification(
-                request.SearchTerm,
-                request.PageNumber,
-                request.PageSize,
-                request.IncludeInactive);
+                searchTerm: request.SearchTerm,
+                pageNumber: request.PageNumber,
+                pageSize: request.PageSize,
+                includeInactive: request.IncludeInactive);
 
-            // Get paginated results
-            var services = await _unitOfWork.Services.ListAsync(spec, cancellationToken);
+            var services = await _unitOfWork.Services.ListAsync(spec, ct);
 
-            // Get total count (without pagination)
             var countSpec = new ServiceSearchSpecification(
-                request.SearchTerm,
-                1,
-                int.MaxValue,
-                request.IncludeInactive);
-            var totalCount = await _unitOfWork.Services.CountAsync(countSpec, cancellationToken);
+                searchTerm: request.SearchTerm,
+                pageNumber: 1,
+                pageSize: int.MaxValue,
+                includeInactive: request.IncludeInactive);
+            var totalCount = await _unitOfWork.Services.CountAsync(countSpec, ct);
 
-            // Map to DTOs
             var mappedServices = _mapper.Map<List<ServiceDto>>(services);
 
-            // Create paginated list
             var paginatedList = new PaginatedList<ServiceDto>(
                 mappedServices,
                 totalCount,

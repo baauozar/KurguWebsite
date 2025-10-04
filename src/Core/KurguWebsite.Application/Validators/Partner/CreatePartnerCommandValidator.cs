@@ -18,20 +18,18 @@ namespace KurguWebsite.Application.Validators.Partner
             RuleFor(x => x.Type)
                 .IsInEnum().WithMessage("Invalid partner type");
 
-            When(x => !string.IsNullOrEmpty(x.WebsiteUrl), () =>
-            {
-                RuleFor(x => x.WebsiteUrl)
-                    .Must(BeAValidUrl).WithMessage("Website URL must be a valid URL");
-            });
+            RuleFor(x => x.WebsiteUrl)
+      .Must(url =>
+      {
+          if (string.IsNullOrWhiteSpace(url)) return true;
+          var candidate = url.Contains("://") ? url : $"https://{url}";
+          return Uri.TryCreate(candidate, UriKind.Absolute, out var u)
+                 && (u.Scheme == Uri.UriSchemeHttp || u.Scheme == Uri.UriSchemeHttps)
+                 && !string.IsNullOrWhiteSpace(u.Host);
+      })
+      .WithMessage("Website must be a valid http(s) URL.");
         }
 
-        private bool BeAValidUrl(string? url)
-        {
-            if (string.IsNullOrWhiteSpace(url))
-                return true;
 
-            return Uri.TryCreate(url, UriKind.Absolute, out var uriResult)
-                && (uriResult.Scheme == Uri.UriSchemeHttp || uriResult.Scheme == Uri.UriSchemeHttps);
-        }
     }
 }

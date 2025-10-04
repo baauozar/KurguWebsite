@@ -3,6 +3,7 @@ using AutoMapper;
 using KurguWebsite.Application.Common.Interfaces;
 using KurguWebsite.Application.Common.Models;
 using KurguWebsite.Application.DTOs.ProcessStep;
+using KurguWebsite.Domain.Specifications;
 using MediatR;
 
 namespace KurguWebsite.Application.Features.ProcessSteps.Queries
@@ -36,7 +37,8 @@ namespace KurguWebsite.Application.Features.ProcessSteps.Queries
                 return Result<List<ProcessStepDto>>.Success(cachedSteps);
             }
 
-            var processSteps = await _unitOfWork.ProcessSteps.GetActiveStepsOrderedAsync();
+            var spec = new ActiveProcessStepsSpecification();
+            var processSteps = await _unitOfWork.ProcessSteps.ListAsync(spec, ct);
             var mappedSteps = _mapper.Map<List<ProcessStepDto>>(processSteps);
 
             await _cacheService.SetAsync(

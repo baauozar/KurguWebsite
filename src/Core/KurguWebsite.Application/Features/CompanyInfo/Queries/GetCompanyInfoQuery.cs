@@ -3,6 +3,7 @@ using AutoMapper;
 using KurguWebsite.Application.Common.Interfaces;
 using KurguWebsite.Application.Common.Models;
 using KurguWebsite.Application.DTOs.CompanyInfo;
+using KurguWebsite.Domain.Specifications;
 using MediatR;
 
 namespace KurguWebsite.Application.Features.CompanyInfo.Queries
@@ -36,7 +37,10 @@ namespace KurguWebsite.Application.Features.CompanyInfo.Queries
                 return Result<CompanyInfoDto>.Success(cachedInfo);
             }
 
-            var companyInfo = await _unitOfWork.CompanyInfo.GetCompanyInfoAsync();
+            var spec = new ActiveCompanyInfoSpecification();
+            var companyInfoList = await _unitOfWork.CompanyInfo.ListAsync(spec, ct);
+            var companyInfo = companyInfoList.FirstOrDefault();
+
             if (companyInfo == null)
             {
                 return Result<CompanyInfoDto>.Failure(

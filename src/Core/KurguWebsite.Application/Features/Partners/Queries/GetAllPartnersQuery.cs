@@ -3,6 +3,7 @@ using AutoMapper;
 using KurguWebsite.Application.Common.Interfaces;
 using KurguWebsite.Application.Common.Models;
 using KurguWebsite.Application.DTOs.Partner;
+using KurguWebsite.Domain.Specifications;
 using MediatR;
 
 namespace KurguWebsite.Application.Features.Partners.Queries
@@ -36,7 +37,8 @@ namespace KurguWebsite.Application.Features.Partners.Queries
                 return Result<List<PartnerDto>>.Success(cachedPartners);
             }
 
-            var partners = await _unitOfWork.Partners.GetActivePartnersAsync();
+            var spec = new ActivePartnersSpecification();
+            var partners = await _unitOfWork.Partners.ListAsync(spec, ct);
             var mappedPartners = _mapper.Map<List<PartnerDto>>(partners);
 
             await _cacheService.SetAsync(

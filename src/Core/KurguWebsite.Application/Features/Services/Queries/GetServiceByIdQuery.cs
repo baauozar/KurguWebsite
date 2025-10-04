@@ -3,7 +3,6 @@ using AutoMapper;
 using KurguWebsite.Application.Common.Interfaces;
 using KurguWebsite.Application.Common.Models;
 using KurguWebsite.Application.DTOs.Service;
-using KurguWebsite.Domain.Specifications;
 using MediatR;
 
 namespace KurguWebsite.Application.Features.Services.Queries
@@ -36,17 +35,18 @@ namespace KurguWebsite.Application.Features.Services.Queries
         {
             var cacheKey = string.Format(CacheKeys.ServiceById, request.Id);
             var cachedService = await _cacheService.GetAsync<ServiceDto>(cacheKey);
+
             if (cachedService != null)
             {
                 return Result<ServiceDto>.Success(cachedService);
             }
 
-            var spec = new ServiceByIdWithFeaturesSpecification(request.Id);
-            var service = await _unitOfWork.Services.GetBySpecAsync(spec, ct);
-
+            var service = await _unitOfWork.Services.GetByIdAsync(request.Id);
             if (service == null)
             {
-                return Result<ServiceDto>.Failure("Service not found.", ErrorCodes.EntityNotFound);
+                return Result<ServiceDto>.Failure(
+                    "Service not found.",
+                    ErrorCodes.EntityNotFound);
             }
 
             var mappedService = _mapper.Map<ServiceDto>(service);

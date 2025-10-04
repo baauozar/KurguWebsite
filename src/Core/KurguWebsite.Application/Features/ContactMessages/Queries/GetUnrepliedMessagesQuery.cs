@@ -1,4 +1,4 @@
-﻿// src/Core/KurguWebsite.Application/Features/ContactMessages/Queries/GetUnreadMessagesQuery.cs
+﻿// src/Core/KurguWebsite.Application/Features/ContactMessages/Queries/GetUnrepliedMessagesQuery.cs
 using AutoMapper;
 using KurguWebsite.Application.Common.Interfaces;
 using KurguWebsite.Application.Common.Models;
@@ -8,25 +8,25 @@ using MediatR;
 
 namespace KurguWebsite.Application.Features.ContactMessages.Queries
 {
-    public class GetUnreadMessagesQuery : IRequest<Result<List<ContactMessageDto>>> { }
+    public class GetUnrepliedMessagesQuery : IRequest<Result<List<ContactMessageDto>>> { }
 
-    public class GetUnreadMessagesQueryHandler
-        : IRequestHandler<GetUnreadMessagesQuery, Result<List<ContactMessageDto>>>
+    public class GetUnrepliedMessagesQueryHandler
+        : IRequestHandler<GetUnrepliedMessagesQuery, Result<List<ContactMessageDto>>>
     {
         private readonly IUnitOfWork _unitOfWork;
         private readonly IMapper _mapper;
 
-        public GetUnreadMessagesQueryHandler(IUnitOfWork unitOfWork, IMapper mapper)
+        public GetUnrepliedMessagesQueryHandler(IUnitOfWork unitOfWork, IMapper mapper)
         {
             _unitOfWork = unitOfWork;
             _mapper = mapper;
         }
 
         public async Task<Result<List<ContactMessageDto>>> Handle(
-            GetUnreadMessagesQuery request,
+            GetUnrepliedMessagesQuery request,
             CancellationToken ct)
         {
-            var spec = new UnreadMessagesSpecification();
+            var spec = new UnrepliedMessagesSpecification();
             var messages = await _unitOfWork.ContactMessages.ListAsync(spec, ct);
             var mappedMessages = _mapper.Map<List<ContactMessageDto>>(messages);
 

@@ -1,7 +1,8 @@
-﻿using System.Net;
-using System.Text.Json;
-using KurguWebsite.Application.Common.Exceptions;
+﻿using KurguWebsite.Application.Common.Exceptions;
 using KurguWebsite.Domain.Exceptions;
+using Microsoft.AspNetCore.Mvc;
+using System.Net;
+using System.Text.Json;
 
 namespace KurguWebsite.API.Middleware
 {
@@ -27,10 +28,24 @@ namespace KurguWebsite.API.Middleware
             {
                 await _next(context);
             }
-            catch (Exception ex)
+            catch (FluentValidation.ValidationException ex)
             {
-                _logger.LogError(ex, "An unhandled exception occurred");
-                await HandleExceptionAsync(context, ex);
+                context.Response.StatusCode = StatusCodes.Status400BadRequest;
+                context.Response.ContentType = "application/json";
+
+                var errors = ex.Errors
+                    .GroupBy(e => e.PropertyName)
+                    .ToDictionary(g => g.Key, g => g.Select(e => e.ErrorMessage).ToArray());
+
+                var problem = new ValidationProblemDetails(errors)
+                {
+                    Title = "Validation failed",
+                    Status = StatusCodes.Status400BadRequest,
+                    Instance = context.Request.Path
+                };
+
+                await context.Response.WriteAsJsonAsync(problem);
+                return;
             }
         }
 

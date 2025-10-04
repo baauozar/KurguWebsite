@@ -3,6 +3,7 @@ using AutoMapper;
 using KurguWebsite.Application.Common.Interfaces;
 using KurguWebsite.Application.Common.Models;
 using KurguWebsite.Application.DTOs.Page;
+using KurguWebsite.Domain.Specifications;
 using MediatR;
 
 namespace KurguWebsite.Application.Features.Pages.Queries
@@ -36,7 +37,8 @@ namespace KurguWebsite.Application.Features.Pages.Queries
                 return Result<List<PageDto>>.Success(cachedPages);
             }
 
-            var pages = await _unitOfWork.Pages.GetAllAsync();
+            var spec = new ActivePagesSpecification();
+            var pages = await _unitOfWork.Pages.ListAsync(spec, ct);
             var mappedPages = _mapper.Map<List<PageDto>>(pages);
 
             await _cacheService.SetAsync(CacheKeys.Pages, mappedPages, TimeSpan.FromMinutes(30));
