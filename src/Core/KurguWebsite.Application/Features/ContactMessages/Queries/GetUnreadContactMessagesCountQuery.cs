@@ -1,36 +1,28 @@
-﻿// src/Core/KurguWebsite.Application/Features/ContactMessages/Queries/GetUnreadMessagesQuery.cs
-using AutoMapper;
+﻿// src/Core/KurguWebsite.Application/Features/ContactMessages/Queries/GetUnreadContactMessagesCountQuery.cs
 using KurguWebsite.Application.Common.Interfaces;
 using KurguWebsite.Application.Common.Models;
-using KurguWebsite.Application.DTOs.Contact;
-using KurguWebsite.Domain.Specifications;
 using MediatR;
 
 namespace KurguWebsite.Application.Features.ContactMessages.Queries
 {
-    public class GetUnreadMessagesQuery : IRequest<Result<List<ContactMessageDto>>> { }
+    public class GetUnreadContactMessagesCountQuery : IRequest<Result<int>> { }
 
-    public class GetUnreadMessagesQueryHandler
-        : IRequestHandler<GetUnreadMessagesQuery, Result<List<ContactMessageDto>>>
+    public class GetUnreadContactMessagesCountQueryHandler
+        : IRequestHandler<GetUnreadContactMessagesCountQuery, Result<int>>
     {
         private readonly IUnitOfWork _unitOfWork;
-        private readonly IMapper _mapper;
 
-        public GetUnreadMessagesQueryHandler(IUnitOfWork unitOfWork, IMapper mapper)
+        public GetUnreadContactMessagesCountQueryHandler(IUnitOfWork unitOfWork)
         {
             _unitOfWork = unitOfWork;
-            _mapper = mapper;
         }
 
-        public async Task<Result<List<ContactMessageDto>>> Handle(
-            GetUnreadMessagesQuery request,
+        public async Task<Result<int>> Handle(
+            GetUnreadContactMessagesCountQuery request,
             CancellationToken ct)
         {
-            var spec = new UnreadMessagesSpecification();
-            var messages = await _unitOfWork.ContactMessages.ListAsync(spec, ct);
-            var mappedMessages = _mapper.Map<List<ContactMessageDto>>(messages);
-
-            return Result<List<ContactMessageDto>>.Success(mappedMessages);
+            var count = await _unitOfWork.ContactMessages.GetUnreadCountAsync();
+            return Result<int>.Success(count);
         }
     }
 }

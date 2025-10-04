@@ -1,13 +1,12 @@
 ﻿using Asp.Versioning;
+using KurguWebsite.Application.Common.Models;
 using KurguWebsite.Application.DTOs.CaseStudy;
 using KurguWebsite.Application.Features.CaseStudies.Commands;
 using KurguWebsite.Application.Features.CaseStudies.Queries;
+using KurguWebsite.Domain.Entities;
 using MediatR;
 using Microsoft.AspNetCore.Authorization; // Add this using statement
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using System;
-using System.Threading.Tasks;
 
 namespace KurguWebsite.API.Controllers.V1
 {
@@ -91,7 +90,12 @@ namespace KurguWebsite.API.Controllers.V1
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         public async Task<IActionResult> Delete(Guid id)
         {
-            return HandleResult(await _mediator.Send(new DeleteCaseStudyMetricCommand { Id = id }));
+            ControlResult data = await _mediator.Send(new DeleteCaseStudyMetricCommand { Id = id });
+
+            if (data is null)
+                return HandleResult(Result<ControlResult>.NotFound(nameof(CaseStudyMetric), id));
+
+            return HandleResult(Result<ControlResult>.Success(data, "Deleted successfully"));
         }
     }
 }

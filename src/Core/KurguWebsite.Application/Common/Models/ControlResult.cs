@@ -10,6 +10,7 @@ namespace KurguWebsite.Application.Common.Models
     {
         public bool Succeeded { get; }
         public string[] Errors { get; }
+        public string? Message { get; set; }
 
         private ControlResult(bool succeeded, IEnumerable<string>? errors = null)
         {

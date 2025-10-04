@@ -36,12 +36,11 @@ namespace KurguWebsite.Application.Features.CaseStudies.Queries
 
             var mappedCaseStudies = _mapper.Map<List<CaseStudyDto>>(caseStudies);
 
-            //
-            // --- THIS IS THE FIX ---
-            // You must 'await' the async method to get the result.
-            //
-            var paginatedList = await PaginatedList<CaseStudyDto>.CreateAsync(mappedCaseStudies.AsQueryable(), request.PageNumber, request.PageSize);
-
+            var paginatedList = new PaginatedList<CaseStudyDto>(
+        mappedCaseStudies,
+        caseStudies.Count(),
+        request.PageNumber,
+        request.PageSize);
             return Result<PaginatedList<CaseStudyDto>>.Success(paginatedList);
         }
     }
