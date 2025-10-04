@@ -348,11 +348,11 @@ namespace KurguWebsite.Persistence.Seed
             }
 
             var testimonials = new[]
-            {
-                Testimonial.Create("John Doe", "CEO", "Tech Corp", "Great service!", 5),
-                Testimonial.Create("Jane Smith", "CTO", "Innovation Inc", "Outstanding support!", 5),
-                Testimonial.Create("Mike Johnson", "IT Director", "Global Solutions", "Professional and reliable!", 5)
-            };
+  {
+    Testimonial.Create("John Doe", "CEO", "Tech Corp", "Great service!", null, 5),
+    Testimonial.Create("Jane Smith", "CTO", "Innovation Inc", "Outstanding support!", null, 5),
+    Testimonial.Create("Mike Johnson", "IT Director", "Global Solutions", "Professional and reliable!", null, 5)
+};
 
             for (int i = 0; i < testimonials.Length; i++)
             {
@@ -377,11 +377,11 @@ namespace KurguWebsite.Persistence.Seed
             }
 
             var partners = new[]
-            {
-                Partner.Create("Microsoft", "/images/partners/microsoft.png", PartnerType.TechnologyPartner),
-                Partner.Create("AWS", "/images/partners/aws.png", PartnerType.TechnologyPartner),
-                Partner.Create("Google Cloud", "/images/partners/google.png", PartnerType.TechnologyPartner)
-            };
+{
+    Partner.Create("Microsoft", "/images/partners/microsoft.png", null, null, PartnerType.TechnologyPartner),
+    Partner.Create("AWS", "/images/partners/aws.png", null, null, PartnerType.TechnologyPartner),
+    Partner.Create("Google Cloud", "/images/partners/google.png", null, null, PartnerType.TechnologyPartner)
+};
 
             for (int i = 0; i < partners.Length; i++)
             {

@@ -33,6 +33,7 @@ namespace KurguWebsite.Domain.Entities
                 Name = name,
                 LogoPath = logoPath,
                 Type = type,
+                WebsiteUrl = websiteUrl,
                 IsActive = true,
                 DisplayOrder = 0
             };

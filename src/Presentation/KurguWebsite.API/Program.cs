@@ -1,22 +1,23 @@
 using Asp.Versioning;
 using Asp.Versioning.ApiExplorer;
 using KurguWebsite.API.Extensions;
+using KurguWebsite.API.Filters;
+using KurguWebsite.API.Helpers;
+using KurguWebsite.API.Middleware;
 using KurguWebsite.Application.Features.DependencyInjection;
 using KurguWebsite.Infrastructure;
+using KurguWebsite.Infrastructure.Identity;
 using KurguWebsite.Infrastructure.Middleware;
 using KurguWebsite.Persistence;
 using KurguWebsite.Persistence.Context;
 using KurguWebsite.Persistence.Seed;
-using KurguWebsite.API.Filters;
-using KurguWebsite.API.Helpers;
-using KurguWebsite.API.Middleware;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Serilog;
 using Serilog.Events;
-using System.Text.Json.Serialization;
 using System.Reflection;
+using System.Text.Json.Serialization;
 
 // Configure Serilog
 Log.Logger = new LoggerConfiguration()
@@ -71,6 +72,7 @@ void ConfigureServices(IServiceCollection services, IConfiguration configuration
     services.AddPersistence(configuration);
     services.AddApplication();
     services.AddInfrastructure(configuration);
+/*    services.AddPermissionPolicies(); */
 
     services.AddControllers(options =>
     {

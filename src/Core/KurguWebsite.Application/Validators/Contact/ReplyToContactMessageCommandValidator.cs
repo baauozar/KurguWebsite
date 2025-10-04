@@ -3,7 +3,7 @@ using KurguWebsite.Application.Features.ContactMessages.Commands;
 
 namespace KurguWebsite.Application.Validators.Contact
 {
-    public class ReplyToContactMessageCommandValidator : AbstractValidator<ReplyToContactMessageCommand>
+    public class ReplyToContactMessageCommandValidator : AbstractValidator<MarkContactMessageAsRepliedCommand>
     {
         public ReplyToContactMessageCommandValidator()
         {

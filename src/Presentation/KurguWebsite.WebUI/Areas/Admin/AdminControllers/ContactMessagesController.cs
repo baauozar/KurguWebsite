@@ -127,11 +127,12 @@ namespace KurguWebsite.WebUI.Areas.Admin.AdminControllers
             var command = new MarkContactMessageAsRepliedCommand { Id = id };
             var result = await Mediator.Send(command);
 
-            // Replace this line:
-           
+            // Fix: Convert Result<ContactMessageDto> to ControlResult before passing to HandleControlResult
+            var controlResult = result.Succeeded
+                ? ControlResult.Success()
+                : ControlResult.Failure(result.Errors);
 
-            // With this line:
-            return HandleControlResult(result,
+            return HandleControlResult(controlResult,
                 "Message marked as replied",
                 nameof(Details),
                 id.ToString());

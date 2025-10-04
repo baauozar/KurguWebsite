@@ -4,6 +4,7 @@ using KurguWebsite.Persistence.Context;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace KurguWebsite.Persistence.Migrations
 {
     [DbContext(typeof(KurguWebsiteDbContext))]
-    partial class KurguWebsiteDbContextModelSnapshot : ModelSnapshot
+    [Migration("20251004015732_djfkjflfl")]
+    partial class djfkjflfl
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -189,32 +192,20 @@ namespace KurguWebsite.Persistence.Migrations
 
                     b.Property<string>("_technologies")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)")
-                        .HasColumnName("Technologies");
+                        .HasColumnType("nvarchar(max)");
 
                     b.HasKey("Id");
 
-                    b.HasIndex("ClientName")
-                        .HasDatabaseName("IX_CaseStudies_ClientName");
+                    b.HasIndex("CompletedDate");
 
-                    b.HasIndex("CompletedDate")
-                        .HasDatabaseName("IX_CaseStudies_CompletedDate");
+                    b.HasIndex("IsActive");
 
-                    b.HasIndex("IsActive")
-                        .HasDatabaseName("IX_CaseStudies_IsActive");
+                    b.HasIndex("IsFeatured");
 
-                    b.HasIndex("IsFeatured")
-                        .HasDatabaseName("IX_CaseStudies_IsFeatured");
-
-                    b.HasIndex("ServiceId")
-                        .HasDatabaseName("IX_CaseStudies_ServiceId");
+                    b.HasIndex("ServiceId");
 
                     b.HasIndex("Slug")
-                        .IsUnique()
-                        .HasDatabaseName("IX_CaseStudies_Slug");
-
-                    b.HasIndex("IsFeatured", "IsActive", "DisplayOrder")
-                        .HasDatabaseName("IX_CaseStudies_Featured_Active_DisplayOrder");
+                        .IsUnique();
 
                     b.ToTable("CaseStudies", (string)null);
                 });

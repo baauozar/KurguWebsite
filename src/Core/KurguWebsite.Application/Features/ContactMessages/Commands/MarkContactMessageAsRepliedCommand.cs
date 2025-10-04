@@ -8,14 +8,14 @@ using Microsoft.Extensions.Logging;
 
 namespace KurguWebsite.Application.Features.ContactMessages.Commands
 {
-    public class ReplyToContactMessageCommand : IRequest<Result<ContactMessageDto>>
+    public class MarkContactMessageAsRepliedCommand : IRequest<Result<ContactMessageDto>>
     {
         public Guid Id { get; set; }
         public string ReplyMessage { get; set; } = string.Empty;
     }
 
     public class ReplyToContactMessageCommandHandler
-        : IRequestHandler<ReplyToContactMessageCommand, Result<ContactMessageDto>>
+        : IRequestHandler<MarkContactMessageAsRepliedCommand, Result<ContactMessageDto>>
     {
         private readonly IUnitOfWork _unitOfWork;
         private readonly IMapper _mapper;
@@ -35,7 +35,7 @@ namespace KurguWebsite.Application.Features.ContactMessages.Commands
         }
 
         public async Task<Result<ContactMessageDto>> Handle(
-            ReplyToContactMessageCommand request,
+            MarkContactMessageAsRepliedCommand request,
             CancellationToken ct)
         {
             using (await _unitOfWork.BeginTransactionAsync(ct))

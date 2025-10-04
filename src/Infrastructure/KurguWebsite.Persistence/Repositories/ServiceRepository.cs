@@ -1,6 +1,7 @@
 ﻿using KurguWebsite.Application.Common.Interfaces.Repositories;
 using KurguWebsite.Domain.Entities;
 using KurguWebsite.Domain.Enums;
+using KurguWebsite.Domain.Specifications;
 using KurguWebsite.Persistence.Context;
 using Microsoft.EntityFrameworkCore;
 using System;
@@ -21,43 +22,33 @@ namespace KurguWebsite.Persistence.Repositories
 
         public async Task<Service?> GetBySlugAsync(string slug)
         {
-            return await _dbSet
-                .Include(s => s.Features)
-                .FirstOrDefaultAsync(s => s.Slug == slug);
+            var spec = new ServiceBySlugSpecification(slug);
+            return await GetBySpecAsync(spec);
         }
 
         public async Task<Service?> GetServiceWithFeaturesAsync(Guid id)
         {
-            return await _dbSet
-                .Include(s => s.Features.OrderBy(f => f.DisplayOrder))
-                .FirstOrDefaultAsync(s => s.Id == id);
+            var spec = new ServiceByIdWithFeaturesSpecification(id);
+            return await GetBySpecAsync(spec);
         }
 
         public async Task<IReadOnlyList<Service>> GetActiveServicesAsync()
         {
-            return await _dbSet
-                .Where(s => s.IsActive)
-                .OrderBy(s => s.DisplayOrder)
-                .ThenBy(s => s.Title)
-                .ToListAsync();
+            var spec = new ActiveServicesSpecification();
+            return await ListAsync(spec);
         }
 
         public async Task<IReadOnlyList<Service>> GetFeaturedServicesAsync()
         {
-            return await _dbSet
-                .Where(s => s.IsActive && s.IsFeatured)
-                .OrderBy(s => s.DisplayOrder)
-                .ThenBy(s => s.Title)
-                .ToListAsync();
+            var spec = new ActiveFeaturedServicesSpecification();
+            return await ListAsync(spec);
         }
+
 
         public async Task<IReadOnlyList<Service>> GetServicesByCategoryAsync(ServiceCategory category)
         {
-            return await _dbSet
-                .Where(s => s.IsActive && s.Category == category)
-                .OrderBy(s => s.DisplayOrder)
-                .ThenBy(s => s.Title)
-                .ToListAsync();
+            var spec = new ServicesByCategorySpecification(category);
+            return await ListAsync(spec);
         }
 
         public async Task<bool> SlugExistsAsync(string slug, Guid? excludeId = null)

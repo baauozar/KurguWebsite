@@ -2,9 +2,7 @@
 using KurguWebsite.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
-using Microsoft.EntityFrameworkCore.ChangeTracking; // ValueComparer
-using System.Collections.Generic;
-using System.Linq; // SequenceEqual, Aggregate
+using Microsoft.EntityFrameworkCore.ChangeTracking;
 using System.Text.Json;
 
 namespace KurguWebsite.Persistence.Configurations
@@ -17,6 +15,9 @@ namespace KurguWebsite.Persistence.Configurations
 
             builder.ToTable("CaseStudies");
 
+            // ===========================================
+            // STRING PROPERTIES
+            // ===========================================
             builder.Property(e => e.Title)
                 .IsRequired()
                 .HasMaxLength(200);
@@ -24,8 +25,6 @@ namespace KurguWebsite.Persistence.Configurations
             builder.Property(e => e.Slug)
                 .IsRequired()
                 .HasMaxLength(256);
-
-            builder.HasIndex(e => e.Slug).IsUnique();
 
             builder.Property(e => e.ClientName)
                 .IsRequired()
@@ -35,53 +34,92 @@ namespace KurguWebsite.Persistence.Configurations
                 .IsRequired()
                 .HasMaxLength(2000);
 
-            builder.Property(e => e.Industry).HasMaxLength(100);
-            builder.Property(e => e.Challenge).HasMaxLength(1000);
-            builder.Property(e => e.Solution).HasMaxLength(1000);
-            builder.Property(e => e.Result).HasMaxLength(1000);
+            builder.Property(e => e.Industry)
+                .HasMaxLength(100);
+
+            builder.Property(e => e.Challenge)
+                .HasMaxLength(1000);
+
+            builder.Property(e => e.Solution)
+                .HasMaxLength(1000);
+
+            builder.Property(e => e.Result)
+                .HasMaxLength(1000);
 
             builder.Property(e => e.ImagePath)
                 .IsRequired()
                 .HasMaxLength(500);
 
-            builder.Property(e => e.ThumbnailPath).HasMaxLength(500);
+            builder.Property(e => e.ThumbnailPath)
+                .HasMaxLength(500);
 
-            // ---- Technologies (JSON) mapped to backing field _technologies as List<string> ----
-            var techField = builder.Property<List<string>>("_technologies");
+            // ===========================================
+            // TECHNOLOGIES (JSON) - FIXED
+            // ===========================================
+            builder.Property<List<string>>("_technologies")
+                .HasColumnName("Technologies") // ✅ ADDED: Explicit column name
+                .HasColumnType("nvarchar(max)")
+                .HasConversion(
+                    // To database
+                    v => JsonSerializer.Serialize(v ?? new List<string>(), (JsonSerializerOptions?)null),
+                    // From database
+                    v => string.IsNullOrWhiteSpace(v)
+                        ? new List<string>()
+                        : JsonSerializer.Deserialize<List<string>>(v, (JsonSerializerOptions?)null) ?? new List<string>(),
+                    // ✅ ADDED: ValueComparer as third parameter (modern approach)
+                    new ValueComparer<List<string>>(
+                        (a, b) => (a == null && b == null) || (a != null && b != null && a.SequenceEqual(b)),
+                        v => v == null ? 0 : v.Aggregate(0, (hash, s) => HashCode.Combine(hash, s == null ? 0 : s.GetHashCode())),
+                        v => v == null ? new List<string>() : new List<string>(v)
+                    )
+                )
+                .UsePropertyAccessMode(PropertyAccessMode.Field);
 
-            // JSON conversion
-            techField.HasConversion(
-                v => JsonSerializer.Serialize(v ?? new List<string>(), (JsonSerializerOptions?)null),
-                v => JsonSerializer.Deserialize<List<string>>(v, (JsonSerializerOptions?)null) ?? new List<string>()
-            );
+            // ===========================================
+            // NAVIGATION PROPERTIES
+            // ===========================================
 
-            // Comparer for List<string> (no null-propagation)
-            var listComparer = new ValueComparer<List<string>>(
-                (a, b) =>
-                    (a == null && b == null) ||
-                    (a != null && b != null && a.SequenceEqual(b)),
-                v => v == null
-                    ? 0
-                    : v.Aggregate(0, (hash, s) => System.HashCode.Combine(hash, (s == null ? 0 : s.GetHashCode()))),
-                v => v == null ? null : new List<string>(v) // snapshot
-            );
+            // ✅ ADDED: Metrics relationship
+            builder.HasMany(cs => cs.Metrics)
+                .WithOne(m => m.CaseStudy)
+                .HasForeignKey(m => m.CaseStudyId)
+                .OnDelete(DeleteBehavior.Cascade); // Delete metrics when case study is deleted
 
-            // Apply comparer and column type; use field access mode
-            techField.Metadata.SetValueComparer(listComparer);
-            techField.HasColumnType("nvarchar(max)");
-            techField.UsePropertyAccessMode(PropertyAccessMode.Field);
+            // Service relationship
+            builder.HasOne(cs => cs.Service)
+                .WithMany(s => s.CaseStudies)
+                .HasForeignKey(cs => cs.ServiceId)
+                .OnDelete(DeleteBehavior.SetNull)
+                .IsRequired(false);
 
-            // ---- Relationship ----
-            builder.HasOne(e => e.Service)
-                   .WithMany(s => s.CaseStudies)
-                   .HasForeignKey(e => e.ServiceId)
-                   .OnDelete(DeleteBehavior.SetNull); // ensure CaseStudy.ServiceId is Guid?
+            // ===========================================
+            // INDEXES
+            // ===========================================
+            builder.HasIndex(cs => cs.Slug)
+                .IsUnique()
+                .HasDatabaseName("IX_CaseStudies_Slug");
 
-            // ---- Indexes ----
-            builder.HasIndex(e => e.IsActive);
-            builder.HasIndex(e => e.IsFeatured);
-            builder.HasIndex(e => e.CompletedDate);
-            builder.HasIndex(e => e.ServiceId);
+            builder.HasIndex(cs => cs.ClientName)
+                .HasDatabaseName("IX_CaseStudies_ClientName");
+
+            builder.HasIndex(cs => cs.IsActive)
+                .HasDatabaseName("IX_CaseStudies_IsActive");
+
+            builder.HasIndex(cs => cs.IsFeatured)
+                .HasDatabaseName("IX_CaseStudies_IsFeatured");
+
+            builder.HasIndex(cs => cs.CompletedDate)
+                .HasDatabaseName("IX_CaseStudies_CompletedDate");
+
+            builder.HasIndex(cs => cs.ServiceId)
+                .HasDatabaseName("IX_CaseStudies_ServiceId");
+
+            // Composite index for featured active case studies
+            builder.HasIndex(cs => new { cs.IsFeatured, cs.IsActive, cs.DisplayOrder })
+                .HasDatabaseName("IX_CaseStudies_Featured_Active_DisplayOrder");
+
+            // ✅ ADDED: Explicit soft delete filter
+            builder.HasQueryFilter(cs => !cs.IsDeleted);
         }
     }
 }

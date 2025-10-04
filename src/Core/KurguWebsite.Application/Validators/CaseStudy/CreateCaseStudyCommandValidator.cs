@@ -1,16 +1,21 @@
 ﻿using FluentValidation;
 using KurguWebsite.Application.DTOs.CaseStudy;
 using KurguWebsite.Application.Features.CaseStudies.Commands;
+using KurguWebsite.Application.Interfaces.Repositories;
 
 namespace KurguWebsite.Application.Validators.CaseStudy
 {
     public class CreateCaseStudyCommandValidator : AbstractValidator<CreateCaseStudyCommand>
     {
-        public CreateCaseStudyCommandValidator()
+        private readonly ICaseStudyUniquenessChecker _checker;
+        public CreateCaseStudyCommandValidator(ICaseStudyUniquenessChecker checker)
         {
+            _checker = checker;
             RuleFor(x => x.Title)
                 .NotEmpty().WithMessage("Title is required")
-                .MaximumLength(200).WithMessage("Title must not exceed 200 characters");
+                .MaximumLength(200).WithMessage("Title must not exceed 200 characters").MustAsync(async (cmd, title, ct) =>
+                    !await _checker.SlugExistsAsync(title, null, ct))
+                .WithMessage("A Case Study with this title already exists"); ;
 
             RuleFor(x => x.ClientName)
                 .NotEmpty().WithMessage("Client name is required")
@@ -43,6 +48,7 @@ namespace KurguWebsite.Application.Validators.CaseStudy
                 RuleFor(x => x.Result)
                     .MaximumLength(1000).WithMessage("Result must not exceed 1000 characters");
             });
+          
         }
     }
 }

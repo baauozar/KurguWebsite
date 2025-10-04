@@ -13,18 +13,36 @@ namespace KurguWebsite.Persistence.Configurations
 
             builder.ToTable("CaseStudyMetrics");
 
-            builder.Property(e => e.MetricName).HasMaxLength(150);
-            builder.Property(e => e.MetricValue).HasMaxLength(150);
-            builder.Property(e => e.Icon).HasMaxLength(150);
+            // Property Configurations
+            builder.Property(e => e.MetricName)
+                .HasMaxLength(150)
+                .IsRequired();
 
-            builder.HasIndex(e => new { e.CaseStudyId, e.MetricName });
+            builder.Property(e => e.MetricValue)
+                .HasMaxLength(150)
+                .IsRequired();
 
+            builder.Property(e => e.Icon)
+                .HasMaxLength(150);
+
+            builder.Property(e => e.DisplayOrder)
+                .IsRequired()
+                .HasDefaultValue(0);
+
+            // Indexes
+            builder.HasIndex(e => new { e.CaseStudyId, e.MetricName })
+                .HasDatabaseName("IX_CaseStudyMetrics_CaseStudyId_MetricName");
+
+            builder.HasIndex(e => new { e.CaseStudyId, e.DisplayOrder })
+                .HasDatabaseName("IX_CaseStudyMetrics_CaseStudyId_DisplayOrder");
+
+            // Relationships
             builder.HasOne(e => e.CaseStudy)
-                   .WithMany(cs => cs.Metrics)      // ensure CaseStudy has ICollection<CaseStudyMetric> Metrics
-                   .HasForeignKey(e => e.CaseStudyId)
-                   .OnDelete(DeleteBehavior.Restrict);
+                .WithMany(cs => cs.Metrics)
+                .HasForeignKey(e => e.CaseStudyId)
+                .OnDelete(DeleteBehavior.Cascade); // Changed to Cascade - when case study is deleted, metrics should be deleted too
 
-            // Soft-delete filter (uses AuditableEntity.IsDeleted)
+            // Soft-delete filter
             builder.HasQueryFilter(e => !e.IsDeleted);
         }
     }

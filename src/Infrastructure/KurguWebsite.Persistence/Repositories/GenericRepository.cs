@@ -33,6 +33,7 @@ namespace KurguWebsite.Persistence.Repositories
         {
             return await _dbSet.FindAsync(new object[] { id }, cancellationToken);
         }
+   
 
         public virtual async Task<T?> GetByIdIncludingDeletedAsync(Guid id, CancellationToken cancellationToken = default)
         {

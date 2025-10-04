@@ -6,23 +6,27 @@ using System.Linq;
 
 namespace KurguWebsite.Persistence.Specifications
 {
-    public static class SpecificationEvaluator<T> where T : BaseEntity
+    public class SpecificationEvaluator<TEntity> where TEntity : BaseEntity
     {
-        public static IQueryable<T> GetQuery(IQueryable<T> inputQuery, ISpecification<T> specification)
+        public static IQueryable<TEntity> GetQuery(
+            IQueryable<TEntity> inputQuery,
+            ISpecification<TEntity> specification)
         {
             var query = inputQuery;
 
-            // Apply criteria (WHERE clause)
+            // Apply filtering
             if (specification.Criteria != null)
             {
                 query = query.Where(specification.Criteria);
             }
 
-            // Apply includes (JOIN related entities)
-            query = specification.Includes.Aggregate(query, (current, include) => current.Include(include));
+            // Apply includes using expressions
+            query = specification.Includes.Aggregate(query,
+                (current, include) => current.Include(include));
 
-            // Apply string-based includes
-            query = specification.IncludeStrings.Aggregate(query, (current, include) => current.Include(include));
+            // Apply string-based includes (for nested includes)
+            query = specification.IncludeStrings.Aggregate(query,
+                (current, include) => current.Include(include));
 
             // Apply ordering
             if (specification.OrderBy != null)
@@ -37,8 +41,43 @@ namespace KurguWebsite.Persistence.Specifications
             // Apply paging
             if (specification.IsPagingEnabled)
             {
-                query = query.Skip(specification.Skip).Take(specification.Take);
+                query = query.Skip(specification.Skip)
+                             .Take(specification.Take);
             }
+
+            return query;
+        }
+
+        public static IQueryable<TEntity> GetQueryWithoutPaging(
+            IQueryable<TEntity> inputQuery,
+            ISpecification<TEntity> specification)
+        {
+            var query = inputQuery;
+
+            // Apply filtering
+            if (specification.Criteria != null)
+            {
+                query = query.Where(specification.Criteria);
+            }
+
+            // Apply includes
+            query = specification.Includes.Aggregate(query,
+                (current, include) => current.Include(include));
+
+            query = specification.IncludeStrings.Aggregate(query,
+                (current, include) => current.Include(include));
+
+            // Apply ordering
+            if (specification.OrderBy != null)
+            {
+                query = query.OrderBy(specification.OrderBy);
+            }
+            else if (specification.OrderByDescending != null)
+            {
+                query = query.OrderByDescending(specification.OrderByDescending);
+            }
+
+            // Don't apply paging for count operations
 
             return query;
         }
