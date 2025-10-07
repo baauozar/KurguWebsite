@@ -16,7 +16,7 @@ namespace KurguWebsite.Application.DTOs.Service
         public string IconPath { get; set; } = string.Empty;
         public string? IconClass { get; set; }
         public ServiceCategory Category { get; set; }
-        public int DisplayOrder { get; set; }
+
         public bool IsFeatured { get; set; }
 
         // SEO

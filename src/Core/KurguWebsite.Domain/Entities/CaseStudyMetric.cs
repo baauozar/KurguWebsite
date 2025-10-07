@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace KurguWebsite.Domain.Entities
 {
-    public  class CaseStudyMetric : AuditableEntity, IActivatable
+    public  class CaseStudyMetric : AuditableEntity, IActivatable, IOrderable
     {
         public Guid CaseStudyId { get; set; }
         public string? MetricName { get; set; }

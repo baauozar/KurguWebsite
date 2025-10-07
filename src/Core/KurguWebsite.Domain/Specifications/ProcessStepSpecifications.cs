@@ -17,7 +17,7 @@ namespace KurguWebsite.Domain.Specifications
         public ProcessStepsByOrderSpecification()
             : base(ps => ps.IsActive && !ps.IsDeleted)
         {
-            ApplyOrderBy(ps => ps.StepNumber);
+            ApplyOrderBy(ps => ps.DisplayOrder);
         }
     }
 

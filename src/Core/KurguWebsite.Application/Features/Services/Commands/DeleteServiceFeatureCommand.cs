@@ -1,6 +1,7 @@
 ﻿// src/Core/KurguWebsite.Application/Features/Services/Commands/DeleteServiceFeatureCommand.cs
 using KurguWebsite.Application.Common.Interfaces;
 using KurguWebsite.Application.Common.Models;
+using KurguWebsite.Domain.Common;
 using MediatR;
 using Microsoft.Extensions.Logging;
 
@@ -29,34 +30,43 @@ namespace KurguWebsite.Application.Features.Services.Commands
         }
 
         public async Task<ControlResult> Handle(
-            DeleteServiceFeatureCommand request,
-            CancellationToken ct)
+          DeleteServiceFeatureCommand request,
+          CancellationToken ct)
         {
-            using (await _unitOfWork.BeginTransactionAsync(ct))
+            try
             {
-                try
+                var feature = await _unitOfWork.ServiceFeatures.GetByIdAsync(request.Id);
+                if (feature == null)
                 {
-                    var feature = await _unitOfWork.ServiceFeatures.GetByIdAsync(request.Id);
-                    if (feature == null)
-                    {
-                        return ControlResult.Failure("Service feature not found.");
-                    }
-
-                    feature.SoftDelete(_currentUserService.UserId ?? "System");
-                    await _unitOfWork.ServiceFeatures.UpdateAsync(feature);
-                    await _unitOfWork.CommitAsync(ct);
-                    await _unitOfWork.CommitTransactionAsync(ct);
-
-                    _logger.LogInformation("Service feature deleted: Id={FeatureId}", request.Id);
-
-                    return ControlResult.Success();
+                    return ControlResult.Failure("Service feature not found.");
                 }
-                catch (Exception ex)
+
+                var serviceId = feature.ServiceId; // Store parent ID
+
+                feature.SoftDelete(_currentUserService.UserId ?? "System");
+                await _unitOfWork.ServiceFeatures.UpdateAsync(feature);
+
+                var remainingFeatures = (await _unitOfWork.ServiceFeatures.GetAllAsync())
+                                        .Where(f => f.IsActive && f.ServiceId == serviceId && f.Id != request.Id)
+                                        .OrderBy(f => f.DisplayOrder)
+                                        .ToList();
+
+                remainingFeatures.Reorder();
+
+                foreach (var item in remainingFeatures)
                 {
-                    _logger.LogError(ex, "Error deleting service feature: {FeatureId}", request.Id);
-                    await _unitOfWork.RollbackTransactionAsync(ct);
-                    throw;
+                    await _unitOfWork.ServiceFeatures.UpdateAsync(item);
                 }
+
+                await _unitOfWork.CommitAsync(ct);
+
+                _logger.LogInformation("Service feature soft-deleted and reordered: Id={FeatureId}", request.Id);
+                return ControlResult.Success();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error deleting service feature: {FeatureId}", request.Id);
+                return ControlResult.Failure($"An error occurred: {ex.Message}");
             }
         }
     }

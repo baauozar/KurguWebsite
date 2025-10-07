@@ -1,5 +1,4 @@
-﻿// File: src/Persistence/KurguWebsite.Persistence/Configurations/ServiceFeatureConfiguration.cs
-using KurguWebsite.Domain.Entities;
+﻿using KurguWebsite.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
@@ -13,6 +12,7 @@ namespace KurguWebsite.Persistence.Configurations
 
             builder.ToTable("ServiceFeatures");
 
+            // Property Configurations
             builder.Property(e => e.Title)
                 .IsRequired()
                 .HasMaxLength(100);
@@ -24,7 +24,9 @@ namespace KurguWebsite.Persistence.Configurations
             builder.Property(e => e.IconClass)
                 .HasMaxLength(100);
 
+            // ✅ Make sure DisplayOrder is required
             builder.Property(e => e.DisplayOrder)
+                .IsRequired()
                 .HasDefaultValue(0);
 
             builder.Property(e => e.ServiceId)
@@ -37,9 +39,12 @@ namespace KurguWebsite.Persistence.Configurations
                 .OnDelete(DeleteBehavior.Cascade);
 
             // Indexes
-            builder.HasIndex(e => new { e.ServiceId, e.DisplayOrder }).IsUnique(); // per-service ordering
-            // Optional: prevent duplicate titles within a service
-            // builder.HasIndex(e => new { e.ServiceId, e.Title }).IsUnique();
+            // ✅ CORRECTED: Removed duplicate index and the IsUnique() constraint.
+            // This prevents potential conflicts when reordering soft-deleted items.
+            builder.HasIndex(e => new { e.ServiceId, e.DisplayOrder });
+
+            // Global soft-delete filter
+            builder.HasQueryFilter(e => !e.IsDeleted);
         }
     }
 }

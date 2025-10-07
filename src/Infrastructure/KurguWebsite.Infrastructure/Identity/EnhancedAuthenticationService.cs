@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
+using System.IdentityModel.Tokens.Jwt;
 using System.Linq;
 using System.Security.Claims;
 using System.Text;
@@ -17,42 +18,31 @@ namespace KurguWebsite.Infrastructure.Identity
     public class EnhancedAuthenticationService : IAuthenticationService
     {
         private readonly UserManager<ApplicationUser> _userManager;
+        private readonly RoleManager<IdentityRole<Guid>> _roleManager;
         private readonly SignInManager<ApplicationUser> _signInManager;
         private readonly JwtService _jwtService;
         private readonly ICurrentUserService _currentUserService;
         private readonly IUnitOfWork _unitOfWork;
         private readonly IHttpContextAccessor _httpContextAccessor;
         private readonly ILogger<EnhancedAuthenticationService> _logger;
-
         public EnhancedAuthenticationService(
-            UserManager<ApplicationUser> userManager,
-            SignInManager<ApplicationUser> signInManager,
-            JwtService jwtService,
-            ICurrentUserService currentUserService,
-            IUnitOfWork unitOfWork,
-            IHttpContextAccessor httpContextAccessor,
-            ILogger<EnhancedAuthenticationService> logger)
+          UserManager<ApplicationUser> userManager,
+          RoleManager<IdentityRole<Guid>> roleManager,
+          SignInManager<ApplicationUser> signInManager,
+          JwtService jwtService,
+          ICurrentUserService currentUserService,
+          IUnitOfWork unitOfWork,
+          IHttpContextAccessor httpContextAccessor,
+          ILogger<EnhancedAuthenticationService> logger)
         {
             _userManager = userManager;
+            _roleManager = roleManager;
             _signInManager = signInManager;
             _jwtService = jwtService;
             _currentUserService = currentUserService;
             _unitOfWork = unitOfWork;
             _httpContextAccessor = httpContextAccessor;
             _logger = logger;
-        }
-
-        private string GetIpAddress()
-        {
-            var ipAddress = _httpContextAccessor.HttpContext?.Connection?.RemoteIpAddress?.ToString();
-            if (string.IsNullOrEmpty(ipAddress))
-                ipAddress = "127.0.0.1";
-
-            // Handle IPv6 localhost
-            if (ipAddress == "::1")
-                ipAddress = "127.0.0.1";
-
-            return ipAddress;
         }
 
         public async Task<AuthenticationResultModel> LoginAsync(string email, string password)
@@ -66,46 +56,33 @@ namespace KurguWebsite.Infrastructure.Identity
                     return Failure("Invalid credentials");
                 }
 
-                // Check if account is locked
                 if (await _userManager.IsLockedOutAsync(user))
                 {
-                    _logger.LogWarning("Login attempt for locked account: {Email}", email);
                     return Failure("Account is locked. Please try again later.");
                 }
 
-                // Check password
                 var result = await _signInManager.CheckPasswordSignInAsync(user, password, lockoutOnFailure: true);
-
                 if (!result.Succeeded)
                 {
-                    if (result.IsLockedOut)
-                    {
-                        _logger.LogWarning("Account locked after failed attempt: {Email}", email);
-                        return Failure("Account is locked due to multiple failed attempts. Please try again later.");
-                    }
-
-                    _logger.LogWarning("Invalid password for user: {Email}", email);
                     return Failure("Invalid credentials");
                 }
 
-                // Reset access failed count on successful login
                 await _userManager.ResetAccessFailedCountAsync(user);
 
-                // Generate tokens
-                var roles = await _userManager.GetRolesAsync(user);
-                var token = _jwtService.GenerateToken(user.Id, user.Email!, roles.ToArray());
-                var refreshToken = _jwtService.GenerateRefreshToken();
+                var userRoles = await _userManager.GetRolesAsync(user);
+                var authClaims = await GetClaimsForUser(user, userRoles);
+                var newAccessToken = _jwtService.GenerateToken(authClaims);
+                var newRefreshTokenString = _jwtService.GenerateRefreshToken();
 
-                // Store refresh token in database
                 var ipAddress = GetIpAddress();
-                var refreshTokenEntity = RefreshToken.Create(user.Id, refreshToken, ipAddress);
+                var refreshTokenEntity = RefreshToken.Create(user.Id, newRefreshTokenString, ipAddress);
 
                 await _unitOfWork.RefreshTokens.AddAsync(refreshTokenEntity);
                 await _unitOfWork.CommitAsync();
 
                 _logger.LogInformation("User logged in successfully: {Email}", email);
 
-                return Success(user.Id, user.Email!, token, refreshToken, roles.ToArray());
+                return Success(user.Id, user.Email!, newAccessToken, newRefreshTokenString, userRoles.ToArray());
             }
             catch (Exception ex)
             {
@@ -121,7 +98,6 @@ namespace KurguWebsite.Infrastructure.Identity
                 var existingUser = await _userManager.FindByEmailAsync(request.Email);
                 if (existingUser != null)
                 {
-                    _logger.LogWarning("Registration attempt with existing email: {Email}", request.Email);
                     return Failure("User with this email already exists");
                 }
 
@@ -131,35 +107,31 @@ namespace KurguWebsite.Infrastructure.Identity
                     UserName = request.Email,
                     FirstName = request.FirstName,
                     LastName = request.LastName,
-                    PhoneNumber = request.PhoneNumber,
-                    EmailConfirmed = false
+                    EmailConfirmed = true
                 };
 
                 var result = await _userManager.CreateAsync(user, request.Password);
                 if (!result.Succeeded)
                 {
-                    _logger.LogWarning("User registration failed for {Email}: {Errors}",
-                        request.Email, string.Join(", ", result.Errors.Select(e => e.Description)));
                     return Failure(result.Errors.Select(e => e.Description).ToArray());
                 }
 
                 await _userManager.AddToRoleAsync(user, "User");
-                var roles = await _userManager.GetRolesAsync(user);
 
-                // Generate tokens
-                var token = _jwtService.GenerateToken(user.Id, user.Email!, roles.ToArray());
-                var refreshToken = _jwtService.GenerateRefreshToken();
+                var userRoles = await _userManager.GetRolesAsync(user);
+                var authClaims = await GetClaimsForUser(user, userRoles);
+                var newAccessToken = _jwtService.GenerateToken(authClaims);
+                var newRefreshTokenString = _jwtService.GenerateRefreshToken();
 
-                // Store refresh token
                 var ipAddress = GetIpAddress();
-                var refreshTokenEntity = RefreshToken.Create(user.Id, refreshToken, ipAddress);
+                var refreshTokenEntity = RefreshToken.Create(user.Id, newRefreshTokenString, ipAddress);
 
                 await _unitOfWork.RefreshTokens.AddAsync(refreshTokenEntity);
                 await _unitOfWork.CommitAsync();
 
                 _logger.LogInformation("New user registered: {Email}", request.Email);
 
-                return Success(user.Id, user.Email!, token, refreshToken, roles.ToArray());
+                return Success(user.Id, user.Email!, newAccessToken, newRefreshTokenString, userRoles.ToArray());
             }
             catch (Exception ex)
             {
@@ -167,6 +139,87 @@ namespace KurguWebsite.Infrastructure.Identity
                 return Failure("An error occurred during registration");
             }
         }
+
+        public async Task<AuthenticationResultModel> RefreshTokenAsync(string token, string refreshToken)
+        {
+            try
+            {
+                var principal = _jwtService.ValidateToken(token);
+                if (principal == null) return Failure("Invalid token");
+
+                var userIdClaim = principal.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier)?.Value;
+                if (!Guid.TryParse(userIdClaim, out var userId)) return Failure("Invalid token");
+
+                var storedToken = await _unitOfWork.RefreshTokens.GetActiveTokenAsync(refreshToken);
+                if (storedToken == null || storedToken.UserId != userId)
+                {
+                    return Failure("Invalid refresh token");
+                }
+
+                var user = await _userManager.FindByIdAsync(userId.ToString());
+                if (user == null) return Failure("User not found");
+
+                var ipAddress = GetIpAddress();
+                var newRefreshTokenString = _jwtService.GenerateRefreshToken();
+                storedToken.Revoke(ipAddress, newRefreshTokenString);
+
+                var newRefreshTokenEntity = RefreshToken.Create(userId, newRefreshTokenString, ipAddress);
+                await _unitOfWork.RefreshTokens.AddAsync(newRefreshTokenEntity);
+                await _unitOfWork.CommitAsync();
+
+                var userRoles = await _userManager.GetRolesAsync(user);
+                var authClaims = await GetClaimsForUser(user, userRoles);
+                var newAccessToken = _jwtService.GenerateToken(authClaims);
+
+                _logger.LogInformation("Token refreshed for user: {Email}", user.Email);
+
+                return Success(user.Id, user.Email!, newAccessToken, newRefreshTokenString, userRoles.ToArray());
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error during token refresh");
+                return Failure("An error occurred during token refresh");
+            }
+        }
+
+        private async Task<List<Claim>> GetClaimsForUser(ApplicationUser user, IEnumerable<string> roles)
+        {
+            var authClaims = new List<Claim>
+            {
+                new(ClaimTypes.NameIdentifier, user.Id.ToString()),
+                new(ClaimTypes.Email, user.Email),
+                new(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
+            };
+
+            foreach (var userRole in roles)
+            {
+                authClaims.Add(new Claim(ClaimTypes.Role, userRole));
+                var role = await _roleManager.FindByNameAsync(userRole);
+                if (role != null)
+                {
+                    var roleClaims = await _roleManager.GetClaimsAsync(role);
+                    authClaims.AddRange(roleClaims.Where(c => c.Type == "Permission"));
+                }
+            }
+            return authClaims;
+        }
+
+
+
+        private string GetIpAddress()
+        {
+            var ipAddress = _httpContextAccessor.HttpContext?.Connection?.RemoteIpAddress?.ToString();
+            if (string.IsNullOrEmpty(ipAddress))
+                ipAddress = "127.0.0.1";
+
+            // Handle IPv6 localhost
+            if (ipAddress == "::1")
+                ipAddress = "127.0.0.1";
+
+            return ipAddress;
+        }
+
+    
 
         public async Task<bool> LogoutAsync()
         {
@@ -192,63 +245,7 @@ namespace KurguWebsite.Infrastructure.Identity
             }
         }
 
-        public async Task<AuthenticationResultModel> RefreshTokenAsync(string token, string refreshToken)
-        {
-            try
-            {
-                var principal = _jwtService.ValidateToken(token);
-                if (principal == null)
-                {
-                    _logger.LogWarning("Invalid token during refresh");
-                    return Failure("Invalid token");
-                }
-
-                var userIdClaim = principal.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier)?.Value;
-                if (!Guid.TryParse(userIdClaim, out var userId))
-                {
-                    _logger.LogWarning("Invalid user ID in token during refresh");
-                    return Failure("Invalid token");
-                }
-
-                // Get refresh token from database
-                var storedToken = await _unitOfWork.RefreshTokens.GetActiveTokenAsync(refreshToken);
-                if (storedToken == null || storedToken.UserId != userId)
-                {
-                    _logger.LogWarning("Invalid refresh token for user: {UserId}", userId);
-                    return Failure("Invalid refresh token");
-                }
-
-                // Revoke old token and create new one
-                var ipAddress = GetIpAddress();
-                var newRefreshToken = _jwtService.GenerateRefreshToken();
-                storedToken.Revoke(ipAddress, newRefreshToken);
-
-                // Create new refresh token
-                var newRefreshTokenEntity = RefreshToken.Create(userId, newRefreshToken, ipAddress);
-                await _unitOfWork.RefreshTokens.AddAsync(newRefreshTokenEntity);
-                await _unitOfWork.CommitAsync();
-
-                // Get user and generate new JWT
-                var user = await _userManager.FindByIdAsync(userId.ToString());
-                if (user == null)
-                {
-                    _logger.LogWarning("User not found during token refresh: {UserId}", userId);
-                    return Failure("User not found");
-                }
-
-                var roles = await _userManager.GetRolesAsync(user);
-                var newToken = _jwtService.GenerateToken(user.Id, user.Email!, roles.ToArray());
-
-                _logger.LogInformation("Token refreshed for user: {Email}", user.Email);
-
-                return Success(user.Id, user.Email!, newToken, newRefreshToken, roles.ToArray());
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error during token refresh");
-                return Failure("An error occurred during token refresh");
-            }
-        }
+     
 
         public async Task<bool> UserExistsAsync(string email)
         {

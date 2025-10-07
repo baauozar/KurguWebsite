@@ -11,7 +11,6 @@ namespace KurguWebsite.Infrastructure.Identity
 {
     public class JwtService
     {
-        private readonly IConfiguration _configuration;
         private readonly string _secret;
         private readonly string _issuer;
         private readonly string _audience;
@@ -19,35 +18,16 @@ namespace KurguWebsite.Infrastructure.Identity
 
         public JwtService(IConfiguration configuration)
         {
-            _configuration = configuration ?? throw new ArgumentNullException(nameof(configuration));
-
-            _secret = configuration["Jwt:Secret"]
-                ?? throw new InvalidOperationException("Jwt:Secret is missing in configuration.");
-
-            _issuer = configuration["Jwt:Issuer"]
-                ?? throw new InvalidOperationException("Jwt:Issuer is missing in configuration.");
-
-            _audience = configuration["Jwt:Audience"]
-                ?? throw new InvalidOperationException("Jwt:Audience is missing in configuration.");
-
+            _secret = configuration["Jwt:Secret"] ?? throw new InvalidOperationException("Jwt:Secret is missing in configuration.");
+            _issuer = configuration["Jwt:Issuer"] ?? throw new InvalidOperationException("Jwt:Issuer is missing in configuration.");
+            _audience = configuration["Jwt:Audience"] ?? throw new InvalidOperationException("Jwt:Audience is missing in configuration.");
             _expiryMinutes = int.Parse(configuration["Jwt:ExpiryMinutes"] ?? "60");
         }
-        public string GenerateToken(Guid userId, string email, string[] roles)
+
+        public string GenerateToken(IEnumerable<Claim> claims)
         {
             var tokenHandler = new JwtSecurityTokenHandler();
             var key = Encoding.ASCII.GetBytes(_secret);
-
-            var claims = new List<Claim>
-            {
-                new Claim(ClaimTypes.NameIdentifier, userId.ToString()),
-                new Claim(ClaimTypes.Email, email),
-                new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
-            };
-
-            foreach (var role in roles)
-            {
-                claims.Add(new Claim(ClaimTypes.Role, role));
-            }
 
             var tokenDescriptor = new SecurityTokenDescriptor
             {
@@ -74,7 +54,6 @@ namespace KurguWebsite.Infrastructure.Identity
         {
             var tokenHandler = new JwtSecurityTokenHandler();
             var key = Encoding.ASCII.GetBytes(_secret);
-
             try
             {
                 var principal = tokenHandler.ValidateToken(token, new TokenValidationParameters

@@ -20,6 +20,15 @@ namespace KurguWebsite.Domain.Entities
         public string? Vision { get; private set; }
         public string? Slogan { get; private set; }
         public string? CopyrightText { get; private set; }
+        public int YearsInBusiness { get; private set; }
+        public int TotalClients { get; private set; }
+        public int ProjectsCompleted { get; private set; }
+        public int TeamMembers { get; private set; }
+
+        // Mission/Vision images for the cards
+        public string? MissionImagePath { get; private set; }
+        public string? VisionImagePath { get; private set; }
+        public string? CareersImagePath { get; private set; }
 
         // Value Objects
         public ContactInfo ContactInformation { get; private set; } = null!;
@@ -29,31 +38,41 @@ namespace KurguWebsite.Domain.Entities
         private CompanyInfo() { }
 
         public static CompanyInfo Create(
-            string companyName,
-            ContactInfo contactInfo,
-            Address address)
+        string companyName,
+        ContactInfo contactInfo,
+        Address address,
+        int yearsInBusiness = 0,
+        int totalClients = 0,
+        int projectsCompleted = 0,
+        int teamMembers = 0)
         {
             return new CompanyInfo
             {
                 CompanyName = companyName,
                 ContactInformation = contactInfo,
                 OfficeAddress = address,
+                YearsInBusiness = yearsInBusiness,
+                TotalClients = totalClients,
+                ProjectsCompleted = projectsCompleted,
+                TeamMembers = teamMembers,
                 CopyrightText = $"{companyName}. © {DateTime.Now.Year}. All Rights Reserved"
             };
         }
 
         public void UpdateBasicInfo(
-            string companyName,
-            string? about,
-            string? mission,
-            string? vision,
-            string? slogan)
+          string companyName,
+          string? about,
+          string? mission,
+          string? vision,
+          string? slogan
+          )
         {
             CompanyName = companyName;
             About = about;
             Mission = mission;
             Vision = vision;
             Slogan = slogan;
+           
             CopyrightText = $"{companyName}. © {DateTime.Now.Year}. All Rights Reserved";
             AddDomainEvent(new CompanyInfoUpdatedEvent(this.Id));
         }
@@ -78,6 +97,32 @@ namespace KurguWebsite.Domain.Entities
         public void UpdateSocialMedia(SocialMediaLinks? socialMedia)
         {
             SocialMedia = socialMedia;
+        }
+        public void UpdateStatistics(
+        int yearsInBusiness,
+        int totalClients,
+        int projectsCompleted,
+        int teamMembers)
+        {
+            if (yearsInBusiness < 0) throw new ArgumentException("Years in business cannot be negative");
+            if (totalClients < 0) throw new ArgumentException("Total clients cannot be negative");
+            if (projectsCompleted < 0) throw new ArgumentException("Projects completed cannot be negative");
+            if (teamMembers < 0) throw new ArgumentException("Team members cannot be negative");
+
+            YearsInBusiness = yearsInBusiness;
+            TotalClients = totalClients;
+            ProjectsCompleted = projectsCompleted;
+            TeamMembers = teamMembers;
+            AddDomainEvent(new CompanyInfoUpdatedEvent(this.Id));
+        }
+        public void UpdateSectionImages(
+        string? missionImagePath,
+        string? visionImagePath
+        )
+        {
+            MissionImagePath = missionImagePath;
+            VisionImagePath = visionImagePath;
+         
         }
     }
 }

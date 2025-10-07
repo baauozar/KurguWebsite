@@ -8,38 +8,24 @@ namespace KurguWebsite.Application.Common.Models
 {
     public static class CacheKeys
     {
-        // Services
         public const string Services = "services_all";
         public const string FeaturedServices = "services_featured";
         public const string ServiceById = "service_id_{0}";
         public const string ServiceBySlug = "service_slug_{0}";
-
-        // Case Studies
         public const string CaseStudies = "casestudies_all";
         public const string FeaturedCaseStudies = "casestudies_featured";
         public const string CaseStudyBySlug = "casestudy_slug_{0}";
-
-        // Testimonials
         public const string Testimonials = "testimonials_all";
         public const string ActiveTestimonials = "testimonials_active";
-
-        // Partners
         public const string Partners = "partners_all";
         public const string ActivePartners = "partners_active";
-
-        // Pages
         public const string Pages = "pages_all";
         public const string PageBySlug = "page_slug_{0}";
-
-        // Process Steps
         public const string ProcessSteps = "processsteps_all";
-
-        // Company Info
         public const string CompanyInfo = "companyinfo";
-
-        // Homepage
         public const string HomePage = "homepage_data";
         public const string AboutPage = "aboutpage_data";
         public const string ContactPage = "contactpage_data";
+        public const string ServicesPage = "servicespage_data";
     }
 }

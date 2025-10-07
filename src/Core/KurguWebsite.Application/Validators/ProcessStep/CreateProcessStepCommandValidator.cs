@@ -19,8 +19,7 @@ namespace KurguWebsite.Application.Validators.ProcessStep
                 .NotEmpty().WithMessage("Process step description is required")
                 .MaximumLength(1000).WithMessage("Process step description must not exceed 1000 characters");
 
-            RuleFor(x => x.DisplayOrder)
-                .GreaterThanOrEqualTo(0).WithMessage("Display order must be non-negative");
+         
 
             When(x => !string.IsNullOrEmpty(x.IconClass), () =>
             {

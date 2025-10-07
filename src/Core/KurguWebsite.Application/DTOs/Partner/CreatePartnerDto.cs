@@ -14,6 +14,6 @@ namespace KurguWebsite.Application.DTOs.Partner
         public string? WebsiteUrl { get; set; }
         public string? Description { get; set; }
         public PartnerType Type { get; set; }
-        public int DisplayOrder { get; set; }
+ 
     }
 }

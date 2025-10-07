@@ -17,8 +17,7 @@ namespace KurguWebsite.Persistence.Configurations
 
             builder.ToTable("ProcessSteps");
 
-            builder.Property(e => e.StepNumber)
-                .IsRequired();
+      
 
             builder.Property(e => e.Title)
                 .IsRequired()
@@ -32,12 +31,17 @@ namespace KurguWebsite.Persistence.Configurations
                 .HasMaxLength(100);
 
             builder.Property(e => e.DisplayOrder)
+                .IsRequired()
                 .HasDefaultValue(0);
+
 
             // Indexes
             builder.HasIndex(e => e.IsActive);
-            builder.HasIndex(e => e.DisplayOrder);
-            builder.HasIndex(e => e.StepNumber);
+            builder.HasIndex(e => new { e.IsActive, e.DisplayOrder });
+            builder.HasIndex(e => e.DisplayOrder).IsUnique(); // StepNumber should likely be unique
+
+
+            builder.HasQueryFilter(e => !e.IsDeleted);
         }
     }
 }

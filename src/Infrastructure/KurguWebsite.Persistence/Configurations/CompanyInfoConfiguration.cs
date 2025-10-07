@@ -1,19 +1,45 @@
-﻿// src/Infrastructure/KurguWebsite.Persistence/Configurations/CompanyInfoConfiguration.cs
-using KurguWebsite.Domain.Entities;
+﻿using KurguWebsite.Domain.Entities;
 using KurguWebsite.Domain.ValueObjects;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace KurguWebsite.Persistence.Configurations
 {
-    public class CompanyInfoConfiguration : IEntityTypeConfiguration<CompanyInfo>
+    // ✅ CORRECTED: Inherit from AuditableEntityConfiguration for consistency
+    public class CompanyInfoConfiguration : AuditableEntityConfiguration<CompanyInfo>
     {
-        public void Configure(EntityTypeBuilder<CompanyInfo> builder)
+        public override void Configure(EntityTypeBuilder<CompanyInfo> builder)
         {
-            builder.ToTable("CompanyInfo");
-            builder.HasKey(c => c.Id);
+            // ✅ ADDED: Call the base configuration
+            base.Configure(builder);
 
-            // Contact Information - Owned Entity
+            builder.ToTable("CompanyInfo");
+
+            // ===========================================
+            // SCALAR PROPERTIES
+            // ===========================================
+            builder.Property(c => c.CompanyName).IsRequired().HasMaxLength(200);
+            builder.Property(c => c.LogoPath).HasMaxLength(500);
+            builder.Property(c => c.LogoLightPath).HasMaxLength(500);
+            builder.Property(c => c.About).HasMaxLength(2000);
+            builder.Property(c => c.Mission).HasMaxLength(1000);
+            builder.Property(c => c.Vision).HasMaxLength(1000);
+            builder.Property(c => c.Slogan).HasMaxLength(200);
+            builder.Property(c => c.CopyrightText).HasMaxLength(200);
+
+            // ✅ ADDED: Configuration for new properties
+            builder.Property(c => c.YearsInBusiness).IsRequired().HasDefaultValue(0);
+            builder.Property(c => c.TotalClients).IsRequired().HasDefaultValue(0);
+            builder.Property(c => c.ProjectsCompleted).IsRequired().HasDefaultValue(0);
+            builder.Property(c => c.TeamMembers).IsRequired().HasDefaultValue(0);
+            builder.Property(c => c.MissionImagePath).HasMaxLength(500);
+            builder.Property(c => c.VisionImagePath).HasMaxLength(500);
+            builder.Property(c => c.CareersImagePath).HasMaxLength(500);
+
+            // ===========================================
+            // OWNED ENTITIES (VALUE OBJECTS)
+            // ===========================================
+
             builder.OwnsOne(c => c.ContactInformation, contact =>
             {
                 contact.Property(ci => ci.SupportPhone).HasMaxLength(20).IsRequired();
@@ -23,7 +49,6 @@ namespace KurguWebsite.Persistence.Configurations
                 contact.Property(ci => ci.SalesEmail).HasMaxLength(100);
             });
 
-            // Office Address - Owned Entity
             builder.OwnsOne(c => c.OfficeAddress, address =>
             {
                 address.Property(a => a.Street).HasMaxLength(200).IsRequired();
@@ -34,25 +59,14 @@ namespace KurguWebsite.Persistence.Configurations
                 address.Property(a => a.Country).HasMaxLength(100).IsRequired();
             });
 
-            // Social Media Links - Owned Entity with required property fix
             builder.OwnsOne(c => c.SocialMedia, social =>
             {
-                // Make at least one property required to fix the warning
-                social.Property(s => s.Facebook).HasMaxLength(200).IsRequired(false);
+                social.Property(s => s.Facebook).HasMaxLength(200);
                 social.Property(s => s.Twitter).HasMaxLength(200);
                 social.Property(s => s.LinkedIn).HasMaxLength(200);
                 social.Property(s => s.Instagram).HasMaxLength(200);
                 social.Property(s => s.YouTube).HasMaxLength(200);
             });
-
-            builder.Property(c => c.CompanyName).HasMaxLength(200).IsRequired();
-            builder.Property(c => c.LogoPath).HasMaxLength(500);
-            builder.Property(c => c.LogoLightPath).HasMaxLength(500);
-            builder.Property(c => c.About).HasMaxLength(2000);
-            builder.Property(c => c.Mission).HasMaxLength(1000);
-            builder.Property(c => c.Vision).HasMaxLength(1000);
-            builder.Property(c => c.Slogan).HasMaxLength(200);
-            builder.Property(c => c.CopyrightText).HasMaxLength(200);
         }
     }
 }

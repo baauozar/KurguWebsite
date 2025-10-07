@@ -45,7 +45,9 @@ namespace KurguWebsite.Application.Features.Partners.Commands
             {
                 try
                 {
-                    var partner = Partner.Create(
+                    var maxOrder = await _unitOfWork.Services.GetAllAsync(ct)
+             .ContinueWith(t => t.Result.Any() ? t.Result.Max(s => s.DisplayOrder) : 0);
+                    var nextDisplayOrder = maxOrder + 1; var partner = Partner.Create(
                 request.Name,
             request.LogoPath,
             request.WebsiteUrl,
@@ -54,7 +56,7 @@ namespace KurguWebsite.Application.Features.Partners.Commands
 
                     partner.CreatedBy = _currentUserService.UserId ?? "System";
                     partner.CreatedDate = DateTime.UtcNow;
-
+                    partner.SetDisplayOrder(nextDisplayOrder);
                     await _unitOfWork.Partners.AddAsync(partner);
                     await _unitOfWork.CommitAsync(ct);
                     await _unitOfWork.CommitTransactionAsync(ct);

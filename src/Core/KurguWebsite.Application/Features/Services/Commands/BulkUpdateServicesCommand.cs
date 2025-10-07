@@ -1,4 +1,4 @@
-﻿using KurguWebsite.Application.Common.Interfaces;
+﻿/*using KurguWebsite.Application.Common.Interfaces;
 using KurguWebsite.Application.Common.Models;
 using KurguWebsite.Domain.Events;
 using MediatR;
@@ -76,4 +76,4 @@ namespace KurguWebsite.Application.Features.Services.Commands
             }
         }
     }
-}
+}*/

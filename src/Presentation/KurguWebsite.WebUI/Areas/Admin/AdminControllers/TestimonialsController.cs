@@ -112,8 +112,7 @@ namespace KurguWebsite.WebUI.Areas.Admin.Controllers
                 Rating = model.Rating,
                 TestimonialDate = model.TestimonialDate,
                 IsActive = model.IsActive,
-                IsFeatured = model.IsFeatured,
-                DisplayOrder = model.DisplayOrder
+                IsFeatured = model.IsFeatured
             };
 
             var result = await Mediator.Send(command);

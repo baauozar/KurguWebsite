@@ -48,8 +48,9 @@ namespace KurguWebsite.Application.Features.CaseStudies.Commands
             {
                 try
                 {
-                    // FIXED: Now includes Industry parameter
-                    var entity = CaseStudy.Create(
+                    var maxOrder = await _unitOfWork.Services.GetAllAsync(ct)
+             .ContinueWith(t => t.Result.Any() ? t.Result.Max(s => s.DisplayOrder) : 0);
+                    var nextDisplayOrder = maxOrder + 1; var entity = CaseStudy.Create(
                         title: request.Title,
                         clientName: request.ClientName,
                         description: request.Description,
@@ -60,7 +61,7 @@ namespace KurguWebsite.Application.Features.CaseStudies.Commands
 
                     entity.CreatedBy = _currentUserService.UserId ?? "System";
                     entity.CreatedDate = DateTime.UtcNow;
-
+                    entity.SetDisplayOrder(nextDisplayOrder);
                     // Set ServiceId if provided
                     if (request.ServiceId.HasValue)
                     {

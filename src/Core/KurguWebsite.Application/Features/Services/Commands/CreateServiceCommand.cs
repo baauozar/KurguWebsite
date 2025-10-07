@@ -41,11 +41,9 @@ namespace KurguWebsite.Application.Features.Services.Commands
 
         public async Task<Result<ServiceDto>> Handle(CreateServiceCommand req, CancellationToken ct)
         {
-            using (await _unitOfWork.BeginTransactionAsync(ct))
-            {
+           
                 try
                 {
-                    // Check title uniqueness
                     if (await _unique.TitleExistsAsync(req.Title, null, ct))
                     {
                         return Result<ServiceDto>.Failure(
@@ -53,8 +51,11 @@ namespace KurguWebsite.Application.Features.Services.Commands
                             ErrorCodes.DuplicateEntity);
                     }
 
-                    // FIXED: Now includes IconClass and FullDescription parameters
-                    var entity = Service.Create(
+                // 1. Get the next display order AUTOMATICALLY
+                var maxOrder = await _unitOfWork.Services.GetAllAsync(ct)
+        .ContinueWith(t => t.Result.Any() ? t.Result.Max(s => s.DisplayOrder) : 0);
+                var nextDisplayOrder = maxOrder + 1;
+                var entity = Service.Create(
                         title: req.Title,
                         description: req.Description,
                         shortDescription: req.ShortDescription,
@@ -64,23 +65,20 @@ namespace KurguWebsite.Application.Features.Services.Commands
                         fullDescription: req.FullDescription
                     );
 
-                    // Track creation
                     entity.CreatedBy = _currentUserService.UserId ?? "System";
                     entity.CreatedDate = DateTime.UtcNow;
 
-                    // Set featured if requested
+                    // 2. Set the display order AUTOMATICALLY
+                    entity.SetDisplayOrder(nextDisplayOrder);
+
                     if (req.IsFeatured)
                     {
                         entity.SetFeatured(true);
                     }
 
-                    // Set display order if provided
-                    if (req.DisplayOrder > 0)
-                    {
-                        entity.SetDisplayOrder(req.DisplayOrder);
-                    }
+                    // ✅ REMOVED: The code block that was causing the error.
+                    // if (req.DisplayOrder > 0) { ... } is no longer needed.
 
-                    // Set SEO if provided
                     if (!string.IsNullOrEmpty(req.MetaTitle) ||
                         !string.IsNullOrEmpty(req.MetaDescription) ||
                         !string.IsNullOrEmpty(req.MetaKeywords))
@@ -88,39 +86,34 @@ namespace KurguWebsite.Application.Features.Services.Commands
                         entity.UpdateSeo(req.MetaTitle, req.MetaDescription, req.MetaKeywords);
                     }
 
-                    // Ensure unique slug
                     var baseSlug = entity.Slug;
                     var candidate = baseSlug;
                     var i = 2;
-
                     while (await _unique.SlugExistsAsync(candidate, null, ct))
                     {
                         candidate = $"{baseSlug}-{i++}";
                     }
-
                     if (candidate != baseSlug)
                     {
                         entity.UpdateSlug(candidate);
                     }
 
-                    // Add features if provided
                     if (req.Features is { Count: > 0 })
                     {
                         foreach (var f in req.Features)
                         {
-                            entity.AddFeature(f.Title, f.Description, f.IconClass, f.DisplayOrder);
+                            // ✅ CORRECTED: The DisplayOrder for features is now handled inside the AddFeature method
+                            entity.AddFeature(f.Title, f.Description, f.IconClass);
                         }
                     }
 
                     await _unitOfWork.Services.AddAsync(entity);
                     await _unitOfWork.CommitAsync(ct);
-                    await _unitOfWork.CommitTransactionAsync(ct);
 
                     _logger.LogInformation(
                         "Service created: Id={ServiceId}, Title={Title}, Slug={Slug}",
                         entity.Id, entity.Title, entity.Slug);
 
-                    // Invalidate cache
                     await _mediator.Publish(
                         new CacheInvalidationEvent(
                             CacheKeys.Services,
@@ -135,10 +128,8 @@ namespace KurguWebsite.Application.Features.Services.Commands
                 catch (Exception ex)
                 {
                     _logger.LogError(ex, "Error creating service: {Title}", req.Title);
-                    await _unitOfWork.RollbackTransactionAsync(ct);
                     return Result<ServiceDto>.Failure($"Failed to create service: {ex.Message}");
                 }
             }
         }
     }
-}

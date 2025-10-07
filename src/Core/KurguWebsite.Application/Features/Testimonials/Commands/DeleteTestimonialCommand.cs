@@ -1,6 +1,7 @@
 ﻿// src/Core/KurguWebsite.Application/Features/Testimonials/Commands/DeleteTestimonialCommand.cs
 using KurguWebsite.Application.Common.Interfaces;
 using KurguWebsite.Application.Common.Models;
+using KurguWebsite.Domain.Common;
 using KurguWebsite.Domain.Events;
 using MediatR;
 using Microsoft.Extensions.Logging;
@@ -36,38 +37,46 @@ namespace KurguWebsite.Application.Features.Testimonials.Commands
             DeleteTestimonialCommand request,
             CancellationToken ct)
         {
-            using (await _unitOfWork.BeginTransactionAsync(ct))
+            try
             {
-                try
+                var testimonial = await _unitOfWork.Testimonials.GetByIdAsync(request.Id);
+                if (testimonial == null)
                 {
-                    var testimonial = await _unitOfWork.Testimonials.GetByIdAsync(request.Id);
-                    if (testimonial == null)
-                    {
-                        return ControlResult.Failure("Testimonial not found.");
-                    }
-
-                    testimonial.SoftDelete(_currentUserService.UserId ?? "System");
-                    await _unitOfWork.Testimonials.UpdateAsync(testimonial);
-                    await _unitOfWork.CommitAsync(ct);
-                    await _unitOfWork.CommitTransactionAsync(ct);
-
-                    _logger.LogInformation("Testimonial deleted: Id={TestimonialId}", request.Id);
-
-                    await _mediator.Publish(
-                        new CacheInvalidationEvent(
-                            CacheKeys.Testimonials,
-                            CacheKeys.ActiveTestimonials,
-                            CacheKeys.HomePage),
-                        ct);
-
-                    return ControlResult.Success();
+                    return ControlResult.Failure("Testimonial not found.");
                 }
-                catch (Exception ex)
+
+                testimonial.SoftDelete(_currentUserService.UserId ?? "System");
+                await _unitOfWork.Testimonials.UpdateAsync(testimonial);
+
+                var remainingTestimonials = (await _unitOfWork.Testimonials.GetAllAsync())
+                                            .Where(t => t.IsActive && t.Id != request.Id)
+                                            .OrderBy(t => t.DisplayOrder)
+                                            .ToList();
+
+                remainingTestimonials.Reorder();
+
+                foreach (var item in remainingTestimonials)
                 {
-                    _logger.LogError(ex, "Error deleting testimonial: {TestimonialId}", request.Id);
-                    await _unitOfWork.RollbackTransactionAsync(ct);
-                    throw;
+                    await _unitOfWork.Testimonials.UpdateAsync(item);
                 }
+
+                await _unitOfWork.CommitAsync(ct);
+
+                _logger.LogInformation("Testimonial soft-deleted and reordered: Id={TestimonialId}", request.Id);
+
+                await _mediator.Publish(
+                    new CacheInvalidationEvent(
+                        CacheKeys.Testimonials,
+                        CacheKeys.ActiveTestimonials,
+                        CacheKeys.HomePage),
+                    ct);
+
+                return ControlResult.Success();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error deleting testimonial: {TestimonialId}", request.Id);
+                return ControlResult.Failure($"An error occurred: {ex.Message}");
             }
         }
     }

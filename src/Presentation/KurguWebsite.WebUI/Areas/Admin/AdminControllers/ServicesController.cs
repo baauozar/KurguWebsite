@@ -141,7 +141,6 @@ namespace KurguWebsite.WebUI.Areas.Admin.Controllers
                 IconPath = model.IconPath ?? string.Empty,
                 IconClass = model.IconClass,
                 Category = (ServiceCategory)model.Category,
-                DisplayOrder = model.DisplayOrder,
                 IsFeatured = model.IsFeatured,
                 MetaTitle = model.MetaTitle,
                 MetaDescription = model.MetaDescription,
@@ -150,8 +149,8 @@ namespace KurguWebsite.WebUI.Areas.Admin.Controllers
                 {
                     Title = f.Title,
                     Description = f.Description,
-                    IconClass = f.IconClass,
-                    DisplayOrder = f.DisplayOrder
+                    IconClass = f.IconClass
+                
                 }).ToList()
             };
 

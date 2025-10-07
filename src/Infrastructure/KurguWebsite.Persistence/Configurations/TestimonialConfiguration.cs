@@ -39,11 +39,18 @@ namespace KurguWebsite.Persistence.Configurations
             builder.Property(e => e.Rating)
                 .IsRequired()
                 .HasDefaultValue(5);
+            builder.Property(e => e.DisplayOrder)
+               .IsRequired()
+               .HasDefaultValue(0);
 
             // Indexes
-            builder.HasIndex(e => e.IsActive);
-            builder.HasIndex(e => e.IsFeatured);
+            // Indexes
+            // ✅ IMPROVED: Composite index for common queries
+            builder.HasIndex(e => new { e.IsActive, e.IsFeatured, e.DisplayOrder });
             builder.HasIndex(e => e.TestimonialDate);
+
+            // ✅ ADDED: Global soft-delete filter
+            builder.HasQueryFilter(e => !e.IsDeleted);
         }
     }
 }

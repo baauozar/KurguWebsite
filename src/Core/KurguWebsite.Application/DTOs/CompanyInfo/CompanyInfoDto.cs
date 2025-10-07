@@ -18,6 +18,20 @@ namespace KurguWebsite.Application.DTOs.CompanyInfo
         public string? Slogan { get; set; }
         public string? CopyrightText { get; set; }
 
+        // NEW: Statistics for About page counters
+        public int YearsInBusiness { get; set; }
+        public int TotalClients { get; set; }
+        public int ProjectsCompleted { get; set; }
+        public int TeamMembers { get; set; }
+
+        // NEW: Section images for Mission/Vision/Careers cards
+        public string? MissionImagePath { get; set; }
+        public string? VisionImagePath { get; set; }
+        public string? CareersImagePath { get; set; }
+
+        // NEW: Careers section content
+        public string? CareersDescription { get; set; }
+
         // Contact Info
         public ContactInfoDto ContactInformation { get; set; } = new();
 

@@ -45,15 +45,16 @@ namespace KurguWebsite.Application.Features.ProcessSteps.Commands
             {
                 try
                 {
-                    // FIXED: Now includes IconClass parameter
-                    var processStep = ProcessStep.Create(
-                        stepNumber: request.StepNumber,
+                    var maxOrder = await _unitOfWork.Services.GetAllAsync(ct)
+             .ContinueWith(t => t.Result.Any() ? t.Result.Max(s => s.DisplayOrder) : 0);
+                    var nextDisplayOrder = maxOrder + 1; var processStep = ProcessStep.Create(
+                 
                         title: request.Title,
                         description: request.Description,
-                        iconClass: request.IconClass,
-                        displayOrder: request.DisplayOrder
-                    );
+                        iconClass: request.IconClass??string.Empty
 
+                    );
+                    processStep.SetDisplayOrder(nextDisplayOrder);
                     processStep.CreatedBy = _currentUserService.UserId ?? "System";
                     processStep.CreatedDate = DateTime.UtcNow;
 

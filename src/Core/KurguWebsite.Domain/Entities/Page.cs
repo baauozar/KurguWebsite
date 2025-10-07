@@ -21,11 +21,13 @@ namespace KurguWebsite.Domain.Entities
         public string? HeroButtonText { get; private set; }
         public string? HeroButtonUrl { get; private set; }
 
+
+
         // SEO
         public string? MetaTitle { get; private set; }
         public string? MetaDescription { get; private set; }
         public string? MetaKeywords { get; private set; }
-
+        public string? ContentImagePath { get; private set; }
         private Page() { }
 
         public static Page Create(string title, PageType pageType)
@@ -43,11 +45,12 @@ namespace KurguWebsite.Domain.Entities
         }
 
         // Main update method (does NOT touch Slug)
-        public void Update(string title, PageType pageType, string? content)
+        public void Update(string title, PageType pageType, string? content, string? contentImagePath = null)
         {
             Title = title;
             PageType = pageType;
             Content = content;
+            ContentImagePath = contentImagePath;
             AddDomainEvent(new PageUpdatedEvent(this.Id));
         }
 

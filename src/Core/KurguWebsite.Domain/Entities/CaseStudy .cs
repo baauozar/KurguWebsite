@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 
 namespace KurguWebsite.Domain.Entities
 {
-    public class CaseStudy : AuditableEntity ,IActivatable // Changed from BaseEntity to AuditableEntity
+    public class CaseStudy : AuditableEntity ,IActivatable, IOrderable 
     {
         public string Title { get; private set; } = string.Empty;
         public string Slug { get; private set; } = string.Empty;

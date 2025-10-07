@@ -216,22 +216,7 @@ namespace KurguWebsite.API.Controllers.V1
             return HandleResult(result);
         }
 
-        /// <summary>
-        /// Bulk updates multiple services
-        /// </summary>
-        /// <param name="command">The bulk update data</param>
-        /// <returns>Number of updated services</returns>
-        [HttpPut("bulk-update")]
-        [Authorize(Roles = "Admin")]
-        [ProducesResponseType(typeof(int), StatusCodes.Status200OK)]
-        [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
-        public async Task<IActionResult> BulkUpdate([FromBody] BulkUpdateServicesCommand command)
-        {
-            _logger.LogInformation("Bulk updating {Count} services", command.Updates.Count);
-
-            var result = await _mediator.Send(command);
-            return HandleResult(result);
-        }
+        
 
         /// <summary>
         /// Deletes a service (soft delete)

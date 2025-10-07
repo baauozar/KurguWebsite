@@ -45,7 +45,9 @@ namespace KurguWebsite.Application.Features.Testimonials.Commands
             {
                 try
                 {
-                    var testimonial = Testimonial.Create(
+                    var maxOrder = await _unitOfWork.Services.GetAllAsync(ct)
+             .ContinueWith(t => t.Result.Any() ? t.Result.Max(s => s.DisplayOrder) : 0);
+                    var nextDisplayOrder = maxOrder + 1; var testimonial = Testimonial.Create(
                         request.ClientName,
                         request.ClientTitle,
                         request.CompanyName,
@@ -56,7 +58,7 @@ namespace KurguWebsite.Application.Features.Testimonials.Commands
 
                     testimonial.CreatedBy = _currentUserService.UserId ?? "System";
                     testimonial.CreatedDate = DateTime.UtcNow;
-
+                    testimonial.SetDisplayOrder(nextDisplayOrder);
                     await _unitOfWork.Testimonials.AddAsync(testimonial);
                     await _unitOfWork.CommitAsync(ct);
                     await _unitOfWork.CommitTransactionAsync(ct);

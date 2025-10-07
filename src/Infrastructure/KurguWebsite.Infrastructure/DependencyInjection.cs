@@ -46,7 +46,7 @@ namespace KurguWebsite.Infrastructure
                 options.Lockout.MaxFailedAccessAttempts = 5;
             })
             .AddEntityFrameworkStores<KurguWebsiteDbContext>()
-            .AddDefaultTokenProviders();
+            .AddDefaultTokenProviders().AddRoles<IdentityRole<Guid>>();
 
             // -------------------------
             // JWT Authentication (optional)

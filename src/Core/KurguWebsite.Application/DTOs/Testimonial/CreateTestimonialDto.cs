@@ -17,6 +17,6 @@ namespace KurguWebsite.Application.DTOs.Testimonial
         public DateTime TestimonialDate { get; set; } = DateTime.UtcNow;
         public bool IsActive { get; set; } = true;
         public bool IsFeatured { get; set; }
-        public int DisplayOrder { get; set; }
+
     }
 }

@@ -1,6 +1,7 @@
 ﻿// src/Core/KurguWebsite.Application/Features/ProcessSteps/Commands/DeleteProcessStepCommand.cs
 using KurguWebsite.Application.Common.Interfaces;
 using KurguWebsite.Application.Common.Models;
+using KurguWebsite.Domain.Common;
 using KurguWebsite.Domain.Events;
 using MediatR;
 using Microsoft.Extensions.Logging;
@@ -36,37 +37,45 @@ namespace KurguWebsite.Application.Features.ProcessSteps.Commands
             DeleteProcessStepCommand request,
             CancellationToken ct)
         {
-            using (await _unitOfWork.BeginTransactionAsync(ct))
+            try
             {
-                try
+                var processStep = await _unitOfWork.ProcessSteps.GetByIdAsync(request.Id);
+                if (processStep == null)
                 {
-                    var processStep = await _unitOfWork.ProcessSteps.GetByIdAsync(request.Id);
-                    if (processStep == null)
-                    {
-                        return ControlResult.Failure("Process step not found.");
-                    }
-
-                    processStep.SoftDelete(_currentUserService.UserId ?? "System");
-                    await _unitOfWork.ProcessSteps.UpdateAsync(processStep);
-                    await _unitOfWork.CommitAsync(ct);
-                    await _unitOfWork.CommitTransactionAsync(ct);
-
-                    _logger.LogInformation("Process step deleted: Id={ProcessStepId}", request.Id);
-
-                    await _mediator.Publish(
-                        new CacheInvalidationEvent(
-                            CacheKeys.ProcessSteps,
-                            CacheKeys.HomePage),
-                        ct);
-
-                    return ControlResult.Success();
+                    return ControlResult.Failure("Process step not found.");
                 }
-                catch (Exception ex)
+
+                processStep.SoftDelete(_currentUserService.UserId ?? "System");
+                await _unitOfWork.ProcessSteps.UpdateAsync(processStep);
+
+                var remainingSteps = (await _unitOfWork.ProcessSteps.GetAllAsync())
+                                    .Where(ps => ps.IsActive && ps.Id != request.Id)
+                                    .OrderBy(ps => ps.DisplayOrder)
+                                    .ToList();
+
+                remainingSteps.Reorder();
+
+                foreach (var item in remainingSteps)
                 {
-                    _logger.LogError(ex, "Error deleting process step: {ProcessStepId}", request.Id);
-                    await _unitOfWork.RollbackTransactionAsync(ct);
-                    throw;
+                    await _unitOfWork.ProcessSteps.UpdateAsync(item);
                 }
+
+                await _unitOfWork.CommitAsync(ct);
+
+                _logger.LogInformation("Process step soft-deleted and reordered: Id={ProcessStepId}", request.Id);
+
+                await _mediator.Publish(
+                    new CacheInvalidationEvent(
+                        CacheKeys.ProcessSteps,
+                        CacheKeys.HomePage),
+                    ct);
+
+                return ControlResult.Success();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error deleting process step: {ProcessStepId}", request.Id);
+                return ControlResult.Failure($"An error occurred: {ex.Message}");
             }
         }
     }

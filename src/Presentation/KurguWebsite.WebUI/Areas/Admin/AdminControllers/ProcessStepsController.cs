@@ -72,7 +72,6 @@ namespace KurguWebsite.WebUI.Areas.Admin.AdminControllers
                 Title = model.Title,
                 Description = model.Description,
                 IconClass = model.IconClass,
-                DisplayOrder = model.DisplayOrder,
                 IsActive = model.IsActive
             };
 

@@ -7,9 +7,9 @@ using System.Threading.Tasks;
 
 namespace KurguWebsite.Domain.Entities
 {
-    public class ProcessStep : AuditableEntity, IActivatable
+    public class ProcessStep : AuditableEntity, IActivatable, IOrderable
     {
-        public int StepNumber { get; private set; }
+     
         public string Title { get; private set; } = string.Empty;
         public string Description { get; private set; } = string.Empty;
         public string? IconClass { get; private set; }
@@ -19,19 +19,19 @@ namespace KurguWebsite.Domain.Entities
         private ProcessStep() { }
 
         public static ProcessStep Create(
-       int stepNumber,
+      
        string title,
        string description,
-       string? iconClass = null,
-       int? displayOrder = null)
+       string iconClass = null,
+       int displayOrder = 0)
         {
             return new ProcessStep
             {
-                StepNumber = stepNumber,
+              
                 Title = title,
                 Description = description,
                 IconClass = iconClass,
-                DisplayOrder = displayOrder ?? stepNumber,
+                DisplayOrder = displayOrder,
                 IsActive = true
             };
         }
@@ -49,12 +49,7 @@ namespace KurguWebsite.Domain.Entities
             DisplayOrder = order;
         }
 
-        public void SetStepNumber(int stepNumber)
-        {
-            if (stepNumber < 1)
-                throw new ArgumentException("Step number must be positive", nameof(stepNumber));
-            StepNumber = stepNumber;
-        }
+
         public void Activate() => IsActive = true;
         public void Deactivate() => IsActive = false;
     }

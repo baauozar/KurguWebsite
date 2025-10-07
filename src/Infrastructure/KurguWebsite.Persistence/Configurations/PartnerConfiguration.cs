@@ -33,11 +33,15 @@ namespace KurguWebsite.Persistence.Configurations
 
             builder.Property(e => e.Type)
                 .IsRequired();
-
+            builder.Property(e => e.DisplayOrder)
+               .IsRequired()
+               .HasDefaultValue(0);
             // Indexes
+            builder.HasIndex(e => new { e.Type, e.IsActive, e.DisplayOrder });
             builder.HasIndex(e => e.IsActive);
             builder.HasIndex(e => e.Type);
             builder.HasIndex(e => e.DisplayOrder);
+            builder.HasQueryFilter(p => !p.IsDeleted);
         }
     }
 }

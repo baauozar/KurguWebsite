@@ -3,6 +3,8 @@ using KurguWebsite.Application.Common.Models;
 using KurguWebsite.Application.DTOs.CaseStudy;
 using KurguWebsite.Application.Features.CaseStudies.Commands;
 using KurguWebsite.Application.Features.CaseStudies.Queries;
+using KurguWebsite.Domain.Constants;
+using KurguWebsite.Infrastructure.Authorization;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -14,6 +16,7 @@ namespace KurguWebsite.API.Controllers.V1
     /// </summary>
     [ApiVersion("1.0")]
     [Route("api/v{version:apiVersion}/[controller]")]
+    [Authorize]
     public class CaseStudiesController : BaseApiController
     {
         private readonly IMediator _mediator;
@@ -35,6 +38,7 @@ namespace KurguWebsite.API.Controllers.V1
         [AllowAnonymous]
         [ResponseCache(Duration = 300)]
         [ProducesResponseType(typeof(List<CaseStudyDto>), StatusCodes.Status200OK)]
+        [Permission(Permissions.CaseStudies.View)]
         public async Task<IActionResult> GetAll()
         {
             var result = await _mediator.Send(new GetAllCaseStudiesQuery());
@@ -210,7 +214,8 @@ namespace KurguWebsite.API.Controllers.V1
         /// <param name="id">The case study ID</param>
         /// <returns>No content on success</returns>
         [HttpDelete("{id:guid}")]
-        [Authorize(Roles = "Admin")]
+        [Authorize(Roles = "Admin,Manager,Editor")]
+        [Permission(Permissions.CaseStudies.Delete)]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
         [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
         public async Task<IActionResult> Delete(Guid id)

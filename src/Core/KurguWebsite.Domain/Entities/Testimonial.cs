@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 namespace KurguWebsite.Domain.Entities
 {
 
-    public class Testimonial : AuditableEntity, IActivatable
+    public class Testimonial : AuditableEntity, IActivatable, IOrderable
     {
         public string ClientName { get; private set; } = string.Empty;
         public string ClientTitle { get; private set; } = string.Empty;
@@ -31,7 +31,7 @@ namespace KurguWebsite.Domain.Entities
             string companyName,
             string content,
             string clientImagePath,
-            int rating = 5)
+            int rating = 5,int displayorder = 0)
         {
             if (rating < 1 || rating > 5)
                 throw new ArgumentException("Rating must be between 1 and 5");
@@ -45,6 +45,7 @@ namespace KurguWebsite.Domain.Entities
                 Rating = rating,
                 TestimonialDate = DateTime.UtcNow,
                 ClientImagePath = clientImagePath,
+                DisplayOrder = displayorder,
                 IsActive = true
             };
             testimonial.AddDomainEvent(new TestimonialCreatedEvent(testimonial.Id));

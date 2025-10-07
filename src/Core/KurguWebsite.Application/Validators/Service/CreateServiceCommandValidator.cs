@@ -34,8 +34,7 @@ namespace KurguWebsite.Application.Validators.Service
             RuleFor(x => x.Category)
                 .IsInEnum().WithMessage("Invalid service category");
 
-            RuleFor(x => x.DisplayOrder)
-                .GreaterThanOrEqualTo(0).WithMessage("Display order must be non-negative");
+        
 
             When(x => !string.IsNullOrEmpty(x.FullDescription), () =>
             {
@@ -67,22 +66,7 @@ namespace KurguWebsite.Application.Validators.Service
                     .MaximumLength(300).WithMessage("Meta keywords must not exceed 300 characters");
             });
 
-            When(x => x.Features != null && x.Features.Any(), () =>
-            {
-                RuleFor(x => x.Features)
-                    .Must(f => f.Count <= 50).WithMessage("Cannot have more than 50 features");
-
-                RuleForEach(x => x.Features).ChildRules(feature =>
-                {
-                    feature.RuleFor(f => f.Title)
-                        .NotEmpty().WithMessage("Feature title is required")
-                        .MaximumLength(100).WithMessage("Feature title must not exceed 100 characters");
-
-                    feature.RuleFor(f => f.Description)
-                        .NotEmpty().WithMessage("Feature description is required")
-                        .MaximumLength(500).WithMessage("Feature description must not exceed 500 characters");
-                });
-            });
+            
         }
     }
 }

@@ -29,8 +29,6 @@ namespace KurguWebsite.Application.Validators.Service
                     .MaximumLength(50).WithMessage("Icon class must not exceed 50 characters");
             });
 
-            RuleFor(x => x.DisplayOrder)
-                .GreaterThanOrEqualTo(0).WithMessage("Display order must be non-negative");
         }
     }
 }

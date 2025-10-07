@@ -21,7 +21,7 @@ namespace KurguWebsite.Persistence.Repositories
             return await _dbSet
                 .Where(p => p.IsActive)
                 .OrderBy(p => p.DisplayOrder)
-                .ThenBy(p => p.StepNumber)
+               
                 .ToListAsync();
         }
     }

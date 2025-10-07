@@ -1,21 +1,22 @@
-﻿// src/Core/KurguWebsite.Application/Features/Services/Commands/CreateServiceFeatureCommand.cs
-using AutoMapper;
+﻿using AutoMapper;
 using KurguWebsite.Application.Common.Interfaces;
 using KurguWebsite.Application.Common.Models;
 using KurguWebsite.Application.DTOs.Service;
 using KurguWebsite.Domain.Entities;
 using MediatR;
 using Microsoft.Extensions.Logging;
+using System.Linq; // Ensure you have this using statement
 
 namespace KurguWebsite.Application.Features.Services.Commands
 {
     public class CreateServiceFeatureCommand : IRequest<Result<ServiceFeatureDto>>
     {
+        // These are the only properties the client should provide
         public Guid ServiceId { get; set; }
         public string Title { get; set; } = string.Empty;
         public string Description { get; set; } = string.Empty;
         public string? IconClass { get; set; }
-        public int DisplayOrder { get; set; }
+        // DisplayOrder is removed from here
     }
 
     public class CreateServiceFeatureCommandHandler
@@ -42,46 +43,48 @@ namespace KurguWebsite.Application.Features.Services.Commands
             CreateServiceFeatureCommand request,
             CancellationToken ct)
         {
-            using (await _unitOfWork.BeginTransactionAsync(ct))
+            try
             {
-                try
+                var service = await _unitOfWork.Services.GetByIdAsync(request.ServiceId);
+                if (service == null)
                 {
-                    var service = await _unitOfWork.Services.GetByIdAsync(request.ServiceId);
-                    if (service == null)
-                    {
-                        return Result<ServiceFeatureDto>.Failure(
-                            "Service not found.",
-                            ErrorCodes.EntityNotFound);
-                    }
-
-                    var entity = ServiceFeature.Create(
-                        request.ServiceId,
-                        request.Title,
-                        request.Description,
-                        request.IconClass,
-                        request.DisplayOrder
-                    );
-
-                    entity.CreatedBy = _currentUserService.UserId ?? "System";
-                    entity.CreatedDate = DateTime.UtcNow;
-
-                    await _unitOfWork.ServiceFeatures.AddAsync(entity);
-                    await _unitOfWork.CommitAsync(ct);
-                    await _unitOfWork.CommitTransactionAsync(ct);
-
-                    _logger.LogInformation(
-                        "Service feature created: Id={FeatureId}, ServiceId={ServiceId}",
-                        entity.Id, request.ServiceId);
-
-                    var dto = _mapper.Map<ServiceFeatureDto>(entity);
-                    return Result<ServiceFeatureDto>.Success(dto);
+                    return Result<ServiceFeatureDto>.Failure("Service not found.", ErrorCodes.EntityNotFound);
                 }
-                catch (Exception ex)
-                {
-                    _logger.LogError(ex, "Error creating service feature");
-                    await _unitOfWork.RollbackTransactionAsync(ct);
-                    return Result<ServiceFeatureDto>.Failure($"Failed to create feature: {ex.Message}");
-                }
+
+                // ✅ CORRECTED: Get all features for THIS service to calculate the next DisplayOrder
+                var featuresForService = await _unitOfWork.ServiceFeatures.GetAsync(f => f.ServiceId == request.ServiceId, cancellationToken: ct);
+                var maxOrder = featuresForService.Any() ? featuresForService.Max(f => f.DisplayOrder) : 0;
+                var nextDisplayOrder = maxOrder + 1;
+
+                // Create the entity without passing DisplayOrder
+                var entity = ServiceFeature.Create(
+                    request.ServiceId,
+                    request.Title,
+                    request.Description,
+                    request.IconClass
+                );
+
+                entity.CreatedBy = _currentUserService.UserId ?? "System";
+                entity.CreatedDate = DateTime.UtcNow;
+
+                // Set the calculated display order
+                entity.SetDisplayOrder(nextDisplayOrder);
+
+                await _unitOfWork.ServiceFeatures.AddAsync(entity);
+                await _unitOfWork.CommitAsync(ct); // Single commit for the transaction
+
+                _logger.LogInformation(
+                    "Service feature created: Id={FeatureId}, ServiceId={ServiceId}",
+                    entity.Id, request.ServiceId);
+
+                var dto = _mapper.Map<ServiceFeatureDto>(entity);
+                return Result<ServiceFeatureDto>.Success(dto);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error creating service feature for ServiceId {ServiceId}", request.ServiceId);
+                // No manual rollback needed, UnitOfWork handles it
+                return Result<ServiceFeatureDto>.Failure($"Failed to create feature: {ex.Message}");
             }
         }
     }

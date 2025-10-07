@@ -11,7 +11,7 @@ using System.Threading.Tasks;
 
 namespace KurguWebsite.Domain.Entities
 {
-    public class Service : AuditableEntity, IAggregateRoot, ISeoEntity, IActivatable
+    public class Service : AuditableEntity, IAggregateRoot, ISeoEntity, IActivatable, IOrderable
     {
         public string Title { get; private set; } = string.Empty;
         public string Slug { get; private set; } = string.Empty;
@@ -46,7 +46,8 @@ namespace KurguWebsite.Domain.Entities
     string iconPath,
     ServiceCategory category,
     string? iconClass = null,
-    string? fullDescription = null)
+    string? fullDescription = null,
+    int displayorder=0)
         {
             if (string.IsNullOrWhiteSpace(title))
                 throw new DomainException("Service title is required");
@@ -80,7 +81,7 @@ namespace KurguWebsite.Domain.Entities
                 IconClass = iconClass,
                 Category = category,
                 IsActive = true,
-                DisplayOrder = 0
+                DisplayOrder = displayorder
             };
 
             service.AddDomainEvent(new ServiceCreatedEvent(service.Id));
@@ -104,6 +105,7 @@ namespace KurguWebsite.Domain.Entities
             IconPath = iconPath;
             IconClass = iconClass;
             Category = category;
+             // Retain existing display order
             AddDomainEvent(new ServiceUpdatedEvent(this.Id));
         }
 

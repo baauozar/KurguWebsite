@@ -12,6 +12,6 @@ namespace KurguWebsite.Application.DTOs.Service
         public string Title { get; set; } = string.Empty;
         public string Description { get; set; } = string.Empty;
         public string? IconClass { get; set; }
-        public int DisplayOrder { get; set; }
+ 
     }
 }

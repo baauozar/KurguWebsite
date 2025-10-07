@@ -17,6 +17,20 @@ namespace KurguWebsite.Application.DTOs.CompanyInfo
         public string? Slogan { get; set; }
         public string? CopyrightText { get; set; }
 
+        // NEW: Statistics
+        public int YearsInBusiness { get; set; }
+        public int TotalClients { get; set; }
+        public int ProjectsCompleted { get; set; }
+        public int TeamMembers { get; set; }
+
+        // NEW: Section images
+        public string? MissionImagePath { get; set; }
+        public string? VisionImagePath { get; set; }
+        public string? CareersImagePath { get; set; }
+
+        // NEW: Careers description
+        public string? CareersDescription { get; set; }
+
         public ContactInfoDto ContactInformation { get; set; } = new();
         public AddressDto OfficeAddress { get; set; } = new();
         public SocialMediaDto? SocialMedia { get; set; }

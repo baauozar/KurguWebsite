@@ -72,7 +72,7 @@ void ConfigureServices(IServiceCollection services, IConfiguration configuration
     services.AddPersistence(configuration);
     services.AddApplication();
     services.AddInfrastructure(configuration);
-/*    services.AddPermissionPolicies(); */
+    services.AddPermissionPolicies();
 
     services.AddControllers(options =>
     {

@@ -251,6 +251,9 @@ namespace KurguWebsite.Persistence.Migrations
                         .HasMaxLength(150)
                         .HasColumnType("nvarchar(150)");
 
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
                     b.Property<bool>("IsDeleted")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("bit")
@@ -294,6 +297,10 @@ namespace KurguWebsite.Persistence.Migrations
                         .HasMaxLength(2000)
                         .HasColumnType("nvarchar(2000)");
 
+                    b.Property<string>("CareersImagePath")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
                     b.Property<string>("CompanyName")
                         .IsRequired()
                         .HasMaxLength(200)
@@ -304,22 +311,27 @@ namespace KurguWebsite.Persistence.Migrations
                         .HasColumnType("nvarchar(200)");
 
                     b.Property<string>("CreatedBy")
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
 
                     b.Property<DateTime>("CreatedDate")
                         .HasColumnType("datetime2");
 
                     b.Property<string>("DeletedBy")
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
 
                     b.Property<DateTime?>("DeletedDate")
                         .HasColumnType("datetime2");
 
                     b.Property<bool>("IsDeleted")
-                        .HasColumnType("bit");
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(false);
 
                     b.Property<string>("LastModifiedBy")
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
 
                     b.Property<DateTime?>("LastModifiedDate")
                         .HasColumnType("datetime2");
@@ -336,13 +348,41 @@ namespace KurguWebsite.Persistence.Migrations
                         .HasMaxLength(1000)
                         .HasColumnType("nvarchar(1000)");
 
+                    b.Property<string>("MissionImagePath")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<int>("ProjectsCompleted")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasDefaultValue(0);
+
                     b.Property<string>("Slogan")
                         .HasMaxLength(200)
                         .HasColumnType("nvarchar(200)");
 
+                    b.Property<int>("TeamMembers")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasDefaultValue(0);
+
+                    b.Property<int>("TotalClients")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasDefaultValue(0);
+
                     b.Property<string>("Vision")
                         .HasMaxLength(1000)
                         .HasColumnType("nvarchar(1000)");
+
+                    b.Property<string>("VisionImagePath")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<int>("YearsInBusiness")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasDefaultValue(0);
 
                     b.HasKey("Id");
 
@@ -434,6 +474,9 @@ namespace KurguWebsite.Persistence.Migrations
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("Content")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("ContentImagePath")
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("CreatedBy")
@@ -552,7 +595,9 @@ namespace KurguWebsite.Persistence.Migrations
                         .HasColumnType("nvarchar(500)");
 
                     b.Property<int>("DisplayOrder")
-                        .HasColumnType("int");
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasDefaultValue(0);
 
                     b.Property<bool>("IsActive")
                         .HasColumnType("bit");
@@ -593,6 +638,8 @@ namespace KurguWebsite.Persistence.Migrations
                     b.HasIndex("IsActive");
 
                     b.HasIndex("Type");
+
+                    b.HasIndex("Type", "IsActive", "DisplayOrder");
 
                     b.ToTable("Partners", (string)null);
                 });
@@ -646,9 +693,6 @@ namespace KurguWebsite.Persistence.Migrations
                     b.Property<DateTime?>("LastModifiedDate")
                         .HasColumnType("datetime2");
 
-                    b.Property<int>("StepNumber")
-                        .HasColumnType("int");
-
                     b.Property<string>("Title")
                         .IsRequired()
                         .HasMaxLength(100)
@@ -656,11 +700,12 @@ namespace KurguWebsite.Persistence.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("DisplayOrder");
+                    b.HasIndex("DisplayOrder")
+                        .IsUnique();
 
                     b.HasIndex("IsActive");
 
-                    b.HasIndex("StepNumber");
+                    b.HasIndex("IsActive", "DisplayOrder");
 
                     b.ToTable("ProcessSteps", (string)null);
                 });
@@ -761,7 +806,9 @@ namespace KurguWebsite.Persistence.Migrations
                         .HasColumnType("nvarchar(1000)");
 
                     b.Property<int>("DisplayOrder")
-                        .HasColumnType("int");
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasDefaultValue(0);
 
                     b.Property<string>("FullDescription")
                         .HasColumnType("nvarchar(max)");
@@ -822,16 +869,10 @@ namespace KurguWebsite.Persistence.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("Category");
-
-                    b.HasIndex("DisplayOrder");
-
-                    b.HasIndex("IsActive");
-
-                    b.HasIndex("IsFeatured");
-
                     b.HasIndex("Slug")
                         .IsUnique();
+
+                    b.HasIndex("IsActive", "IsFeatured", "Category", "DisplayOrder");
 
                     b.ToTable("Services", (string)null);
                 });
@@ -870,6 +911,9 @@ namespace KurguWebsite.Persistence.Migrations
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)");
 
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
                     b.Property<bool>("IsDeleted")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("bit")
@@ -892,8 +936,7 @@ namespace KurguWebsite.Persistence.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("ServiceId", "DisplayOrder")
-                        .IsUnique();
+                    b.HasIndex("ServiceId", "DisplayOrder");
 
                     b.ToTable("ServiceFeatures", (string)null);
                 });
@@ -943,7 +986,9 @@ namespace KurguWebsite.Persistence.Migrations
                         .HasColumnType("datetime2");
 
                     b.Property<int>("DisplayOrder")
-                        .HasColumnType("int");
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasDefaultValue(0);
 
                     b.Property<bool>("IsActive")
                         .HasColumnType("bit");
@@ -973,11 +1018,9 @@ namespace KurguWebsite.Persistence.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("IsActive");
-
-                    b.HasIndex("IsFeatured");
-
                     b.HasIndex("TestimonialDate");
+
+                    b.HasIndex("IsActive", "IsFeatured", "DisplayOrder");
 
                     b.ToTable("Testimonials", (string)null);
                 });

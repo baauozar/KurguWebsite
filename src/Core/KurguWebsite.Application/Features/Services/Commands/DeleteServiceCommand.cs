@@ -1,6 +1,7 @@
 ﻿// src/Core/KurguWebsite.Application/Features/Services/Commands/DeleteServiceCommand.cs
 using KurguWebsite.Application.Common.Interfaces;
 using KurguWebsite.Application.Common.Models;
+using KurguWebsite.Domain.Common;
 using KurguWebsite.Domain.Events;
 using MediatR;
 using Microsoft.Extensions.Logging;
@@ -33,38 +34,46 @@ namespace KurguWebsite.Application.Features.Services.Commands
 
         public async Task<ControlResult> Handle(DeleteServiceCommand request, CancellationToken ct)
         {
-            using (await _unitOfWork.BeginTransactionAsync(ct))
+            try
             {
-                try
+                var service = await _unitOfWork.Services.GetByIdAsync(request.Id);
+                if (service == null)
                 {
-                    var service = await _unitOfWork.Services.GetByIdAsync(request.Id);
-                    if (service == null)
-                    {
-                        return ControlResult.Failure("Service not found.");
-                    }
-
-                    service.SoftDelete(_currentUserService.UserId ?? "System");
-                    await _unitOfWork.Services.UpdateAsync(service);
-                    await _unitOfWork.CommitAsync(ct);
-                    await _unitOfWork.CommitTransactionAsync(ct);
-
-                    _logger.LogInformation("Service deleted: Id={ServiceId}", request.Id);
-
-                    await _mediator.Publish(
-                        new CacheInvalidationEvent(
-                            CacheKeys.Services,
-                            CacheKeys.FeaturedServices,
-                            CacheKeys.HomePage),
-                        ct);
-
-                    return ControlResult.Success();
+                    return ControlResult.Failure("Service not found.");
                 }
-                catch (Exception ex)
+
+                service.SoftDelete(_currentUserService.UserId ?? "System");
+                await _unitOfWork.Services.UpdateAsync(service);
+
+                var remainingServices = (await _unitOfWork.Services.GetAllAsync())
+                                        .Where(s => s.IsActive && s.Id != request.Id)
+                                        .OrderBy(s => s.DisplayOrder)
+                                        .ToList();
+
+                remainingServices.Reorder();
+
+                foreach (var item in remainingServices)
                 {
-                    _logger.LogError(ex, "Error deleting service: {ServiceId}", request.Id);
-                    await _unitOfWork.RollbackTransactionAsync(ct);
-                    throw;
+                    await _unitOfWork.Services.UpdateAsync(item);
                 }
+
+                await _unitOfWork.CommitAsync(ct);
+
+                _logger.LogInformation("Service soft-deleted and reordered: Id={ServiceId}", request.Id);
+
+                await _mediator.Publish(
+                    new CacheInvalidationEvent(
+                        CacheKeys.Services,
+                        CacheKeys.FeaturedServices,
+                        CacheKeys.HomePage),
+                    ct);
+
+                return ControlResult.Success();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error deleting service: {ServiceId}", request.Id);
+                return ControlResult.Failure($"An error occurred: {ex.Message}");
             }
         }
     }

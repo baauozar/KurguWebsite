@@ -24,22 +24,38 @@ namespace KurguWebsite.Application.Features.CompanyInfo.Commands
             _mediator = mediator;
         }
 
-        public async Task<Result<CompanyInfoDto>> Handle(UpdateCompanyInfoBasicCommand request, CancellationToken cancellationToken)
+        public async Task<Result<CompanyInfoDto>> Handle(
+     UpdateCompanyInfoBasicCommand request,
+     CancellationToken cancellationToken)
         {
             var companyInfo = await _unitOfWork.CompanyInfo.GetCompanyInfoAsync();
-            if (companyInfo == null) return Result<CompanyInfoDto>.Failure("Company Info not found.");
+            if (companyInfo == null)
+                return Result<CompanyInfoDto>.Failure("Company Info not found.");
 
-            companyInfo.UpdateBasicInfo(request.CompanyName ?? string.Empty, request.About, request.Mission, request.Vision, request.Slogan);
+           
+            companyInfo.UpdateBasicInfo(
+                request.CompanyName ?? string.Empty,
+                request.About,
+                request.Mission,
+                request.Vision,
+                request.Slogan
+               
+            );
+
             companyInfo.UpdateLogos(request.LogoPath, request.LogoLightPath);
 
-            // Track who modified
             companyInfo.LastModifiedBy = _currentUserService.UserId ?? "System";
             companyInfo.LastModifiedDate = DateTime.UtcNow;
 
             await _unitOfWork.CompanyInfo.UpdateAsync(companyInfo);
             await _unitOfWork.CommitAsync(cancellationToken);
 
-            await _mediator.Publish(new CacheInvalidationEvent(CacheKeys.CompanyInfo, CacheKeys.HomePage, CacheKeys.AboutPage), cancellationToken);
+            await _mediator.Publish(
+                new CacheInvalidationEvent(
+                    CacheKeys.CompanyInfo,
+                    CacheKeys.HomePage,
+                    CacheKeys.AboutPage),
+                cancellationToken);
 
             return Result<CompanyInfoDto>.Success(_mapper.Map<CompanyInfoDto>(companyInfo));
         }

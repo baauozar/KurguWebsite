@@ -1,5 +1,4 @@
-﻿// File: src/Persistence/KurguWebsite.Persistence/Configurations/ServiceConfiguration.cs
-using KurguWebsite.Domain.Entities;
+﻿using KurguWebsite.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
@@ -13,46 +12,19 @@ namespace KurguWebsite.Persistence.Configurations
 
             builder.ToTable("Services");
 
-            builder.Property(e => e.Title)
-                .IsRequired()
-                .HasMaxLength(200);
-
-            builder.Property(e => e.Slug)
-                .IsRequired()
-                .HasMaxLength(265);
-
-            builder.HasIndex(e => e.Slug)
-                .IsUnique();
-
-            builder.Property(e => e.Description)
-                .IsRequired()
-                .HasMaxLength(1000);
-
-            builder.Property(e => e.ShortDescription)
-                .IsRequired()
-                .HasMaxLength(300);
-
-            builder.Property(e => e.FullDescription)
-                .HasColumnType("nvarchar(max)");
-
-            builder.Property(e => e.IconPath)
-                .IsRequired()
-                .HasMaxLength(500);
-
-            builder.Property(e => e.IconClass)
-                .HasMaxLength(100);
-
-            builder.Property(e => e.Category)
-                .IsRequired();
-
-            builder.Property(e => e.MetaTitle)
-                .HasMaxLength(60);
-
-            builder.Property(e => e.MetaDescription)
-                .HasMaxLength(160);
-
-            builder.Property(e => e.MetaKeywords)
-                .HasMaxLength(500);
+            // Property Configurations
+            builder.Property(e => e.Title).IsRequired().HasMaxLength(200);
+            builder.Property(e => e.Slug).IsRequired().HasMaxLength(265);
+            builder.Property(e => e.Description).IsRequired().HasMaxLength(1000);
+            builder.Property(e => e.ShortDescription).IsRequired().HasMaxLength(300);
+            builder.Property(e => e.FullDescription).HasColumnType("nvarchar(max)");
+            builder.Property(e => e.IconPath).IsRequired().HasMaxLength(500);
+            builder.Property(e => e.IconClass).HasMaxLength(100);
+            builder.Property(e => e.Category).IsRequired();
+            builder.Property(e => e.MetaTitle).HasMaxLength(60);
+            builder.Property(e => e.MetaDescription).HasMaxLength(160);
+            builder.Property(e => e.MetaKeywords).HasMaxLength(500);
+            builder.Property(e => e.DisplayOrder).IsRequired().HasDefaultValue(0);
 
             // Relationships
             builder.HasMany(e => e.Features)
@@ -63,13 +35,17 @@ namespace KurguWebsite.Persistence.Configurations
             builder.HasMany(e => e.CaseStudies)
                 .WithOne(c => c.Service)
                 .HasForeignKey(c => c.ServiceId)
-                .OnDelete(DeleteBehavior.SetNull); // ensure CaseStudy.ServiceId is nullable (Guid?)
+                .OnDelete(DeleteBehavior.SetNull);
 
             // Indexes
-            builder.HasIndex(e => e.IsActive);
-            builder.HasIndex(e => e.IsFeatured);
-            builder.HasIndex(e => e.Category);
-            builder.HasIndex(e => e.DisplayOrder);
+            builder.HasIndex(e => e.Slug).IsUnique();
+
+            // ✅ CORRECTED: Removed redundant individual indexes. 
+            // This composite index handles filtering and sorting efficiently.
+            builder.HasIndex(e => new { e.IsActive, e.IsFeatured, e.Category, e.DisplayOrder });
+
+            // Global soft-delete filter
+            builder.HasQueryFilter(e => !e.IsDeleted);
         }
     }
 }

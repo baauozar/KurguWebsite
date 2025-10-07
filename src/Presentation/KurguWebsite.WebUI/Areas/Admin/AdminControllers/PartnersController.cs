@@ -88,8 +88,7 @@ namespace KurguWebsite.WebUI.Areas.Admin.AdminControllers
                 LogoPath = model.LogoPath,
                 WebsiteUrl = model.WebsiteUrl,
                 Description = model.Description,
-                Type = (PartnerType)model.Type,
-                DisplayOrder = model.DisplayOrder
+                Type = (PartnerType)model.Type
             };
 
             var result = await Mediator.Send(command);
