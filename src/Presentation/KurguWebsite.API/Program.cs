@@ -71,7 +71,7 @@ void ConfigureServices(IServiceCollection services, IConfiguration configuration
     // explicit JWT authentication setup can override the default Identity settings.
     services.AddPersistence(configuration);
     services.AddApplication();
-    services.AddInfrastructure(configuration);
+    services.AddInfrastructureApi(configuration);
     services.AddPermissionPolicies();
 
     services.AddControllers(options =>

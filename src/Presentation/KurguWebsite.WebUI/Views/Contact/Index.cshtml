@@ -1,0 +1,66 @@
+﻿@model KurguWebsite.WebUI.UIModel.Contact.ContactFormViewModel
+@{
+    ViewData["Title"] = "Contact";
+}
+
+<section class="page-header page-header-modern page-header-lg bg-color-primary border-0 my-0">
+    <div class="container container-xl-custom my-5">
+        <div class="row">
+            <div class="col-md-12 text-center">
+                <h1 class="font-weight-bold text-10 mb-0">Contact</h1>
+            </div>
+        </div>
+    </div>
+</section>
+
+<div class="container container-xl-custom py-5 my-3">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+
+            <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+
+            <form asp-action="Index" asp-controller="Contact" method="post" class="contact-form">
+                @Html.AntiForgeryToken()
+
+                <div class="mb-3">
+                    <label asp-for="Name" class="form-label"></label>
+                    <input asp-for="Name" class="form-control" />
+                    <span asp-validation-for="Name" class="text-danger"></span>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label asp-for="Email" class="form-label"></label>
+                        <input asp-for="Email" class="form-control" />
+                        <span asp-validation-for="Email" class="text-danger"></span>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label asp-for="Phone" class="form-label"></label>
+                        <input asp-for="Phone" class="form-control" />
+                        <span asp-validation-for="Phone" class="text-danger"></span>
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <label asp-for="Subject" class="form-label"></label>
+                    <input asp-for="Subject" class="form-control" />
+                    <span asp-validation-for="Subject" class="text-danger"></span>
+                </div>
+
+                <div class="mb-3">
+                    <label asp-for="Message" class="form-label"></label>
+                    <textarea asp-for="Message" class="form-control" rows="6"></textarea>
+                    <span asp-validation-for="Message" class="text-danger"></span>
+                </div>
+
+                
+
+                <button type="submit" class="btn btn-primary btn-modern px-4 py-2">Send Message</button>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

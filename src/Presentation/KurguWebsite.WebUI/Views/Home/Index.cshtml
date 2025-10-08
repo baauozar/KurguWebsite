@@ -1,8 +1,11 @@
-﻿@{
+﻿@model KurguWebsite.WebUI.UIModel.Home.HomeViewModel
+@{
     ViewData["Title"] = "Home Page";
 }
 
-<div class="text-center">
-    <h1 class="display-4">Welcome</h1>
-    <p>Learn about <a href="https://learn.microsoft.com/aspnet/core">building Web apps with ASP.NET Core</a>.</p>
+<div class="owl-carousel owl-carousel-light owl-carousel-light-init-fadeIn owl-theme manual nav-style-1 nav-arrows-thin nav-font-size-lg nav-outside custom-nav-1 custom-nav-1-pos-1 ps-lg-5 ps-xl-0" data-plugin-options="{'autoplay': true, 'autoplayTimeout': 7000}" data-dynamic-height="['650px','650px','650px','550px','500px']" style="height: 650px;">
 </div>
+@* 
+@await Component.InvokeAsync("FeaturedServices", new { services = Model.FeaturedServices })
+@await Component.InvokeAsync("Testimonials", new { testimonials = Model.Testimonials })
+@await Component.InvokeAsync("Partners", new { partners = Model.Partners }) *@

@@ -31,7 +31,7 @@ namespace KurguWebsite.Persistence
             services.AddScoped<IServiceUniquenessChecker, ServiceUniquenessChecker>();
             services.AddScoped<ICaseStudyUniquenessChecker, CaseStudyUniquenessChecker>();
             services.AddScoped<IPageUniquenessChecker, PageUniquenessChecker>();
-            services.AddScoped<IServiceUniquenessChecker, ServiceUniquenessChecker>();
+         
 
 
             // UoW

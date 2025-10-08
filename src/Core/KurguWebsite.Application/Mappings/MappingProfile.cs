@@ -1,4 +1,6 @@
 ﻿using AutoMapper;
+using KurguWebsite.Application.Contracts.Contact;
+
 
 // DTOs
 using KurguWebsite.Application.DTOs.Audit;
@@ -13,6 +15,8 @@ using KurguWebsite.Application.DTOs.Testimonial;
 
 // Commands
 using KurguWebsite.Application.Features.CaseStudies.Commands;
+using KurguWebsite.Application.Features.ContactMessages.Commands;
+
 
 // Domain
 using KurguWebsite.Domain.Entities;
@@ -109,6 +113,7 @@ namespace KurguWebsite.Application.Mappings
             // ---------------------------
             CreateMap<AuditLog, AuditLogDto>()
                 .ForMember(d => d.UserName, o => o.MapFrom(s => s.UserName));
+            CreateMap<ContactMessageRequest, CreateContactMessageCommand>();
         }
     }
 }

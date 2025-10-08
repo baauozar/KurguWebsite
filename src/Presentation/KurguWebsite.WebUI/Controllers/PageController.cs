@@ -1,4 +1,4 @@
-﻿// src/Presentation/KurguWebsite.Web/Controllers/PagesController.cs
+﻿/*// src/Presentation/KurguWebsite.Web/Controllers/PagesController.cs
 using KurguWebsite.Application.Features.Pages.Queries;
 using KurguWebsite.Application.Features.Services.Queries;
 using MediatR;
@@ -133,4 +133,4 @@ namespace KurguWebsite.WebUI.Controllers
             }
         }
     }
-}
+}*/

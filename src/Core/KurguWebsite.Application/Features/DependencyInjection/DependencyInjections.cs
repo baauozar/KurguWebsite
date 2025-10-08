@@ -1,5 +1,7 @@
 ﻿using FluentValidation;
 using KurguWebsite.Application.Common.Behaviors;
+using KurguWebsite.Application.Common.Interfaces;
+using KurguWebsite.Application.Features.ContactMessages;
 using MediatR;
 using Microsoft.Extensions.DependencyInjection;
 using System;
@@ -18,7 +20,7 @@ namespace KurguWebsite.Application.Features.DependencyInjection
 
             // Add FluentValidation
             services.AddValidatorsFromAssembly(Assembly.GetExecutingAssembly());
-
+            services.AddScoped<IContactAppService, ContactAppService>();
             // Add MediatR
             services.AddMediatR(cfg =>
             {

@@ -1,0 +1,73 @@
+﻿@model KurguWebsite.WebUI.UIModel.Service.ServiceDetailViewModel
+@{
+    ViewData["Title"] = Model?.Title ?? "Service Detail";
+}
+
+<section class="page-header page-header-modern page-header-lg bg-color-primary border-0 my-0">
+    <div class="container container-xl-custom my-5">
+        <div class="row">
+            <div class="col-md-12 align-self-center p-static order-2 text-center">
+                <h1 class="font-weight-bold text-10">@Model?.Title</h1>
+            </div>
+        </div>
+    </div>
+</section>
+
+<div class="container container-xl-custom py-5 my-3">
+    <div class="row">
+        <div class="col-lg-8">
+            @if (!string.IsNullOrWhiteSpace(Model?.Description))
+            {
+                <p class="font-weight-medium text-4">@Model.Description</p>
+            }
+
+            @if (!string.IsNullOrWhiteSpace(Model?.FullDescription))
+            {
+                @Html.Raw(Model.FullDescription)
+            }
+
+            @if ((Model?.Features?.Count ?? 0) > 0)
+            {
+                <h3 class="font-weight-bold text-color-dark text-5 mt-5 mb-3">Service Features</h3>
+                <ul class="list list-icons list-icons-style-2 list-icons-lg">
+                    @foreach (var feature in Model!.Features!)
+                    {
+                        <li>
+                            <i class="fas fa-check text-color-primary"></i>
+                            <p class="mb-1">
+                                <strong>@feature.Name</strong>
+                                @if (!string.IsNullOrWhiteSpace(feature.Summary))
+                                {
+                                    <span>: @feature.Summary</span>
+                                }
+                            </p>
+                        </li>
+                    }
+                </ul>
+            }
+        </div>
+
+        <div class="col-lg-4">
+            @if ((Model?.OtherServices?.Count ?? 0) > 0)
+            {
+                <div class="card card-style-1 custom-card-style-1">
+                    <div class="card-body">
+                        <h4 class="font-weight-bold text-6">Other Services</h4>
+                        <ul class="list list-unstyled">
+                            @foreach (var other in Model!.OtherServices!)
+                            {
+                                <li>
+                                    <a asp-controller="Services"
+                                       asp-action="Detail"
+                                       asp-route-slug="@other.Slug">
+                                        @other.Title
+                                    </a>
+                                </li>
+                            }
+                        </ul>
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+</div>
