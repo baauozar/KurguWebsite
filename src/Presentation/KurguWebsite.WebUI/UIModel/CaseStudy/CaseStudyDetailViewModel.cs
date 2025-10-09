@@ -37,14 +37,5 @@ namespace KurguWebsite.WebUI.UIModel.CaseStudy
     }
 
     // Optional: a compact card/list VM for index/related items
-    public class CaseStudyCardVm
-    {
-        public string Title { get; set; } = string.Empty;
-        public string Slug { get; set; } = string.Empty;
-        public string? ThumbnailPath { get; set; }
-        public DateTime CompletedDate { get; set; }
 
-        public string CompletedDateText =>
-            CompletedDate.ToString("dd MMM yyyy", CultureInfo.CurrentCulture);
-    }
 }

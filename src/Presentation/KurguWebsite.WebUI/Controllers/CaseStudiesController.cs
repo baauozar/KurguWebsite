@@ -1,58 +1,48 @@
-﻿using AutoMapper;
+﻿// Controllers/CaseStudiesController.cs
+using AutoMapper;
+using KurguWebsite.Application.Common.Models;
+using KurguWebsite.Application.DTOs.CaseStudy;
+using KurguWebsite.Application.Features.CaseStudies.Queries; // adjust to your actual namespace
 using KurguWebsite.WebUI.UIModel.CaseStudy;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Logging;
-
-// Adjust to your actual query namespaces/types
-using KurguWebsite.Application.Features.CaseStudies.Queries;
+using System.Linq;
 
 namespace KurguWebsite.WebUI.Controllers
 {
-    [Route("CaseStudies")]
+    [Route("case-studies")]
     public class CaseStudiesController : Controller
     {
         private readonly IMediator _mediator;
         private readonly IMapper _mapper;
-        private readonly ILogger<CaseStudiesController> _logger;
 
-        public CaseStudiesController(IMediator mediator, IMapper mapper, ILogger<CaseStudiesController> logger)
+        public CaseStudiesController(IMediator mediator, IMapper mapper)
         {
             _mediator = mediator;
             _mapper = mapper;
-            _logger = logger;
         }
 
-        // GET /case-studies  and  /case-studies/index
         [HttpGet("")]
-        [HttpGet("index")]
-        public async Task<IActionResult> Index(CancellationToken ct)
+        public async Task<IActionResult> Index()
         {
-            // If you have a paged result use that; otherwise use a simple list query.
-            // Example assumes a query returning List<CaseStudyDto>.
-            var result = await _mediator.Send(new GetAllActiveMetricsQuery(), ct);
-            if (!result.Succeeded || result.Data is null)
-                return View(new List<CaseStudyCardVm>());
+            var res = await _mediator.Send(new GetPaginatedCaseStudiesQuery
+            {
+                Params = new PaginationParams { PageNumber = 1, PageSize = 9 }
+            });
 
-            var vms = _mapper.Map<List<CaseStudyCardVm>>(result.Data);
+            var items = (res.Succeeded && res.Data != null) ? res.Data.Items : Enumerable.Empty<CaseStudyDto>();
+            var vms = items.Select(_mapper.Map<CaseStudyCardVm>).ToList();
             return View(vms);
         }
 
-        // GET /case-studies/details/{slug}
-        [HttpGet("details/{slug}", Name = "CaseStudyDetail")]
-        public async Task<IActionResult> Detail(string slug, CancellationToken ct)
+        [HttpGet("{slug}")]
+        public async Task<IActionResult> Details(string slug)
         {
-            var result = await _mediator.Send(new GetCaseStudyBySlugQuery { Slug = slug }, ct);
-            if (!result.Succeeded || result.Data is null)
-                return NotFound();
-
-            var vm = _mapper.Map<CaseStudyDetailViewModel>(result.Data);
+            var dto = await _mediator.Send(new GetCaseStudyBySlugQuery { Slug = slug });
+            if (!dto.Succeeded || dto.Data is null) return NotFound();
+            // You can map to a dedicated detail VM if you prefer
+            var vm = _mapper.Map<CaseStudyCardVm>(dto.Data);
             return View(vm);
         }
-
-        // Optional convenience: /case-studies/{slug} -> redirect to details route
-        [HttpGet("{slug}")]
-        public IActionResult RedirectToDetail(string slug)
-            => RedirectToRoute("CaseStudyDetail", new { slug });
     }
 }
