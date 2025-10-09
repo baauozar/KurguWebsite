@@ -1,10 +1,8 @@
 ﻿using AutoMapper;
 using KurguWebsite.Application.Common.Interfaces;
-using KurguWebsite.Application.Features.ContactMessages.Commands; // adjust if your namespace differs
+using KurguWebsite.Application.Contracts.Contact;
 using KurguWebsite.WebUI.UIModel.Contact;
-using MediatR;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Logging;
 
 namespace KurguWebsite.WebUI.Controllers
 {
@@ -32,7 +30,7 @@ namespace KurguWebsite.WebUI.Controllers
         {
             if (!ModelState.IsValid) return View(model);
 
-            var request = _mapper.Map<KurguWebsite.Application.Contracts.Contact.ContactMessageRequest>(model);
+            var request = _mapper.Map<ContactMessageRequest>(model);
             var result = await _contact.SubmitAsync(request, HttpContext.RequestAborted);
 
             if (!result.Succeeded)
